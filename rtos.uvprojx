@@ -389,11 +389,6 @@
               <FileType>1</FileType>
               <FilePath>src\gpio.c</FilePath>
             </File>
-            <File>
-              <FileName>test.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>src\test.s</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
