@@ -114,7 +114,7 @@ int createThread(thread_routine_t _routine, thread_priority_t _priority, thread_
     g_kernel.thread_data_pool[i].routine = _routine;
     g_kernel.thread_data_pool[i].priority = _priority;
     if (_handle) *_handle = i;
-
+    
     g_arbiter.task_list[_priority].list[g_arbiter.task_list[_priority].count] = i;
     g_arbiter.task_list[_priority].count++;
     
@@ -174,6 +174,13 @@ void kernel_start(void)
 {
     arbiter_start();
 
+    // setup interrupts
+    NVIC_SetPriority(SysTick_IRQn, 10); // systick should be higher than pendsv
+    NVIC_SetPriority(PendSV_IRQn, 12);
+    
+    NVIC_EnableIRQ(SysTick_IRQn);
+    NVIC_EnableIRQ(PendSV_IRQn);
+    
     // run kernel
     __set_CONTROL(2); // sp -> psp
     g_kernel.status |= KERNEL_EN; // sync with sysTick, todo: this is temp. fix
@@ -279,15 +286,18 @@ void SysTick_Handler(void)
             // 2. get current task arbiter position
             // 3. find 'next'
             {
-                int prio = g_kernel.thread_data_pool[g_kernel.current_thread].priority;
+                int prio = g_kernel.thread_data_pool[g_kernel.current_thread].priority; // 1. get current task prio
                 
                 if (g_arbiter.task_list[prio].current < g_arbiter.task_list[prio].count) {
                     thread_handle_t next_h;
-                    g_arbiter.task_list[prio].next = g_arbiter.task_list[prio].current + 1;
-                    if (g_arbiter.task_list[prio].next == g_arbiter.task_list[prio].count) {
+                    
+                    g_arbiter.task_list[prio].next += 1; // init is current = next, next ++
+                    
+                    if (g_arbiter.task_list[prio].next == g_arbiter.task_list[prio].count) { // next == count -> next = 0
                         g_arbiter.task_list[prio].next = 0; // this will blow up
                     }
                     
+                    g_arbiter.task_list[prio].current = g_arbiter.task_list[prio].next;
                     next_h = g_arbiter.task_list[prio].list[g_arbiter.task_list[prio].next];
                     
                     g_kernel.next_thread = next_h;

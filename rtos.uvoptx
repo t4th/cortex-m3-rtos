@@ -149,7 +149,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGDARM</Key>
-          <Name>(1010=-1,-1,-1,-1,0)(1007=-1,-1,-1,-1,0)(1008=-1,-1,-1,-1,0)(1009=-1,-1,-1,-1,0)</Name>
+          <Name>(1010=-2611,147,-2191,703,0)(1007=-2620,81,-2433,355,0)(1008=-1,-1,-1,-1,0)(1009=-2277,116,-2033,663,0)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -166,9 +166,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>302</LineNumber>
+          <LineNumber>203</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134219018</Address>
+          <Address>134220264</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -177,14 +177,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\src\kernel.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\src/kernel.c\302</Expression>
+          <Expression>\\demo\src/kernel.c\203</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>195</LineNumber>
+          <LineNumber>337</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134220114</Address>
+          <Address>134218188</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -193,7 +193,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>.\src\kernel.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\demo\src/kernel.c\195</Expression>
+          <Expression>\\demo\src/kernel.c\337</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -222,7 +222,7 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>2</SubType>
-          <ItemText>0x20000150</ItemText>
+          <ItemText>0x20000D00</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
@@ -250,7 +250,7 @@
         <aPa1>0</aPa1>
         <AscS4>0</AscS4>
         <aSer4>0</aSer4>
-        <StkLoc>0</StkLoc>
+        <StkLoc>1</StkLoc>
         <TrcWin>0</TrcWin>
         <newCpu>0</newCpu>
         <uProt>0</uProt>
