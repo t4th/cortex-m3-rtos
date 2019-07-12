@@ -37,8 +37,6 @@ typedef struct thread_s
     thread_routine_t    routine;
 } thread_t;
 
-typedef void(*thread_proc_t)(thread_t * p);
-
 // --------- kernel --------------------
 
 typedef struct kernel_s
@@ -85,6 +83,7 @@ void printErrorMsg(const char * errMsg)
       ITM_SendChar(*errMsg);
       ++errMsg;
    }
+      ITM_SendChar('\n');
 }
 
 time_t GetTime(void)
@@ -137,6 +136,9 @@ void kernel_init(void)
 {
     int thread_i = 0;
 
+      ITM->TCR |= ITM_TCR_ITMENA_Msk;   // ITM enable
+      ITM->TER = 1UL;                  // ITM Port #0 enable
+    
     // init thread pool table
     for (thread_i = 0; thread_i<MAX_THREADS; thread_i++)
     {
@@ -167,7 +169,8 @@ void kernel_init(void)
         // call arbiter
         //  - set current and next
     }
-printErrorMsg("init done");
+    
+    printErrorMsg("init done");
 }
 
 void kernel_start(void)
@@ -219,6 +222,7 @@ void arbiter_start(void)
         for (i = 0; i < MAX_THREADS; i++) {
             if (g_kernel.thread_data_pool_status[i]) {
                 int count = g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].count;
+                
                 g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].list[count] = i;
                 g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].count++;
             }
@@ -273,6 +277,7 @@ volatile uint32_t * next_task_context = 0;
 void SysTick_Handler(void)
 {
     static unsigned old_time = 0;
+    __disable_irq();
     g_kernel.time_ms++;
     
     if (g_kernel.time_ms - old_time > 10)
@@ -288,21 +293,23 @@ void SysTick_Handler(void)
             {
                 int prio = g_kernel.thread_data_pool[g_kernel.current_thread].priority; // 1. get current task prio
                 
-                if (g_arbiter.task_list[prio].current < g_arbiter.task_list[prio].count) {
-                    thread_handle_t next_h;
+                if (g_arbiter.task_list[prio].count > 1 && // dont context switch if there is only 1 task
+                    g_arbiter.task_list[prio].current < g_arbiter.task_list[prio].count) 
+                {
+                    thread_handle_t next_handle;
                     
                     g_arbiter.task_list[prio].next += 1; // init is current = next, next ++
                     
                     if (g_arbiter.task_list[prio].next == g_arbiter.task_list[prio].count) { // next == count -> next = 0
-                        g_arbiter.task_list[prio].next = 0; // this will blow up
+                        g_arbiter.task_list[prio].next = 0; // go to the first task in prio list. todo: this will blow up
                     }
                     
                     g_arbiter.task_list[prio].current = g_arbiter.task_list[prio].next;
-                    next_h = g_arbiter.task_list[prio].list[g_arbiter.task_list[prio].next];
+                    next_handle = g_arbiter.task_list[prio].list[g_arbiter.task_list[prio].next];
                     
-                    g_kernel.next_thread = next_h;
+                    g_kernel.next_thread = next_handle;
                     g_kernel.status |= SWITCH_REQUESTED;
-                } else g_kernel.status &= ~SWITCH_REQUESTED;
+                } // else g_kernel.status &= ~SWITCH_REQUESTED;
             }
             
             if (g_kernel.status & SWITCH_REQUESTED)
@@ -316,17 +323,12 @@ void SysTick_Handler(void)
                 __set_PSP( g_kernel.thread_data_pool[g_kernel.next_thread].sp); // set next sp
                 
                 g_kernel.current_thread = g_kernel.next_thread;
-                
-                // g_kernel.next_thread ++;
-                // //if (g_kernel.next_thread  >= NO_THREADS)
-                // {
-                //     g_kernel.next_thread = 0;
-                // }
-                
+                                
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
             }
         }
     }
+    __enable_irq();
 }
 
 __ASM void PendSV_Handler(void)
