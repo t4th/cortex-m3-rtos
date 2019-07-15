@@ -67,8 +67,8 @@ int main()
     kernel_init();
     
     CreateTask(thread0, T_MEDIUM, 0);
-    CreateTask(thread1, T_MEDIUM, 0);
-    CreateTask(thread2, T_MEDIUM, 0);
+    CreateTask(thread1, T_LOW, 0);
+    CreateTask(thread2, T_HIGH, 0);
     CreateTask(thread3, T_MEDIUM, 0);
     
     kernel_start();

@@ -35,6 +35,7 @@ void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handl
 {
     const int count = arbiter->task_list[prio].count; // just for readabilty
     
+    //todo: sanity check is done by the caller!
     //assert(prio < MAX_PRIORITIES);
     //assert(h != INVALID_HANDLE);
     
@@ -52,3 +53,25 @@ void Arbiter_Sort(arbiter_t * const arbiter)
 {
 }
 
+task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio)
+{
+    task_handle_t handle = INVALID_HANDLE;
+    task_queue_t * queue = &arbiter->task_list[prio];
+    
+    if (queue->count > 1) {
+        queue->next = queue->current + 1;
+        
+        if (queue->next >= queue->count) {
+            queue->next = 0;
+        }
+        
+        handle = queue->list[queue->next];
+        queue->current = queue->next;
+    }
+    else {
+        // return current task as next if no switch is needed
+        handle = queue->list[queue->current];
+    }
+    
+    return handle;
+}
