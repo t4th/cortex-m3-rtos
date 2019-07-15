@@ -1,14 +1,13 @@
+
+#include "kernel_config.h"
+#include "kernel_types.h"
 #include "kernel_api.h"
+#include "arbiter.h"
 #include "kernel.h"
 // hw specyfic
 #include <stm32f10x.h>
 
  // DUI0552A_cortex_m3_dgug
-#define STACK_SIZE          32u
-#define MAX_USER_THREADS    8u
-#define MAX_THREADS         MAX_USER_THREADS + 1 // 1 is idle task
-#define IDLE_TASK_ID        0u
-
 
 // kernel status flags
 #define KERNEL_EN           0x1
@@ -32,50 +31,43 @@ typedef struct thread_s
     uint32_t            sp;
     context_t           context;
     stack_t             stack;
-    thread_priority_t   priority;
-    thread_state_t      state;
-    thread_routine_t    routine;
+    task_priority_t   priority;
+    task_state_t      state;
+    task_routine_t    routine;
 } thread_t;
 
 // --------- kernel --------------------
 
 typedef struct kernel_s
 {
-    thread_handle_t    current_thread;
-    thread_handle_t    next_thread;
+    task_handle_t    current_thread;
+    task_handle_t    next_thread;
 
     time_t      time_ms;
     uint32_t    status; // sync with systick
 
     uint32_t    user_thread_count;
-    int         thread_data_pool_status[MAX_THREADS]; // might use .routine instead
-    thread_t    thread_data_pool[MAX_THREADS];
+    int         thread_data_pool_status[MAX_USER_THREADS]; // might use .routine instead
+    thread_t    thread_data_pool[MAX_USER_THREADS];
+    thread_t    idle_task; // always ready
 } kernel_t;
 
 // local memory
 volatile kernel_t g_kernel;
 
-// arbiter
-typedef struct
-{
-    int count;
-    int current;
-    int next;
-    int list[MAX_THREADS];
-} task_list_t;
+arbiter_t g_arbiter; // todo: volatile
 
-typedef struct arbiter_s
-{
-    task_list_t task_list[3]; // todo: size is number of prorities
-} arbiter_t;
 
-// local memory
-volatile arbiter_t g_arbiter;
 
 // public API
 static void thread_proc(void);
 void thread_idle(void);
 void arbiter_start(void);
+
+// private
+
+// body
+
 
 void printErrorMsg(const char * errMsg)
 {
@@ -92,33 +84,40 @@ time_t GetTime(void)
     return g_kernel.time_ms;
 }
 
-int createThread(thread_routine_t _routine, thread_priority_t _priority, thread_handle_t * _handle)
+int CreateTask(task_routine_t _routine, task_priority_t _priority, task_handle_t * _handle)
 {
     int i;
+    int ret = 0;
+    
+    __disable_irq();
     // todo: sanity for kernel init and args
 
-    // find empty spot in thread pool
-    // skip IDLE_TASK_ID as it takes index 0
-    for (i = 0; i < MAX_THREADS; i++) {
-        if (0 == g_kernel.thread_data_pool_status[i]) {
-            break;
+    if (g_kernel.user_thread_count < MAX_USER_THREADS)
+    {
+        // find empty spot in thread pool
+        // skip IDLE_TASK_ID as it takes index 0
+        for (i = 0; i < MAX_USER_THREADS; i++) {
+            if (0 == g_kernel.thread_data_pool_status[i]) {
+                break;
+            }
         }
+
+        // todo: set stack to default or skip init if it is fist time init
+        // init new thread if found empty slot
+        g_kernel.thread_data_pool_status[i] = 1;
+        g_kernel.thread_data_pool[i].routine = _routine;
+        g_kernel.thread_data_pool[i].priority = _priority;
+        if (_handle) *_handle = i;
+        
+        // add task to arbiter
+        Arbiter_AddTask(&g_arbiter, _priority, i);
+        
+    } else {
+        ret = 1; // no more free task space
     }
 
-    if (i == MAX_THREADS)return -1; // max numbe of threads reached
-
-    // todo: set stack to default or skip init if it is fist time init
-    // init new thread if found empty slot
-    g_kernel.thread_data_pool_status[i] = 1;
-    g_kernel.thread_data_pool[i].routine = _routine;
-    g_kernel.thread_data_pool[i].priority = _priority;
-    if (_handle) *_handle = i;
-    
-    g_arbiter.task_list[_priority].list[g_arbiter.task_list[_priority].count] = i;
-    g_arbiter.task_list[_priority].count++;
-    
-
-    return 0;
+    __enable_irq();
+    return ret;
 }
 
 void kernel_tick(void)
@@ -135,12 +134,16 @@ void interrupt_occurred(int id)
 void kernel_init(void)
 {
     int thread_i = 0;
-
+    
+    __disable_irq();
+    
+    Arbiter_Init(&g_arbiter);
+    
       ITM->TCR |= ITM_TCR_ITMENA_Msk;   // ITM enable
       ITM->TER = 1UL;                  // ITM Port #0 enable
     
     // init thread pool table
-    for (thread_i = 0; thread_i<MAX_THREADS; thread_i++)
+    for (thread_i = 0; thread_i< MAX_USER_THREADS; thread_i++)
     {
         g_kernel.thread_data_pool[thread_i].sp = (uint32_t)&g_kernel.thread_data_pool[thread_i].stack.data[STACK_SIZE - 8]; // last element
         
@@ -153,11 +156,18 @@ void kernel_init(void)
         g_kernel.thread_data_pool[thread_i].stack.data[STACK_SIZE - 2] = (uint32_t)thread_proc; // return address, pc+1
         g_kernel.thread_data_pool[thread_i].stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
     }
-
-    // g_kernel.thread_data_pool_status[IDLE_TASK_ID] = 1;
-    // g_kernel.thread_data_pool[IDLE_TASK_ID].routine = thread_idle;
-    // g_kernel.thread_data_pool[IDLE_TASK_ID].priority = T_LOW;
-    createThread(thread_idle, T_LOW, 0);
+    
+    // init IDLE task
+    g_kernel.idle_task.sp = (uint32_t)&g_kernel.idle_task.stack.data[STACK_SIZE - 8]; // last element
+    
+    g_kernel.idle_task.stack.data[STACK_SIZE - 8] = 0xcdcdcdcd; // r0
+    g_kernel.idle_task.stack.data[STACK_SIZE - 7] = 0xcdcdcdcd; // r1
+    g_kernel.idle_task.stack.data[STACK_SIZE - 6] = 0xcdcdcdcd; // r2
+    g_kernel.idle_task.stack.data[STACK_SIZE - 5] = 0xcdcdcdcd; // r3
+    g_kernel.idle_task.stack.data[STACK_SIZE - 4] = 0;//0xabababab; // r12
+    g_kernel.idle_task.stack.data[STACK_SIZE - 3] = 0; // lr r14
+    g_kernel.idle_task.stack.data[STACK_SIZE - 2] = (uint32_t)thread_idle; // return address, pc+1
+    g_kernel.idle_task.stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
 
     // sort all threads in thread pool
     if (0 == g_kernel.user_thread_count) {
@@ -169,13 +179,34 @@ void kernel_init(void)
         // call arbiter
         //  - set current and next
     }
-    
+    __enable_irq();
     printErrorMsg("init done");
 }
 
 void kernel_start(void)
 {
-    arbiter_start();
+    __disable_irq();
+    
+    // set first highest priority task found as first
+    {
+        task_handle_t h;
+        h = Arbiter_GetHigestPrioTask(&g_arbiter);
+
+        // no user task found, set idle as default
+        if (INVALID_HANDLE == h) {
+            // set sp as last last element of stored sp
+            g_kernel.idle_task.sp = (uint32_t)&g_kernel.idle_task.stack.data[STACK_SIZE - 1];
+            __set_PSP(g_kernel.idle_task.sp); // initial psp
+            g_kernel.current_thread = INVALID_HANDLE;
+        }
+        else
+        {
+            // set first task
+            g_kernel.thread_data_pool[h].sp = (uint32_t)&g_kernel.thread_data_pool[h].stack.data[STACK_SIZE - 1]; // last element
+            __set_PSP(g_kernel.thread_data_pool[h].sp); // initial psp
+            g_kernel.current_thread = h;
+        }
+    }
 
     // setup interrupts
     NVIC_SetPriority(SysTick_IRQn, 10); // systick should be higher than pendsv
@@ -185,9 +216,11 @@ void kernel_start(void)
     NVIC_EnableIRQ(PendSV_IRQn);
     
     // run kernel
+    __enable_irq();
     __set_CONTROL(2); // sp -> psp
     g_kernel.status |= KERNEL_EN; // sync with sysTick, todo: this is temp. fix
 //    g_kernel.thread_data_pool[0].routine(); // run
+    
     thread_proc();
 }
 
@@ -202,7 +235,12 @@ static void thread_finished(void)
 static void thread_proc(void)
 {
     //p->routine();
-    g_kernel.thread_data_pool[g_kernel.current_thread].routine();
+    
+    if (IDLE_TASK_ID == g_kernel.current_thread) {
+        g_kernel.idle_task.routine();
+    } else {
+        g_kernel.thread_data_pool[g_kernel.current_thread].routine();
+    }
     thread_finished();
 }
 
@@ -211,52 +249,6 @@ void thread_idle(void)
     while (1);
 }
 
-// first run - set curent task
-void arbiter_start(void)
-{
-    // sort all tasks in kernel thread_pool and put result in arbiter task list
-    #if 0
-    { // createThread do this
-        int i;
-        
-        for (i = 0; i < MAX_THREADS; i++) {
-            if (g_kernel.thread_data_pool_status[i]) {
-                int count = g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].count;
-                
-                g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].list[count] = i;
-                g_arbiter.task_list[g_kernel.thread_data_pool[i].priority].count++;
-            }
-        }
-    }
-    #endif
-    
-    {
-        // set first highest priority task found as first
-        int i, j;
-        int found = 0;
-        thread_handle_t h;
-
-        for (i = 0; i < 3; i++) { // i is priority
-            for (j = 0; j < MAX_THREADS; j++) { // j is position in arbiter task list
-                h = g_arbiter.task_list[i].list[j]; // get handle
-                if (h) { // 0 is reserved for idle task
-                    found = 1;
-                    goto skip;
-                }
-            }
-        }
-skip:
-        if (!found) { // no user task found, set idle as default
-            h = IDLE_TASK_ID;
-        }
-            
-        // set first task
-        g_kernel.thread_data_pool[h].sp = (uint32_t)&g_kernel.thread_data_pool[h].stack.data[STACK_SIZE - 1]; // last element
-        __set_PSP(g_kernel.thread_data_pool[h].sp); // initial psp
-    
-        g_kernel.current_thread = h;
-    }
-}
 
 // sys_tick
 void arbiter_run(void)
@@ -296,7 +288,7 @@ void SysTick_Handler(void)
                 if (g_arbiter.task_list[prio].count > 1 && // dont context switch if there is only 1 task
                     g_arbiter.task_list[prio].current < g_arbiter.task_list[prio].count) 
                 {
-                    thread_handle_t next_handle;
+                    task_handle_t next_handle;
                     
                     g_arbiter.task_list[prio].next += 1; // init is current = next, next ++
                     

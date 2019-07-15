@@ -66,10 +66,10 @@ int main()
     
     kernel_init();
     
-    createThread(thread0, T_MEDIUM, 0);
-    createThread(thread1, T_MEDIUM, 0);
-    createThread(thread2, T_MEDIUM, 0);
-    createThread(thread3, T_MEDIUM, 0);
+    CreateTask(thread0, T_MEDIUM, 0);
+    CreateTask(thread1, T_MEDIUM, 0);
+    CreateTask(thread2, T_MEDIUM, 0);
+    CreateTask(thread3, T_MEDIUM, 0);
     
     kernel_start();
     

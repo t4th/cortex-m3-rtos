@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -393,6 +393,11 @@
               <FileName>kernel.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\kernel.c</FilePath>
+            </File>
+            <File>
+              <FileName>arbiter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\arbiter.c</FilePath>
             </File>
           </Files>
         </Group>
