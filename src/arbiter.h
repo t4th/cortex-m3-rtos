@@ -16,6 +16,7 @@ typedef struct arbiter_s
     task_queue_t task_list[MAX_PRIORITIES]; // todo: size is number of prorities
 } arbiter_t;
 
+// system APIs
 void Arbiter_Init(arbiter_t * const arbiter);
 // return INVALID_HANDLE if not found
 task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter);
@@ -25,3 +26,4 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
 void Arbiter_Sort(arbiter_t * const arbiter);
 // return same handle as current if no switch is needed
 task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio);
+

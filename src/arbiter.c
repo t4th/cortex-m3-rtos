@@ -45,8 +45,40 @@ void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handl
 
 void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h)
 {
-    // find task
-    // remove
+    task_handle_t current = INVALID_HANDLE;
+    task_handle_t next = INVALID_HANDLE;
+    
+    // find current
+    {
+        int i;
+        for (i = 0; i < arbiter->task_list[prio].count; i ++) {
+            if (arbiter->task_list[prio].list[i] == h) {
+                current = i;
+                break;
+            }
+        }
+        next = current + 1;
+        
+        if (INVALID_HANDLE == current) {
+            while(1); // unhandled expection
+        }
+    }
+    
+    arbiter->task_list[prio].count--;
+    
+    if (arbiter->task_list[prio].count > 0) {
+        int i;
+        
+        for (i = 0; i < arbiter->task_list[prio].count; i ++) {
+            arbiter->task_list[prio].list[current] = arbiter->task_list[prio].list[next];
+            arbiter->task_list[prio].list[next] = INVALID_HANDLE;
+            current = next;
+            next ++;
+        }
+    } else {
+        arbiter->task_list[prio].list[0] = INVALID_HANDLE;
+        arbiter->task_list[prio].current = 0;
+    }
 }
 
 void Arbiter_Sort(arbiter_t * const arbiter)
