@@ -68,7 +68,7 @@ arbiter_t g_arbiter; // todo: volatile
 
 // public API
 static void task_proc(void);
-void task_idle(void);
+static void task_idle(void);
 
 // private
 

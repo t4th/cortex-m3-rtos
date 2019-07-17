@@ -23,7 +23,6 @@ task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter);
 
 void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h);
 void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h);
-void Arbiter_Sort(arbiter_t * const arbiter);
 // return same handle as current if no switch is needed
 task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio);
 

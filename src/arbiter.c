@@ -78,17 +78,14 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
             next ++;
         }
         
+        if (arbiter->task_list[prio].current >= arbiter->task_list[prio].count) {
+            arbiter->task_list[prio].current --; // todo: fix
+        }
+        
     } else {
         arbiter->task_list[prio].list[0] = INVALID_HANDLE;
         arbiter->task_list[prio].current = 0;
     }
-    
-    if (arbiter->task_list[prio].count == arbiter->task_list[prio].current)
-        while (1);
-}
-
-void Arbiter_Sort(arbiter_t * const arbiter)
-{
 }
 
 task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio)
@@ -108,6 +105,8 @@ task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio)
     }
     else {
         // return current task as next if no switch is needed
+        queue->current = 0;
+        queue->next = 0;
         handle = queue->list[queue->current];
     }
     
