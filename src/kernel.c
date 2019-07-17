@@ -360,6 +360,9 @@ void SysTick_Handler(void)
                     // round-robin schedule of same priority tasks
                     task_priority_t prio = g_kernel.task_data_pool[g_kernel.current_task].priority;
                     task_handle_t next_task = Arbiter_FindNext(&g_arbiter, prio);
+                    if (INVALID_HANDLE == next_task){
+                        while (1);
+                    }
                     
                     if (g_kernel.current_task != next_task)
                     {
