@@ -56,7 +56,6 @@ void RunTimers(void)
                         default:
                             // do nothing
                             while(1); // not supported
-                            break;
                     }
                     if (E_PULSE == g_timer.data_pool[current].type)
                         RemoveTimer(current);

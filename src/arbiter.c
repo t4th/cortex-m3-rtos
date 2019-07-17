@@ -68,7 +68,9 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
     
     if (arbiter->task_list[prio].count > 0) {
         int i;
-        
+        // shift all to the left
+        // todo: when removing from inside create hole
+        //       move last element instead of iterating all.
         for (i = 0; i < arbiter->task_list[prio].count; i ++) {
             arbiter->task_list[prio].list[current] = arbiter->task_list[prio].list[next];
             arbiter->task_list[prio].list[next] = INVALID_HANDLE;
