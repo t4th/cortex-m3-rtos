@@ -73,16 +73,30 @@ void task_idle(void);
 // private
 
 // body
-
+static void kernel_issue_switch(void)
+{
+    g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
+    
+    if (INVALID_HANDLE == g_kernel.next_task) {
+        g_kernel.next_task = IDLE_TASK_ID;
+        g_kernel.status |= SYSTEM_IDLE_ON;
+    }        
+    
+    g_kernel.status |= SWITCH_REQUESTED;
+    
+    if (!(SCB->SHCSR & SCB_SHCSR_SYSTICKACT_Msk)) {
+        SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
+    }
+}
 
 void printErrorMsg(const char * errMsg)
 {
     __disable_irq();
-   while(*errMsg != '\0'){
+   while(*errMsg != '\0') {
       ITM_SendChar(*errMsg);
       ++errMsg;
    }
-      ITM_SendChar('\n');
+   ITM_SendChar('\n');
     __enable_irq();
 }
 
@@ -119,17 +133,7 @@ void Sleep(time_ms_t delay)
     g_kernel.task_data_pool[hTask].state = T_TASK_WAITING;
     StartTimer(timer);
     
-    // find next task to switch
-    g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
-    
-    if (INVALID_HANDLE == g_kernel.next_task) {
-        g_kernel.next_task = IDLE_TASK_ID;
-        g_kernel.status |= SYSTEM_IDLE_ON;
-    }        
-    
-    // force switch
-    g_kernel.status |= SWITCH_REQUESTED;
-    SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
+    kernel_issue_switch();
     
     __enable_irq();
 }
@@ -172,12 +176,8 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
 
             // if task created in run-time force re-arbitration
             if (g_kernel.status & KERNEL_EN ) {
-                g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
-                g_kernel.status |= SWITCH_REQUESTED;
-                if (!(SCB->SHCSR & SCB_SHCSR_SYSTICKACT_Msk)) {
-                SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
+                kernel_issue_switch();
             }
-    }
         }
     } else {
         ret = 1; // no more free task space
@@ -202,16 +202,7 @@ void ResumeTask(task_handle_t task)
     Arbiter_AddTask(&g_arbiter, g_kernel.task_data_pool[task].priority, task);
     g_kernel.task_data_pool[task].state = T_TASK_READY;
     
-    //if (g_kernel.status & SYSTEM_IDLE_ON) {
-        //g_kernel.idle_task.state = T_TASK_READY;
-    g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
-    g_kernel.status |= SWITCH_REQUESTED;
-    
-    //todo: force systick if called outside of systick.
-    // if ResumeTask is called withing SysTick (like from Timers) it will re-enter interrupt
-    if (!(SCB->SHCSR & SCB_SHCSR_SYSTICKACT_Msk)) {
-        SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
-    }
+    kernel_issue_switch();
     
     __enable_irq();
 }
