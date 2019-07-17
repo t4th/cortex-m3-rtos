@@ -5,8 +5,24 @@
 #include "kernel.h"
 #include "kernel_api.h"
 
+void HI_prio_task(void)
+{
+    time_ms_t current_time = 0;
+    time_ms_t old_time = GetTime();;
+        printErrorMsg("HI prio spam start");
+    do
+    {
+        current_time = GetTime();
+        
+        if (current_time - old_time > 1000u) // 1ms * 1000->1s
+        {
+        printErrorMsg("HI prio spam stop");
+            Sleep(10000);
+        }
+    } while (1);
+}
 
-void led(GPIO_PIN_t pin)
+void led(GPIO_PIN_t pin, const char * txt, time_ms_t time)
 {
     time_ms_t current_time = 0;
     time_ms_t old_time = 0;
@@ -15,9 +31,9 @@ void led(GPIO_PIN_t pin)
     {
         current_time = GetTime();
         
-        if (current_time - old_time > 2000u) // 1ms * 1000->1s
+        if (current_time - old_time > 500u) // 1ms * 1000->1s
         {
-            printErrorMsg("GPIO_PIN7 <----");
+            printErrorMsg(txt);
             old_time = current_time;
             if (prev_state == 0)
             {
@@ -26,8 +42,17 @@ void led(GPIO_PIN_t pin)
             }
             else
             {
+                handle_t handle;
                 Gpio_ClearOutputPin(GPIOF, pin);
                 prev_state = 0;
+                Sleep(time);
+                {
+                    static int once = 0;
+                    if (once == 0) {
+                        once = 1;
+                        CreateTask(HI_prio_task, T_HIGH, &handle, FALSE);
+                    }
+                }
             }
         }
     } while(1);
@@ -53,13 +78,13 @@ void led2(GPIO_PIN_t pin, time_ms_t delay)
         switch (pin)
         {
             case GPIO_PIN6:
-                printErrorMsg("GPIO_PIN6");
+                printErrorMsg("GPIO_PIN6 <- Medium");
                 break;
             case GPIO_PIN7:
                 printErrorMsg("GPIO_PIN7 <----");
                 break;
             case GPIO_PIN8:
-                printErrorMsg("GPIO_PIN8");
+                printErrorMsg("GPIO_PIN8 <- Medium");
                 break;
             case GPIO_PIN9:
                 printErrorMsg("GPIO_PIN9");
@@ -78,7 +103,7 @@ void thread0(void)
 
 void thread1(void)
 {
-    led(GPIO_PIN7);
+    led(GPIO_PIN7,"GPIO_PIN7 <--- low", 100);
 }
 
 void thread2(void)
@@ -88,7 +113,8 @@ void thread2(void)
 
 void thread3(void)
 {
-    led2(GPIO_PIN9, 200);
+    //led2(GPIO_PIN9, 200);
+    led(GPIO_PIN9,"GPIO_PIN9 <-- Low", 1000);
 }
 
 int main()
@@ -108,7 +134,7 @@ int main()
     CreateTask(thread0, T_MEDIUM, 0, FALSE);
     CreateTask(thread1, T_LOW, 0, FALSE);
     CreateTask(thread2, T_MEDIUM, 0, FALSE);
-    CreateTask(thread3, T_MEDIUM, 0, FALSE);
+    CreateTask(thread3, T_LOW, 0, FALSE);
     
     kernel_start();
     

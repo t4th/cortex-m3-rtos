@@ -169,6 +169,15 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
         else {
             g_kernel.task_data_pool[h].state = T_TASK_READY;
             Arbiter_AddTask(&g_arbiter, _priority, h);
+
+            // if task created in run-time force re-arbitration
+            if (g_kernel.status & KERNEL_EN ) {
+                g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
+                g_kernel.status |= SWITCH_REQUESTED;
+                if (!(SCB->SHCSR & SCB_SHCSR_SYSTICKACT_Msk)) {
+                SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
+            }
+    }
         }
     } else {
         ret = 1; // no more free task space
