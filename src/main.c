@@ -9,14 +9,15 @@ void HI_prio_task(void)
 {
     time_ms_t current_time = 0;
     time_ms_t old_time = GetTime();;
-        printErrorMsg("HI prio spam start");
+    printErrorMsg("HI prio spam start");
+    
     do
     {
         current_time = GetTime();
         
         if (current_time - old_time > 1000u) // 1ms * 1000->1s
         {
-        printErrorMsg("HI prio spam stop");
+            printErrorMsg("HI prio spam stop");
             Sleep(10000);
         }
     } while (1);
@@ -78,13 +79,13 @@ void led2(GPIO_PIN_t pin, time_ms_t delay)
         switch (pin)
         {
             case GPIO_PIN6:
-                printErrorMsg("GPIO_PIN6 <- Medium");
+                printErrorMsg("GPIO_PIN6 <- Medium 1");
                 break;
             case GPIO_PIN7:
                 printErrorMsg("GPIO_PIN7 <----");
                 break;
             case GPIO_PIN8:
-                printErrorMsg("GPIO_PIN8 <- Medium");
+                printErrorMsg("GPIO_PIN8 <- Medium 2");
                 break;
             case GPIO_PIN9:
                 printErrorMsg("GPIO_PIN9");
@@ -103,7 +104,7 @@ void thread0(void)
 
 void thread1(void)
 {
-    led(GPIO_PIN7,"GPIO_PIN7 <--- low", 100);
+    led(GPIO_PIN7,"GPIO_PIN7 <--- low 1", 100);
 }
 
 void thread2(void)
@@ -114,7 +115,7 @@ void thread2(void)
 void thread3(void)
 {
     //led2(GPIO_PIN9, 200);
-    led(GPIO_PIN9,"GPIO_PIN9 <-- Low", 1000);
+    led(GPIO_PIN9,"GPIO_PIN9 <--- Low 2", 1000);
 }
 
 int main()

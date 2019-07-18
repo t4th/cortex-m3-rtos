@@ -36,7 +36,8 @@ void RunTimers(void)
     // todo: add 'count' variable to skip searching
     int current;
     
-    for (current = 0; current < MAX_TIMERS; current++) { // force search through all
+    // force search through all since timers are not sorted
+    for (current = 0; current < MAX_TIMERS; current++) {
         if (g_timer.data_pool_status[current])
         {
             if (E_TIMER_ON == g_timer.data_pool[current].state)
@@ -66,8 +67,10 @@ void RunTimers(void)
 }
 
 // timer handle is timer position in data_pool
+// return timer handle if created ok.
 timer_handle_t CreateTimer(time_ms_t interval, timer_type_t type, handle_t * handle)
 {
+    // todo: sanity of handle argument -> nothing to signal means timer is not needed
     uint32_t free_pos;
     
     if (FindEmptyTimer(&free_pos))
@@ -84,6 +87,7 @@ timer_handle_t CreateTimer(time_ms_t interval, timer_type_t type, handle_t * han
     }
     else
     {
+        // max timers reached
         return INVALID_HANDLE;
     }
 }

@@ -22,6 +22,10 @@ task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter)
         for (task = 0; task < MAX_USER_THREADS; task++) {
             h = arbiter->task_list[prio].list[task];
             if (INVALID_HANDLE != h) {
+                arbiter->task_list[prio].current = task;
+                if (arbiter->task_list[prio].count > 1) {
+                    arbiter->task_list[prio].next = task + 1;
+                }
                 goto skip;
             }
             
@@ -85,6 +89,7 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
     } else {
         arbiter->task_list[prio].list[0] = INVALID_HANDLE;
         arbiter->task_list[prio].current = 0;
+        arbiter->task_list[prio].next = 0;
     }
 }
 

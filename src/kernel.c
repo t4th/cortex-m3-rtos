@@ -102,8 +102,7 @@ void printErrorMsg(const char * errMsg)
 
 time_ms_t GetTime(void)
 {
-    // return atomic word
-    return g_kernel.time;
+    return g_kernel.time; // return atomic word
 }
 
 
@@ -187,7 +186,7 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
     return ret;
 }
 
-void TerminateThread(void)
+void TerminateTask(void)
 {
     // pretty much call
     // thread_finished
@@ -385,6 +384,7 @@ void SysTick_Handler(void)
         if (g_kernel.status & SWITCH_REQUESTED) {
             g_kernel.status &= ~SWITCH_REQUESTED;
             
+            // todo: this 'if' can be removed if IDLE task is placed in common task pool
             if (IDLE_TASK_ID == g_kernel.current_task)
             {
                 g_kernel.idle_task.sp = __get_PSP(); // store current sp
@@ -397,14 +397,12 @@ void SysTick_Handler(void)
             if (IDLE_TASK_ID == g_kernel.next_task)
             {
                 next_task_context = (volatile uint32_t *)&g_kernel.idle_task.context;
-                __set_PSP( g_kernel.idle_task.sp); // set next sp
-                // update tasks state
-                g_kernel.idle_task.state = T_TASK_RUNNING;
+                __set_PSP( g_kernel.idle_task.sp);          // set next sp
+                g_kernel.idle_task.state = T_TASK_RUNNING;  // update tasks state
             } else {
                 next_task_context = (volatile uint32_t *)&g_kernel.task_data_pool[g_kernel.next_task].context;
-                __set_PSP( g_kernel.task_data_pool[g_kernel.next_task].sp); // set next sp
-                // update tasks state
-                g_kernel.task_data_pool[g_kernel.next_task].state = T_TASK_RUNNING;
+                __set_PSP( g_kernel.task_data_pool[g_kernel.next_task].sp);             // set next sp
+                g_kernel.task_data_pool[g_kernel.next_task].state = T_TASK_RUNNING;     // update tasks state
             }
             
             g_kernel.current_task = g_kernel.next_task;

@@ -18,7 +18,7 @@ typedef struct arbiter_s
 
 // system APIs
 void Arbiter_Init(arbiter_t * const arbiter);
-// return INVALID_HANDLE if not found
+// return IDLE_TASK_ID if not found
 task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter);
 
 void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h);
