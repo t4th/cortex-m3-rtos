@@ -206,11 +206,6 @@ void ResumeTask(task_handle_t task)
     __enable_irq();
 }
 
-void kernel_tick(void)
-{
-    
-}
-
 void interrupt_occurred(int id)
 {
     // ,,,
@@ -315,10 +310,23 @@ void kernel_start(void)
 // private api
 static void thread_finished(void)
 {
+    task_priority_t current_task_prio;
+    
+    __disable_irq();
+    
     // get current task
+    current_task_prio = g_kernel.task_data_pool[g_kernel.current_task].priority;
     // remove task from data pool
-    // call arbiter to get next task
+    g_kernel.task_data_pool_status[g_kernel.current_task] = 0;
+    // remove task from arbiter
+    Arbiter_RemoveTask(&g_arbiter, current_task_prio, g_kernel.current_task);
     // kill all related timers, events, etc
+    
+    // request switch, but without storing current context (since its not existing anymore)
+    // store_context = 0
+    // kernel_issue_switch();
+    
+    __enable_irq();
 }
 
 static void task_proc(void)
