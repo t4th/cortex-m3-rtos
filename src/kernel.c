@@ -12,8 +12,9 @@
 
 // kernel status flags
 #define KERNEL_EN           0x1
-#define SWITCH_REQUESTED    0x2
-#define SYSTEM_IDLE_ON      0x4
+#define KERNEL_SWITCH_REQUESTED    0x2
+#define KERNEL_SWITCH_NO_STORE     0x4
+#define KERNEL_SYSTEM_IDLE_ON      0x8
 
 // --------------- task ------------
 typedef struct stack_s
@@ -73,16 +74,27 @@ static void task_idle(void);
 // private
 
 // body
-static void kernel_issue_switch(void)
+
+typedef enum
+{
+    SWITCH_NORMAL = 0,
+    SWITCH_NO_STORE
+} switch_type_e;
+
+static void kernel_issue_switch(switch_type_e no_store)
 {
     g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
     
     if (INVALID_HANDLE == g_kernel.next_task) {
         g_kernel.next_task = IDLE_TASK_ID;
-        g_kernel.status |= SYSTEM_IDLE_ON;
+        g_kernel.status |= KERNEL_SYSTEM_IDLE_ON;
     }        
     
-    g_kernel.status |= SWITCH_REQUESTED;
+    if (no_store) {
+        g_kernel.status |= KERNEL_SWITCH_NO_STORE;
+    }
+        
+    g_kernel.status |= KERNEL_SWITCH_REQUESTED;
     
     if (!(SCB->SHCSR & SCB_SHCSR_SYSTICKACT_Msk)) {
         SCB->ICSR |= SCB_ICSR_PENDSTSET_Msk;
@@ -132,7 +144,7 @@ void Sleep(time_ms_t delay)
     g_kernel.task_data_pool[hTask].state = T_TASK_WAITING;
     StartTimer(timer);
     
-    kernel_issue_switch();
+    kernel_issue_switch(SWITCH_NORMAL);
     
     __enable_irq();
 }
@@ -175,7 +187,7 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
 
             // if task created in run-time force re-arbitration
             if (g_kernel.status & KERNEL_EN ) {
-                kernel_issue_switch();
+                kernel_issue_switch(SWITCH_NORMAL);
             }
         }
     } else {
@@ -201,7 +213,7 @@ void ResumeTask(task_handle_t task)
     Arbiter_AddTask(&g_arbiter, g_kernel.task_data_pool[task].priority, task);
     g_kernel.task_data_pool[task].state = T_TASK_READY;
     
-    kernel_issue_switch();
+    kernel_issue_switch(SWITCH_NORMAL);
     
     __enable_irq();
 }
@@ -280,7 +292,7 @@ void kernel_start(void)
             g_kernel.idle_task.sp = (uint32_t)&g_kernel.idle_task.stack.data[STACK_SIZE - 1];
             __set_PSP(g_kernel.idle_task.sp); // initial psp
             g_kernel.current_task = IDLE_TASK_ID;
-            g_kernel.status |= SYSTEM_IDLE_ON;
+            g_kernel.status |= KERNEL_SYSTEM_IDLE_ON;
         }
         else
         {
@@ -323,8 +335,7 @@ static void thread_finished(void)
     // kill all related timers, events, etc
     
     // request switch, but without storing current context (since its not existing anymore)
-    // store_context = 0
-    // kernel_issue_switch();
+    kernel_issue_switch(SWITCH_NO_STORE);
     
     __enable_irq();
 }
@@ -346,6 +357,7 @@ void task_idle(void)
 
 volatile uint32_t * current_task_context = 0;
 volatile uint32_t * next_task_context = 0;
+volatile uint32_t skip_store = 0;
 
 void SysTick_Handler(void)
 {
@@ -360,9 +372,9 @@ void SysTick_Handler(void)
         if (g_kernel.time - old_time > g_kernel.interval)
         {
             old_time = g_kernel.time;
-            if (0 == (g_kernel.status & SYSTEM_IDLE_ON))
+            if (0 == (g_kernel.status & KERNEL_SYSTEM_IDLE_ON))
             {
-                if (0 == (g_kernel.status & SWITCH_REQUESTED)) // if switch is not requested do arbitration
+                if (0 == (g_kernel.status & KERNEL_SWITCH_REQUESTED)) // if switch is not requested do arbitration
                 {
                     // round-robin schedule of same priority tasks
                     task_priority_t prio = g_kernel.task_data_pool[g_kernel.current_task].priority;
@@ -376,30 +388,36 @@ void SysTick_Handler(void)
                         g_kernel.task_data_pool[g_kernel.current_task].state = T_TASK_READY;
                         g_kernel.task_data_pool[g_kernel.next_task].state = T_TASK_RUNNING;
                         g_kernel.next_task = next_task;
-                        g_kernel.status |= SWITCH_REQUESTED;
+                        g_kernel.status |= KERNEL_SWITCH_REQUESTED;
                     }
                 } else { // switch was requested from kernel API
                     old_time = g_kernel.time; // reset timestamp
                 }
             } else{ // IDLE task
                 if (g_kernel.next_task != IDLE_TASK_ID) {
-                    g_kernel.status &= ~SYSTEM_IDLE_ON;
-                    g_kernel.status |= SWITCH_REQUESTED;
+                    g_kernel.status &= ~KERNEL_SYSTEM_IDLE_ON;
+                    g_kernel.status |= KERNEL_SWITCH_REQUESTED;
                 }
             }
          }
             
-        if (g_kernel.status & SWITCH_REQUESTED) {
-            g_kernel.status &= ~SWITCH_REQUESTED;
+        if (g_kernel.status & KERNEL_SWITCH_REQUESTED) {
+            g_kernel.status &= ~KERNEL_SWITCH_REQUESTED;
             
-            // todo: this 'if' can be removed if IDLE task is placed in common task pool
-            if (IDLE_TASK_ID == g_kernel.current_task)
-            {
-                g_kernel.idle_task.sp = __get_PSP(); // store current sp
-                current_task_context = (volatile uint32_t *)&g_kernel.idle_task.context;
-            } else {
-                g_kernel.task_data_pool[g_kernel.current_task].sp = __get_PSP(); // store current sp
-                current_task_context = (volatile uint32_t *)&g_kernel.task_data_pool[g_kernel.current_task].context;
+            if (g_kernel.status & KERNEL_SWITCH_NO_STORE) {
+                g_kernel.status &= ~KERNEL_SWITCH_NO_STORE;
+                skip_store = 1;
+            }
+            else {
+                // todo: this 'if' can be removed if IDLE task is placed in common task pool
+                if (IDLE_TASK_ID == g_kernel.current_task)
+                {
+                    g_kernel.idle_task.sp = __get_PSP(); // store current sp
+                    current_task_context = (volatile uint32_t *)&g_kernel.idle_task.context;
+                } else {
+                    g_kernel.task_data_pool[g_kernel.current_task].sp = __get_PSP(); // store current sp
+                    current_task_context = (volatile uint32_t *)&g_kernel.task_data_pool[g_kernel.current_task].context;
+                }
             }
             
             if (IDLE_TASK_ID == g_kernel.next_task)
@@ -425,19 +443,30 @@ __ASM void PendSV_Handler(void)
 {
     extern current_task_context;
     extern next_task_context;
+    extern skip_store;
     
     CPSID I
     
+    ldr r2, =skip_store; if non-zero skip store_current_task
+    ldr r0, [r2] ; dereference pointer
+    cbnz r0, load_next_task;
+    
+store_current_task
     ldr r0, =current_task_context;
     ldr r1, [r0]
     stm r1, {r4-r11};
     
+load_next_task
     ldr r0, =next_task_context;
     ldr r1, [r0]
     ldm r1, {r4-r11};
     
+    ; set skip_store to 0
+    mov r0, #0
+    nop
+    str r0, [r2]
+    
     ldr r0, =0xFFFFFFFD ; return to thread mode. Without this PendSV would return to SysTick losing current thread state along the way.
     CPSIE I
     bx r0
-    nop
 }
