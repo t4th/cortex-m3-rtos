@@ -25,7 +25,7 @@ typedef struct timer_s
     // state: on, off
     timer_state_t state;
     // signal handle
-    handle_t handle; // todo: more than 1 handle to signal
+    handle_t signal; // todo: more than 1 handle to signal
     // todo: add routine
 } timer_t;
 
@@ -36,4 +36,4 @@ void RunTimers(void);
 timer_handle_t CreateTimer(time_ms_t interval, timer_type_t type, handle_t * handle);
 void StartTimer(timer_handle_t handle);
 void StopTimer(timer_handle_t handle);
-void RemoveTimer(timer_handle_t handle);
+void RemoveTimer(handle_t * handle);

@@ -11,10 +11,10 @@
  // DUI0552A_cortex_m3_dgug
 
 // kernel status flags
-#define KERNEL_EN           0x1
+#define KERNEL_EN                  0x1
 #define KERNEL_SWITCH_REQUESTED    0x2
 #define KERNEL_SWITCH_NO_STORE     0x4
-#define KERNEL_SYSTEM_IDLE_ON      0x8
+#define KERNEL_SYSTEM_IDLE_ON      0x8  // idle - state
 
 // --------------- task ------------
 typedef struct stack_s
@@ -67,18 +67,17 @@ volatile kernel_t g_kernel;
 
 arbiter_t g_arbiter; // todo: volatile
 
-// public API
+// private API
 static void task_proc(void);
 static void task_idle(void);
-
-// private
+static void thread_finished(void);
 
 // body
 
 typedef enum
 {
-    SWITCH_NORMAL = 0,
-    SWITCH_NO_STORE
+    ISSUE_SWITCH_NORMAL = 0,
+    ISSUE_SWITCH_NO_STORE
 } switch_type_e;
 
 static void kernel_issue_switch(switch_type_e no_store)
@@ -130,7 +129,7 @@ void Sleep(time_ms_t delay)
     __disable_irq();
     hTask = g_kernel.current_task;
     
-    handle.handle = g_kernel.current_task;
+    handle.value = g_kernel.current_task;
     handle.type = E_TASK;
     
     timer = CreateTimer(delay, E_PULSE, &handle);
@@ -144,7 +143,7 @@ void Sleep(time_ms_t delay)
     g_kernel.task_data_pool[hTask].state = T_TASK_WAITING;
     StartTimer(timer);
     
-    kernel_issue_switch(SWITCH_NORMAL);
+    kernel_issue_switch(ISSUE_SWITCH_NORMAL);
     
     __enable_irq();
 }
@@ -174,7 +173,7 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
         g_kernel.task_data_pool[h].routine = _routine;
         g_kernel.task_data_pool[h].priority = _priority;
         if (_handle) {
-            _handle->handle = h;
+            _handle->value = h;
             _handle->type = E_TASK;
         }
         
@@ -187,7 +186,7 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
 
             // if task created in run-time force re-arbitration
             if (g_kernel.status & KERNEL_EN ) {
-                kernel_issue_switch(SWITCH_NORMAL);
+                kernel_issue_switch(ISSUE_SWITCH_NORMAL);
             }
         }
     } else {
@@ -202,6 +201,7 @@ void TerminateTask(void)
 {
     // pretty much call
     // thread_finished
+    thread_finished();
 }
 
 // wake, as set to READY state (add to arbiter)
@@ -213,7 +213,7 @@ void ResumeTask(task_handle_t task)
     Arbiter_AddTask(&g_arbiter, g_kernel.task_data_pool[task].priority, task);
     g_kernel.task_data_pool[task].state = T_TASK_READY;
     
-    kernel_issue_switch(SWITCH_NORMAL);
+    kernel_issue_switch(ISSUE_SWITCH_NORMAL);
     
     __enable_irq();
 }
@@ -280,28 +280,6 @@ void kernel_init(void)
 void kernel_start(void)
 {
     __disable_irq();
-    
-    // set first highest priority task found as first
-    {
-        task_handle_t h;
-        h = Arbiter_GetHigestPrioTask(&g_arbiter);
-
-        // no user task found, set idle as default
-        if (INVALID_HANDLE == h) {
-            // set sp as last last element of stored sp
-            g_kernel.idle_task.sp = (uint32_t)&g_kernel.idle_task.stack.data[STACK_SIZE - 1];
-            __set_PSP(g_kernel.idle_task.sp); // initial psp
-            g_kernel.current_task = IDLE_TASK_ID;
-            g_kernel.status |= KERNEL_SYSTEM_IDLE_ON;
-        }
-        else
-        {
-            // set first task
-            g_kernel.task_data_pool[h].sp = (uint32_t)&g_kernel.task_data_pool[h].stack.data[STACK_SIZE - 1]; // last element
-            __set_PSP(g_kernel.task_data_pool[h].sp); // initial psp
-            g_kernel.current_task = h;
-        }
-    }
 
     // setup interrupts
     NVIC_SetPriority(SysTick_IRQn, 10); // systick should be higher than pendsv
@@ -311,12 +289,24 @@ void kernel_start(void)
     NVIC_EnableIRQ(PendSV_IRQn);
     
     // run kernel
-    __enable_irq();
-    __set_CONTROL(2); // sp -> psp
+    //__set_CONTROL(2); // sp -> psp
     g_kernel.status |= KERNEL_EN; // sync with sysTick, todo: this is temp. fix
-//    g_kernel.task_data_pool[0].routine(); // run
     
-    task_proc();
+    // request switch, but without storing current context since there is none
+    // set first highest priority task found
+    kernel_issue_switch(ISSUE_SWITCH_NO_STORE);
+    
+    __enable_irq();
+}
+
+handle_t GetHandle(void)
+{
+    handle_t hTask;
+    __disable_irq();
+    hTask.value =  g_kernel.current_task;
+    hTask.type = E_TASK;
+    __enable_irq();
+    return hTask;
 }
 
 // private api
@@ -333,9 +323,13 @@ static void thread_finished(void)
     // remove task from arbiter
     Arbiter_RemoveTask(&g_arbiter, current_task_prio, g_kernel.current_task);
     // kill all related timers, events, etc
+    {
+        handle_t hTask = GetHandle();
+        RemoveTimer(&hTask);
+    }
     
     // request switch, but without storing current context (since its not existing anymore)
-    kernel_issue_switch(SWITCH_NO_STORE);
+    kernel_issue_switch(ISSUE_SWITCH_NO_STORE);
     
     __enable_irq();
 }

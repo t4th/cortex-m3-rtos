@@ -19,6 +19,7 @@ void HI_prio_task(void)
         {
             printErrorMsg("HI prio spam stop");
             Sleep(10000);
+            break; // thread finished
         }
     } while (1);
 }
