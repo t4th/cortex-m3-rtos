@@ -224,10 +224,22 @@ void interrupt_occurred(int id)
     // call arbiter
 }
 
+static void init_task(volatile task_t * task)
+{
+    task->sp = (uint32_t)&task->stack.data[STACK_SIZE - 8]; // last element
+    task->stack.data[STACK_SIZE - 8] = 0xcdcdcdcd; // r0
+    task->stack.data[STACK_SIZE - 7] = 0xcdcdcdcd; // r1
+    task->stack.data[STACK_SIZE - 6] = 0xcdcdcdcd; // r2
+    task->stack.data[STACK_SIZE - 5] = 0xcdcdcdcd; // r3
+    task->stack.data[STACK_SIZE - 4] = 0;//0xabababab; // r12
+    task->stack.data[STACK_SIZE - 3] = 0; // lr r14
+    // todo: return to error handler since this will be overwritten on first change
+    task->stack.data[STACK_SIZE - 2] = (uint32_t)task_proc;
+    task->stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
+}
+
 void kernel_init(void)
 {
-    int thread_i = 0;
-    
     __disable_irq();
     
     Arbiter_Init(&g_arbiter);
@@ -238,32 +250,18 @@ void kernel_init(void)
     g_kernel.interval = 10; // 10ms round-robin
     
     // init thread pool table
-    for (thread_i = 0; thread_i< MAX_USER_THREADS; thread_i++)
     {
-        g_kernel.task_data_pool[thread_i].sp = (uint32_t)&g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 8]; // last element
-        
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 8] = 0xcdcdcdcd; // r0
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 7] = 0xcdcdcdcd; // r1
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 6] = 0xcdcdcdcd; // r2
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 5] = 0xcdcdcdcd; // r3
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 4] = 0;//0xabababab; // r12
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 3] = 0; // lr r14
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 2] = (uint32_t)task_proc; // return address, pc+1
-        g_kernel.task_data_pool[thread_i].stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
+        int i = 0;
+        for (i = 0; i< MAX_USER_THREADS; i++)
+        {
+            init_task(&g_kernel.task_data_pool[i]);
+
+        }
     }
     
     // init IDLE task
-    g_kernel.idle_task.sp = (uint32_t)&g_kernel.idle_task.stack.data[STACK_SIZE - 8]; // last element
     g_kernel.idle_task.routine = task_idle;
-    
-    g_kernel.idle_task.stack.data[STACK_SIZE - 8] = 0xcdcdcdcd; // r0
-    g_kernel.idle_task.stack.data[STACK_SIZE - 7] = 0xcdcdcdcd; // r1
-    g_kernel.idle_task.stack.data[STACK_SIZE - 6] = 0xcdcdcdcd; // r2
-    g_kernel.idle_task.stack.data[STACK_SIZE - 5] = 0xcdcdcdcd; // r3
-    g_kernel.idle_task.stack.data[STACK_SIZE - 4] = 0;//0xabababab; // r12
-    g_kernel.idle_task.stack.data[STACK_SIZE - 3] = 0; // lr r14
-    g_kernel.idle_task.stack.data[STACK_SIZE - 2] = (uint32_t)task_idle; // return address, pc+1
-    g_kernel.idle_task.stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
+    init_task(&g_kernel.idle_task);
 
     if (0 == g_kernel.user_task_count) {
         g_kernel.current_task = IDLE_TASK_ID; // 0 idle task ID
