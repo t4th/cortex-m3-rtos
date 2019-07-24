@@ -3,12 +3,16 @@
 #include "kernel_config.h"
 #include "kernel_types.h"
 
+// todo: make task list a ring-buffer queue
+// put finished task at the end of priority queue
+// todo: change arbiter name to scheduler
+
 typedef struct
 {
     int count;
     int current;
     int next;
-    task_handle_t list[MAX_USER_THREADS];
+    task_handle_t list[MAX_USER_TASKS];
 } task_queue_t;
 
 typedef struct arbiter_s

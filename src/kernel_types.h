@@ -46,7 +46,7 @@ typedef struct // universal 'handle' type for easier API usage (like windows :D.
 {
     uint32_t value;
     handle_type_t type;
-} handle_t;
+} handle_t; // todo: change to HANDLE? :)
 
 typedef void(*task_routine_t)(void);
 

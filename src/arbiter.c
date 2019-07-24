@@ -7,7 +7,7 @@ void Arbiter_Init(arbiter_t * const arbiter)
     int prio, task;
     
     for (prio = 0; prio < MAX_PRIORITIES; prio++) {
-        for (task = 0; task < MAX_USER_THREADS; task++) {
+        for (task = 0; task < MAX_USER_TASKS; task++) {
             arbiter->task_list[prio].list[task] = INVALID_HANDLE;
         }
      }
@@ -19,7 +19,7 @@ task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter)
     task_handle_t h = INVALID_HANDLE;
     
     for (prio = 0; prio < MAX_PRIORITIES; prio++) {
-        for (task = 0; task < MAX_USER_THREADS; task++) {
+        for (task = 0; task < MAX_USER_TASKS; task++) {
             h = arbiter->task_list[prio].list[task];
             if (INVALID_HANDLE != h) {
                 arbiter->task_list[prio].current = task;

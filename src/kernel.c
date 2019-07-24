@@ -20,7 +20,7 @@
 typedef struct stack_s
 {
     //uint32_t size;
-    uint32_t data[STACK_SIZE];
+    uint32_t data[TASK_STACK_SIZE];
 } stack_t;
 
 typedef struct context_s
@@ -57,8 +57,8 @@ typedef struct kernel_s
     uint32_t    status; // sync with systick
 
     uint32_t    user_task_count;
-    int         task_data_pool_status[MAX_USER_THREADS]; // might use .routine instead
-    task_t      task_data_pool[MAX_USER_THREADS];
+    int         task_data_pool_status[MAX_USER_TASKS]; // might use .routine instead
+    task_t      task_data_pool[MAX_USER_TASKS];
     task_t      idle_task; // always ready
 } kernel_t;
 
@@ -157,11 +157,11 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
     
     __disable_irq();
     {
-        if (g_kernel.user_task_count < MAX_USER_THREADS)
+        if (g_kernel.user_task_count < MAX_USER_TASKS)
         {
             // find empty spot in thread pool
             int task_id;
-            for (task_id = 0; task_id < MAX_USER_THREADS; task_id++) {
+            for (task_id = 0; task_id < MAX_USER_TASKS; task_id++) {
                 if (0 == g_kernel.task_data_pool_status[task_id]) {
                     break;
                 }
@@ -253,15 +253,15 @@ void interrupt_occurred(int id)
 
 static void init_task(volatile task_t * task)
 {
-    task->sp = (uint32_t)&task->stack.data[STACK_SIZE - 8]; // last element
-    task->stack.data[STACK_SIZE - 8] = 0xcdcdcdcd; // r0
-    task->stack.data[STACK_SIZE - 7] = 0xcdcdcdcd; // r1
-    task->stack.data[STACK_SIZE - 6] = 0xcdcdcdcd; // r2
-    task->stack.data[STACK_SIZE - 5] = 0xcdcdcdcd; // r3
-    task->stack.data[STACK_SIZE - 4] = 0;//0xabababab; // r12
-    task->stack.data[STACK_SIZE - 3] = 0; // lr r14
-    task->stack.data[STACK_SIZE - 2] = (uint32_t)task_proc;
-    task->stack.data[STACK_SIZE - 1] = 0x01000000; // xPSR
+    task->sp = (uint32_t)&task->stack.data[TASK_STACK_SIZE - 8]; // last element
+    task->stack.data[TASK_STACK_SIZE - 8] = 0xcdcdcdcd; // r0
+    task->stack.data[TASK_STACK_SIZE - 7] = 0xcdcdcdcd; // r1
+    task->stack.data[TASK_STACK_SIZE - 6] = 0xcdcdcdcd; // r2
+    task->stack.data[TASK_STACK_SIZE - 5] = 0xcdcdcdcd; // r3
+    task->stack.data[TASK_STACK_SIZE - 4] = 0;//0xabababab; // r12
+    task->stack.data[TASK_STACK_SIZE - 3] = 0; // lr r14
+    task->stack.data[TASK_STACK_SIZE - 2] = (uint32_t)task_proc;
+    task->stack.data[TASK_STACK_SIZE - 1] = 0x01000000; // xPSR
 }
 
 void kernel_init(void)
@@ -278,7 +278,7 @@ void kernel_init(void)
         // init thread pool table
         {
             int i = 0;
-            for (i = 0; i< MAX_USER_THREADS; i++) {
+            for (i = 0; i< MAX_USER_TASKS; i++) {
                 init_task(&g_kernel.task_data_pool[i]);
             }
         }
