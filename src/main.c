@@ -8,7 +8,7 @@
 void HI_prio_task(void)
 {
     time_ms_t current_time = 0;
-    time_ms_t old_time = GetTime();;
+    time_ms_t old_time = GetTime();
     printErrorMsg("HI prio spam start");
     
     do
@@ -18,7 +18,8 @@ void HI_prio_task(void)
         if (current_time - old_time > 1000u) // 1ms * 1000->1s
         {
             printErrorMsg("HI prio spam stop");
-            Sleep(10000);
+            Sleep(5000);
+            printErrorMsg("HI prio ends");
             break; // thread finished
         }
     } while (1);
@@ -33,7 +34,7 @@ void led(GPIO_PIN_t pin, const char * txt, time_ms_t time)
     {
         current_time = GetTime();
         
-        if (current_time - old_time > 500u) // 1ms * 1000->1s
+        if (current_time - old_time > time) // 1ms * 1000->1s
         {
             printErrorMsg(txt);
             old_time = current_time;
@@ -65,7 +66,6 @@ void led2(GPIO_PIN_t pin, time_ms_t delay)
     int prev_state = 0;
     do
     {
-        
         if (prev_state == 0)
         {
             prev_state = 1;
@@ -105,18 +105,18 @@ void thread0(void)
 
 void thread1(void)
 {
-    led(GPIO_PIN7,"GPIO_PIN7 <--- low 1", 100);
+    led(GPIO_PIN7,"GPIO_PIN7 <--- low 1", 300);
 }
 
 void thread2(void)
 {
-    led2(GPIO_PIN8, 800);
+    led2(GPIO_PIN8, 300);
 }
 
 void thread3(void)
 {
     //led2(GPIO_PIN9, 200);
-    led(GPIO_PIN9,"GPIO_PIN9 <--- Low 2", 1000);
+    led(GPIO_PIN9,"GPIO_PIN9 <--- Low 2", 500);
 }
 
 int main()
@@ -140,7 +140,5 @@ int main()
     
     kernel_start();
     
-    while (1)
-    {
-    }
+    while (1);
 }
