@@ -127,11 +127,8 @@ void Sleep(time_ms_t delay)
     {
         timer_handle_t  timer;
         handle_t        handle;
-        task_handle_t   hTask;
-        hTask = g_kernel.current_task;
         
-        handle.value = g_kernel.current_task;
-        handle.type = E_TASK;
+        handle  = GetHandle();
         
         // create timer and bind task to timer
         timer = CreateTimer(delay, E_PULSE, &handle);
@@ -141,8 +138,8 @@ void Sleep(time_ms_t delay)
         }
             
         // go to Waiting mode (remove from arbiter)
-        Arbiter_RemoveTask(&g_arbiter, g_kernel.task_data_pool[hTask].priority, hTask);
-        g_kernel.task_data_pool[hTask].state = T_TASK_WAITING;
+        Arbiter_RemoveTask(&g_arbiter, g_kernel.task_data_pool[handle.value].priority, handle.value);
+        g_kernel.task_data_pool[handle.value].state = T_TASK_WAITING;
         StartTimer(timer);
         
         kernel_issue_switch(ISSUE_SWITCH_NORMAL);
@@ -236,7 +233,7 @@ void ResumeTask(task_handle_t task)
 {
     __disable_irq();
     {
-        // todo: sanity
+        // todo: sanity - if task is already added, do nothing!
         Arbiter_AddTask(&g_arbiter, g_kernel.task_data_pool[task].priority, task);
         g_kernel.task_data_pool[task].state = T_TASK_READY;
         
