@@ -37,6 +37,7 @@ typedef struct task_s
     task_priority_t   priority;
     task_state_t      state;
     task_routine_t    routine;
+    BOOL              inside_lock; // if set (cs), task switch is not available
 } task_t;
 
 typedef struct event_s

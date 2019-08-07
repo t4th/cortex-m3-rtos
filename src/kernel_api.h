@@ -13,6 +13,8 @@ void ResumeTask(task_handle_t task);
 void printErrorMsg(const char * errMsg);
 
 #if 0 // optional for now
+int GetLastError(void); // each task has its own last error message
+
 void SuspendThread(void);
 
 BOOL WaitOnAddress(

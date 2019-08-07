@@ -2,6 +2,7 @@
 
 #include "kernel_config.h"
 #include "kernel_api.h" // GetTime, WakeTask
+#include "event.h"
 
 typedef struct
 {
@@ -9,7 +10,7 @@ typedef struct
     timer_t     data_pool[MAX_TIMERS];
 } timer_module_t;
 
-volatile timer_module_t g_timer;
+timer_module_t g_timer;
 
 // return non-zero if ok, 0 if fail
 static int FindEmptyTimer(uint32_t * position)
@@ -55,6 +56,9 @@ void RunTimers(void)
                     {
                         case E_TASK:
                             ResumeTask(g_timer.data_pool[current.value].signal.value);
+                            break;
+                        case E_EVENT:
+                            SetEvent(&g_timer.data_pool[current.value].signal);
                             break;
                         default:
                             // do nothing
