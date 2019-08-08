@@ -2,9 +2,11 @@
 
 #include <stdint.h>
 
+#ifndef __cplusplus
 typedef unsigned char BOOL;
 #define TRUE   (1u)
 #define FALSE  (0u)
+#endif
 
 typedef enum task_priority_e
 {

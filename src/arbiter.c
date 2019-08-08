@@ -15,20 +15,13 @@ void Arbiter_Init(arbiter_t * const arbiter)
 
 task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter)
 {
-    int prio, task;
+    task_priority_t prio;
     task_handle_t h = INVALID_HANDLE;
     
-    for (prio = 0; prio < MAX_PRIORITIES; prio++) {
-        for (task = 0; task < MAX_USER_TASKS; task++) {
-            h = arbiter->task_list[prio].list[task];
-            if (INVALID_HANDLE != h) {
-                arbiter->task_list[prio].current = task;
-                if (arbiter->task_list[prio].count > 1) {
-                    arbiter->task_list[prio].next = task + 1;
-                }
-                goto skip;
-            }
-            
+    for (prio = T_HIGH; prio < MAX_PRIORITIES; prio++) {
+        if (arbiter->task_list[prio].count > 0) {
+            h = Arbiter_FindNext(arbiter, prio);
+            goto skip;
         }
     }
     skip:
@@ -64,32 +57,28 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
         }
         
         if (INVALID_HANDLE == current) {
+            return;
+            #if 0
             while(1); // unhandled expection
+            #endif
         }
     }
     
     arbiter->task_list[prio].count--;
     
-    if (arbiter->task_list[prio].count > 0) {
-        int i;
-        // shift all to the left
-        // todo: when removing from inside create hole
-        //       move last element instead of iterating all.
-        for (i = 0; i < arbiter->task_list[prio].count; i ++) {
+    // if current task is last item in queue
+    if (arbiter->task_list[prio].list[next] == INVALID_HANDLE) {
+        arbiter->task_list[prio].current = 0;
+        arbiter->task_list[prio].list[current] = INVALID_HANDLE;
+    }
+    else {
+        do
+        {
             arbiter->task_list[prio].list[current] = arbiter->task_list[prio].list[next];
             arbiter->task_list[prio].list[next] = INVALID_HANDLE;
             current = next;
             next ++;
-        }
-        
-        if (arbiter->task_list[prio].current >= arbiter->task_list[prio].count) {
-            arbiter->task_list[prio].current --; // todo: fix
-        }
-        
-    } else {
-        arbiter->task_list[prio].list[0] = INVALID_HANDLE;
-        arbiter->task_list[prio].current = 0;
-        arbiter->task_list[prio].next = 0;
+        } while (arbiter->task_list[prio].list[next] != INVALID_HANDLE);
     }
 }
 
@@ -99,19 +88,20 @@ task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio)
     task_queue_t * queue = &arbiter->task_list[prio];
     
     if (queue->count > 1) {
-        queue->next = queue->current + 1;
-        
-        if (queue->next >= queue->count) {
-            queue->next = 0;
+        // check if next item is at the end of queue
+        int next = queue->current + 1;
+
+        if (next < queue->count) {
         }
-        
-        handle = queue->list[queue->next];
-        queue->current = queue->next;
-    }
-    else {
+        else {
+            next = 0; // go back to first item in queue
+        }
+
+        handle = queue->list[next];
+        queue->current = next;
+    } else {
         // return current task as next if no switch is needed
         queue->current = 0;
-        queue->next = 0;
         handle = queue->list[queue->current];
     }
     

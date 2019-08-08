@@ -412,6 +412,12 @@ void SysTick_Handler(void)
                 skip_store = 1;
             }
             else {
+                
+                if (INVALID_HANDLE == g_kernel.current_task ||
+                    INVALID_HANDLE == g_kernel.next_task) {
+                        while(1);//unhandled expection
+                    }
+                
                 // todo: this 'if' can be removed if IDLE task is placed in common task pool
                 if (IDLE_TASK_ID == g_kernel.current_task)
                 {
