@@ -119,6 +119,18 @@ void thread3(void)
     led(GPIO_PIN9,"GPIO_PIN9 <--- Low 2", 500);
 }
 
+void thread4(void)
+{
+    //led2(GPIO_PIN9, 200);
+    led(GPIO_PIN9,"GPIO_PIN9 <--- Low 3", 400);
+}
+
+void thread5(void)
+{
+    //led2(GPIO_PIN9, 200);
+    led(GPIO_PIN9,"GPIO_PIN9 <--- Low 4", 250);
+}
+
 int main()
 {    
     RCC->APB2ENR |= RCC_APB2ENR_IOPFEN; // enable gpiof
@@ -137,6 +149,8 @@ int main()
     CreateTask(thread1, T_LOW, 0, FALSE);
     CreateTask(thread2, T_MEDIUM, 0, FALSE);
     CreateTask(thread3, T_LOW, 0, FALSE);
+    CreateTask(thread4, T_LOW, 0, FALSE);
+    CreateTask(thread5, T_LOW, 0, FALSE);
     
     kernel_start();
     

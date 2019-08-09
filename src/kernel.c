@@ -17,74 +17,70 @@
 #define KERNEL_SYSTEM_IDLE_ON      0x8  // idle - state
 
 // --------------- task ------------
-typedef struct stack_s
+struct stack_s
 {
     //uint32_t size;
     uint32_t data[TASK_STACK_SIZE];
-} stack_t;
+};
 
-typedef struct context_s
+struct context_s
 {
     uint32_t    r4, r5, r6, r7,
                 r8, r9, r10, r11;
-} context_t;
+} ;
 
-typedef struct task_s
+struct task_s
 {
-    uint32_t          sp;
-    context_t         context;
-    stack_t           stack;
-    task_priority_t   priority;
-    task_state_t      state;
-    task_routine_t    routine;
-    BOOL              inside_lock; // if set (cs), task switch is not available
-} task_t;
-
-typedef struct event_s
-{
-    event_state_t state;
-    
-} event_t;
+    uint32_t                 sp;
+    struct context_s         context;
+    struct stack_s           stack;
+    enum task_priority_e     priority;
+    enum task_state_e        state;
+    task_routine_t           routine;
+    BOOL                     inside_lock; // if set (cs), task switch is not available
+};
 
 // --------- kernel --------------------
 
-typedef struct kernel_s
+struct kernel_s
 {
-    task_handle_t    current_task;
-    task_handle_t    next_task;
+    task_handle_t       current_task;
+    task_handle_t       next_task;
 
-    time_ms_t   time;
-    time_ms_t   interval;
-    uint32_t    status; // sync with systick
-
-    uint32_t    user_task_count;
-    int         task_data_pool_status[MAX_USER_TASKS]; // might use .routine instead
-    task_t      task_data_pool[MAX_USER_TASKS];
-    task_t      idle_task; // always ready
-} kernel_t;
+    time_ms_t           time;
+    time_ms_t           interval;
+    uint32_t            status; // sync with systick
+        
+    uint32_t            user_task_count;
+    int                 task_data_pool_status[MAX_USER_TASKS]; // might use .routine instead
+    struct task_s       task_data_pool[MAX_USER_TASKS];
+    struct task_s       idle_task; // always ready, todo: move to task data pool
+    
+    arbiter_t   arbiter;
+    
+    /* system objects */
+};
 
 // local memory
-volatile kernel_t g_kernel;
-
-arbiter_t g_arbiter; // todo: volatile
+volatile struct kernel_s g_kernel;
 
 // private API
 static void task_proc(void);
 static void task_idle(void);
 static void thread_finished(void);
-static void init_task(volatile task_t * task);
+static void init_task(volatile struct task_s * task);
 
 // body
 
-typedef enum
+enum switch_type_e
 {
     ISSUE_SWITCH_NORMAL = 0,
     ISSUE_SWITCH_NO_STORE
-} switch_type_e;
+};
 
-static void kernel_issue_switch(switch_type_e no_store)
+static void kernel_issue_switch(enum switch_type_e no_store)
 {
-    g_kernel.next_task = Arbiter_GetHigestPrioTask(&g_arbiter);
+    g_kernel.next_task = Arbiter_GetHigestPrioTask(g_kernel.arbiter);
     
     if (INVALID_HANDLE == g_kernel.next_task) {
         g_kernel.next_task = IDLE_TASK_ID;
@@ -139,7 +135,7 @@ void Sleep(time_ms_t delay)
         }
             
         // go to Waiting mode (remove from arbiter)
-        Arbiter_RemoveTask(&g_arbiter, g_kernel.task_data_pool[handle.value].priority, handle.value);
+        Arbiter_RemoveTask(g_kernel.arbiter, g_kernel.task_data_pool[handle.value].priority, handle.value);
         g_kernel.task_data_pool[handle.value].state = T_TASK_WAITING;
         StartTimer(timer);
         
@@ -148,7 +144,7 @@ void Sleep(time_ms_t delay)
     __enable_irq();
 }
 
-int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _handle, BOOL create_suspended)
+int CreateTask(task_routine_t _routine, enum task_priority_e _priority, handle_t * _handle, BOOL create_suspended)
 {
     // todo: sanity for kernel init and args
     int ret = 0;
@@ -185,7 +181,7 @@ int CreateTask(task_routine_t _routine, task_priority_t _priority, handle_t * _h
             }
             else { // add task to arbiter
                 g_kernel.task_data_pool[task_id].state = T_TASK_READY;
-                Arbiter_AddTask(&g_arbiter, _priority, task_id);
+                Arbiter_AddTask(g_kernel.arbiter, _priority, task_id);
 
                 // if task created in run-time - force re-arbitration
                 if (g_kernel.status & KERNEL_EN ) {
@@ -208,11 +204,11 @@ void TerminateTask(handle_t * task)
         if (task->type == E_TASK)
         {
             // get current task
-            const task_priority_t task_to_remove_prio = g_kernel.task_data_pool[task->value].priority;
+            const enum task_priority_e task_to_remove_prio = g_kernel.task_data_pool[task->value].priority;
             // remove task from data pool
             g_kernel.task_data_pool_status[task->value] = 0;
             // remove task from arbiter
-            Arbiter_RemoveTask(&g_arbiter, task_to_remove_prio, task->value);
+            Arbiter_RemoveTask(g_kernel.arbiter, task_to_remove_prio, task->value);
             // kill all related timers, events, etc
             {
                 RemoveTimer(task);
@@ -235,7 +231,7 @@ void ResumeTask(task_handle_t task)
     __disable_irq();
     {
         // todo: sanity - if task is already added, do nothing!
-        Arbiter_AddTask(&g_arbiter, g_kernel.task_data_pool[task].priority, task);
+        Arbiter_AddTask(g_kernel.arbiter, g_kernel.task_data_pool[task].priority, task);
         g_kernel.task_data_pool[task].state = T_TASK_READY;
         
         kernel_issue_switch(ISSUE_SWITCH_NORMAL);
@@ -249,7 +245,7 @@ void interrupt_occurred(int id)
     // call arbiter
 }
 
-static void init_task(volatile task_t * task)
+static void init_task(volatile struct task_s * task)
 {
     task->sp = (uint32_t)&task->stack.data[TASK_STACK_SIZE - 8]; // last element
     task->stack.data[TASK_STACK_SIZE - 8] = 0xcdcdcdcd; // r0
@@ -266,7 +262,7 @@ void kernel_init(void)
 {
     __disable_irq();
     {
-        Arbiter_Init(&g_arbiter);
+        Arbiter_Init(&g_kernel.arbiter);
         
         ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
         ITM->TER = 1UL;                  // ITM Port #0 enable
@@ -380,8 +376,8 @@ void SysTick_Handler(void)
                 if (0 == (g_kernel.status & KERNEL_SWITCH_REQUESTED)) // if switch is not requested do arbitration
                 {
                     // round-robin schedule of same priority tasks
-                    task_priority_t prio = g_kernel.task_data_pool[g_kernel.current_task].priority;
-                    task_handle_t next_task = Arbiter_FindNext(&g_arbiter, prio);
+                    enum task_priority_e prio = g_kernel.task_data_pool[g_kernel.current_task].priority;
+                    task_handle_t next_task = Arbiter_FindNext(g_kernel.arbiter, prio);
                     if (INVALID_HANDLE == next_task){
                         while (1);
                     }

@@ -2,20 +2,36 @@
 #include "arbiter.h"
 #include "assert.h"
 
-void Arbiter_Init(arbiter_t * const arbiter)
+struct task_queue_s
+{
+    int count;
+    int current;
+    task_handle_t list[MAX_USER_TASKS];
+};
+
+struct arbiter_s
+{
+    struct task_queue_s task_list[MAX_PRIORITIES]; // todo: size is number of prorities
+};
+
+volatile struct arbiter_s g_arbiter;
+
+void Arbiter_Init(volatile arbiter_t * const arbiter)
 {
     int prio, task;
     
+    *arbiter = &g_arbiter;
+    
     for (prio = 0; prio < MAX_PRIORITIES; prio++) {
         for (task = 0; task < MAX_USER_TASKS; task++) {
-            arbiter->task_list[prio].list[task] = INVALID_HANDLE;
+            (*arbiter)->task_list[prio].list[task] = INVALID_HANDLE;
         }
      }
 }
 
-task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter)
+task_handle_t Arbiter_GetHigestPrioTask(arbiter_t const arbiter)
 {
-    task_priority_t prio;
+    enum task_priority_e prio;
     task_handle_t h = INVALID_HANDLE;
     
     for (prio = T_HIGH; prio < MAX_PRIORITIES; prio++) {
@@ -28,7 +44,7 @@ task_handle_t Arbiter_GetHigestPrioTask(arbiter_t * const arbiter)
     return h;
 }
 
-void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h)
+void Arbiter_AddTask(arbiter_t const arbiter, enum task_priority_e prio, task_handle_t h)
 {
     const int count = arbiter->task_list[prio].count; // just for readabilty
     
@@ -40,7 +56,7 @@ void Arbiter_AddTask(arbiter_t * const arbiter, task_priority_t prio, task_handl
     arbiter->task_list[prio].count++;
 }
 
-void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_handle_t h)
+void Arbiter_RemoveTask(arbiter_t const arbiter, enum task_priority_e prio, task_handle_t h)
 {
     int current = INVALID_HANDLE;
     int next = INVALID_HANDLE;
@@ -82,10 +98,10 @@ void Arbiter_RemoveTask(arbiter_t * const arbiter, task_priority_t prio, task_ha
     }
 }
 
-task_handle_t Arbiter_FindNext(arbiter_t * const arbiter, task_priority_t prio)
+task_handle_t Arbiter_FindNext(arbiter_t const arbiter, enum task_priority_e prio)
 {
     task_handle_t handle = INVALID_HANDLE;
-    task_queue_t * queue = &arbiter->task_list[prio];
+    volatile struct task_queue_s * queue = &arbiter->task_list[prio];
     
     if (queue->count > 1) {
         // check if next item is at the end of queue
