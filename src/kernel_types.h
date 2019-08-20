@@ -31,7 +31,6 @@ typedef enum event_state_e
 
 // position of thread in thread_data_pool, so each is unique if it is never sorted
 #define INVALID_HANDLE 0xffffffffu
-#define IDLE_TASK_ID   0xfffffffeu
 
 typedef uint32_t task_handle_t;
 
