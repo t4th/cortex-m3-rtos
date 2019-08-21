@@ -86,7 +86,7 @@ void led2(GPIO_PIN_t pin, time_ms_t delay)
                 printErrorMsg("GPIO_PIN7 <----");
                 break;
             case GPIO_PIN8:
-                printErrorMsg("GPIO_PIN8 <- Medium 2");
+                printErrorMsg("GPIO_PIN8 <- high 2");
                 break;
             case GPIO_PIN9:
                 printErrorMsg("GPIO_PIN9");
@@ -147,10 +147,10 @@ int main()
     
     CreateTask(thread0, T_MEDIUM, 0, FALSE);
     CreateTask(thread1, T_LOW, 0, FALSE);
-    CreateTask(thread2, T_MEDIUM, 0, FALSE);
+    CreateTask(thread2, T_HIGH, 0, FALSE);
     CreateTask(thread3, T_LOW, 0, FALSE);
     CreateTask(thread4, T_LOW, 0, FALSE);
-    CreateTask(thread5, T_LOW, 0, FALSE);
+    CreateTask(thread5, T_MEDIUM, 0, FALSE);
     
     kernel_start();
     

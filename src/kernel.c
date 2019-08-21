@@ -14,7 +14,6 @@
 #define KERNEL_EN                  0x1
 #define KERNEL_SWITCH_REQUESTED    0x2
 #define KERNEL_SWITCH_NO_STORE     0x4
-#define KERNEL_SYSTEM_IDLE_ON      0x8  // idle - state
 
 // --------------- task ------------
 struct stack_s
@@ -27,7 +26,7 @@ struct context_s
 {
     uint32_t    r4, r5, r6, r7,
                 r8, r9, r10, r11;
-} ;
+};
 
 struct task_s
 {
@@ -66,7 +65,7 @@ volatile struct kernel_s g_kernel;
 // private API
 static void task_proc(void);
 static void task_idle(void);
-static void thread_finished(void);
+static void task_finished(void);
 static void init_task(volatile struct task_s * task);
 
 // body
@@ -84,8 +83,6 @@ static void kernel_issue_switch(enum switch_type_e no_store)
     if (INVALID_HANDLE == g_kernel.next_task) {
         // should never be empty, since IDLE task is there at lowest priority
         while(1);
-        //g_kernel.next_task = IDLE_TASK_ID;
-        //g_kernel.status |= KERNEL_SYSTEM_IDLE_ON;
     }        
     
     if (no_store) {
@@ -152,6 +149,8 @@ int CreateTask(task_routine_t _routine, enum task_priority_e _priority, handle_t
     
     __disable_irq();
     {
+        printErrorMsg("Created task");
+        
         if (g_kernel.user_task_count < MAX_USER_TASKS)
         {
             // find empty spot in thread pool
@@ -185,6 +184,7 @@ int CreateTask(task_routine_t _routine, enum task_priority_e _priority, handle_t
                 Arbiter_AddTask(g_kernel.arbiter, _priority, task_id);
 
                 // if task created in run-time - force re-arbitration
+                // todo: only when new task prio is higher than current task prio
                 if (g_kernel.status & KERNEL_EN ) {
                     kernel_issue_switch(ISSUE_SWITCH_NORMAL);
                 }
@@ -221,6 +221,8 @@ void TerminateTask(handle_t * task)
             
             // request switch, but without storing current context (since its not existing anymore)
             kernel_issue_switch(ISSUE_SWITCH_NO_STORE);
+        
+            printErrorMsg("task finished");
         }
     }
     __enable_irq();
@@ -283,8 +285,7 @@ void kernel_init(void)
             handle_t idle_handle;
             
             if (CreateTask(task_idle, T_LOW, &idle_handle, FALSE)) {
-                // no free space during init? should never happen..
-                while(1);
+                while(1); // no free space during init? should never happen..
             }
             
             g_kernel.current_task = idle_handle.value;
@@ -330,7 +331,7 @@ handle_t GetHandle(void)
 }
 
 // private api
-static void thread_finished(void)
+static void task_finished(void)
 {
     __disable_irq();
     {
@@ -344,7 +345,7 @@ static void task_proc(void)
 {
     g_kernel.task_data_pool[g_kernel.current_task].routine();
 
-    thread_finished();
+    task_finished();
 }
 
 void task_idle(void)
