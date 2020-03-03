@@ -27,6 +27,7 @@ Simple Keil Uvision Lite project (for now).
 ## Experimental POC branches
 Scheduler prove-of-concept
 https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
+
 kernel prove-of-concept
 https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 
