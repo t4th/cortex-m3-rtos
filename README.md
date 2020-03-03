@@ -24,6 +24,12 @@ Simple Keil Uvision Lite project (for now).
 * compile time defined reserved thread and stack space
 * no dynamic allocations
 
+## Experimental POC branches
+Scheduler prove-of-concept
+https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
+kernel prove-of-concept
+https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
+
 ## After POC branch decisions
 * HANDLE system like in windows (generlized handle to system objects for easier user API)
 * API function will use win32 function names (since I like it)
