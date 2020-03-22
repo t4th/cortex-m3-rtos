@@ -1,8 +1,7 @@
 #pragma once
 
-namespace kernel
+namespace kernel::hardware
 {
     void init();
-    void tick();
     void start();
 }

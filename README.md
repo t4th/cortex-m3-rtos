@@ -43,4 +43,4 @@ https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 ## After POC branch decisions
 * HANDLE system like in windows (generlized handle to system objects for easier user API) - better than raw pointers
 * ~~API function will use win32 function names (since I like it)~~ - since c++ will be used this is no longer valid
-* task queue cirular linked list ~~or b-tree~~ - make it work, not CS degree viable
+* task queue circular linked list ~~or b-tree~~ - make it work, not CS degree viable
