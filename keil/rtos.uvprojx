@@ -10,8 +10,8 @@
       <TargetName>stm32f103ze</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060750::V5.06 update 6 (build 750)::ARMCC</pCCUsed>
-      <uAC6>0</uAC6>
+      <pCCUsed>6130001::V6.13.1::.\ARMCLANG</pCCUsed>
+      <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32F103ZE</Device>
@@ -312,7 +312,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>7</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -321,14 +321,14 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>3</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>1</uC99>
+            <uC99>0</uC99>
             <uGnu>1</uGnu>
             <useXO>0</useXO>
-            <v6Lang>1</v6Lang>
-            <v6LangP>1</v6LangP>
+            <v6Lang>3</v6Lang>
+            <v6LangP>8</v6LangP>
             <vShortEn>1</vShortEn>
             <vShortWch>1</vShortWch>
             <v6Lto>0</v6Lto>
@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\external\arm;..\external\st\STM32F10x</IncludePath>
+              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -380,6 +380,71 @@
       </TargetOption>
       <Groups>
         <Group>
+          <GroupName>main</GroupName>
+          <Files>
+            <File>
+              <FileName>main.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\main\main.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>kernel</GroupName>
+          <Files>
+            <File>
+              <FileName>kernel.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\kernel.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>timer.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\timer\timer.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>task.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\task\task.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>scheduler.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\scheduler\scheduler.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>handle.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\handle\handle.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>event.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\event\event.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>critical_section.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\critical_section\critical_section.cpp</FilePath>
+            </File>
+            <File>
+              <FileName>memory_buffer.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\common\memory_buffer.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>hardware</GroupName>
+          <Files>
+            <File>
+              <FileName>hardware.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\hardware\armv7m\hardware.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>startup</GroupName>
           <Files>
             <File>
@@ -388,29 +453,24 @@
               <FilePath>..\external\st\STM32F10x\startup_stm32f10x_hd.s</FilePath>
             </File>
             <File>
-              <FileName>stm32f10x.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\external\st\STM32F10x\stm32f10x.h</FilePath>
-            </File>
-            <File>
               <FileName>system_stm32f10x.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\external\st\STM32F10x\system_stm32f10x.c</FilePath>
             </File>
-            <File>
-              <FileName>system_stm32f10x.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\external\st\STM32F10x\system_stm32f10x.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>main</GroupName>
+          <GroupName>doc</GroupName>
           <Files>
             <File>
-              <FileName>main.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\main\main.cpp</FilePath>
+              <FileName>LICENSE.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\LICENSE.txt</FilePath>
+            </File>
+            <File>
+              <FileName>README.md</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\README.md</FilePath>
             </File>
           </Files>
         </Group>
