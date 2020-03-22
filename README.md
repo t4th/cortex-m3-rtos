@@ -4,7 +4,7 @@ This is experimental fun project, so no fancy build/tool sets are used.
 Simple Keil Uvision Lite project due to free simulator.
 
 Check out prove of concept branches for technical stuff. Master will be empty until 1.0.  
-Task tracking via github: https://github.com/users/t4th/projects/1
+Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
 ## Goals
 
