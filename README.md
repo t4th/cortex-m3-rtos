@@ -1,6 +1,6 @@
 # Small cortex-m3 RTOS
 
-This is experimental fun project, so no fancy build/tool sets are used.
+This is experimental fun project, so no fancy build/tool sets are used.  
 Simple Keil Uvision Lite project due to free simulator.
 
 Check out prove of concept branches for technical stuff. Master will be empty until 1.0.
@@ -40,13 +40,13 @@ Check out prove of concept branches for technical stuff. Master will be empty un
 * keil Uvision 5 lite
 
 ## Build
-Open project **keil\rtos.uvprojx** or call:
-**build.BAT** to build
-**build.BAT clean** or **build.Bat c** to clean
-**build.BAT re** to retranslate
-**build.BAT debug** or **build.BAT d** to start debuging
+Open project **keil\rtos.uvprojx** or call:  
+**build.BAT** to build  
+**build.BAT clean** or **build.Bat c** to clean  
+**build.BAT re** to retranslate  
+**build.BAT debug** or **build.BAT d** to start debuging  
 
-In build.BAT file you must set Keil uvision location, ie. **set keil_dir=d:\Keil_v5\UV4**.
+In build.BAT file you must set Keil uvision location, ie. **set keil_dir=d:\Keil_v5\UV4**.  
 
 ## Edit
 VS Code or Uvision.
