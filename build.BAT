@@ -39,5 +39,5 @@ if "%~1"=="d" goto debug
 
 @echo off
 if %show_result%==1 (
-    more keil\log.txt
+    type keil\log.txt
 )
