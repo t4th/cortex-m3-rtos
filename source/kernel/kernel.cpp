@@ -14,5 +14,6 @@ namespace kernel
     
     void start()
     {
+        hardware::start();
     }
 }
