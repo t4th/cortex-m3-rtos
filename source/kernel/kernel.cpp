@@ -12,7 +12,7 @@ namespace kernel
     {
         time_ms_t   time = 0;
         time_ms_t   interval = default_timer_interval;
-    } context;
+    } m_context;
     
 
     
@@ -30,7 +30,7 @@ namespace kernel
     {
         static time_ms_t old_time = 0;
         
-        if (kernel::context.time - old_time > kernel::context.interval)
+        if (kernel::m_context.time - old_time > kernel::m_context.interval)
         {
         }
         

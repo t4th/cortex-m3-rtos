@@ -60,6 +60,12 @@ extern "C"
     {
         __ASM("CPSID I\n");
         
+        // If skip_store is non-zero skip store_current_task. This is workaround for starting first task.
+        // TODO: This workaround has to go.
+        __ASM("ldr r2, =skip_store\n"); // TODO: this can be optimized to 1 instruction.
+        __ASM("ldr r0, [r2]\n");
+        __ASM("cbnz r0, load_next_task;\n");
+        
         __ASM("store_current_task:\n");
         __ASM("ldr r0, =current_task_context\n");
         __ASM("ldr r1, [r0]\n");
