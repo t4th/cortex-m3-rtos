@@ -26,8 +26,8 @@ namespace kernel::hardware
     
     void start()
     {
-        // setup interrupts
-        NVIC_SetPriority(SysTick_IRQn, 10); // systick should be higher than pendsv
+        // Setup interrupts.
+        NVIC_SetPriority(SysTick_IRQn, 10); // SysTick should be higher than PendSV.
         NVIC_SetPriority(PendSV_IRQn, 12);
         
         NVIC_EnableIRQ(SysTick_IRQn);
@@ -40,12 +40,13 @@ extern "C"
 {
     void SysTick_Handler(void)
     {
+        // TODO: this wont work. Move it to kernel.
+        current_task_context.sp = __get_PSP();
+        
         bool execute_context_switch = kernel::tick(current_task_context, next_task_context);  // TODO: Make this function explicitly inline.
         
         if (execute_context_switch)
         {
-            current_task_context.sp = __get_PSP();
-            
             __set_PSP(next_task_context.sp);
             
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
