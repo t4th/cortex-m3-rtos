@@ -28,7 +28,7 @@ namespace kernel::task
     {
         uint32_t item_id;
         
-        //m_context.m_data.allocate(item_id);
+        m_context.m_data.allocate(item_id);
         
         return false;
     }

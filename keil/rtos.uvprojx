@@ -427,11 +427,6 @@
               <FileType>8</FileType>
               <FilePath>..\source\kernel\critical_section\critical_section.cpp</FilePath>
             </File>
-            <File>
-              <FileName>memory_buffer.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\kernel\common\memory_buffer.cpp</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
