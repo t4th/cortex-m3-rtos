@@ -1,11 +1,7 @@
 #include <handle.hpp>
 
-#include <memory_buffer.hpp>
-
 namespace kernel::handle
 {
-    constexpr size_t max_number_of_handles = 64;
-    
     uint32_t create(uint32_t index, ObjectType type)
     {
         uint32_t new_handle = (static_cast<uint32_t>(type) << 16) | (index & 0xFFFF);
