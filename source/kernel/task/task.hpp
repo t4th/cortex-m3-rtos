@@ -13,6 +13,14 @@ namespace kernel::task
         Low
     };
     
+    enum class State
+    {
+        Suspended,
+        Waiting,
+        Ready,
+        Running
+    };
+    
     bool create(
         Routine     a_routube,
         Priority    a_priority = kernel::task::Priority::Low,
