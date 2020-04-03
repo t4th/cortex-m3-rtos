@@ -22,8 +22,8 @@ namespace kernel::task
     };
     
     bool create(
-        Routine     a_routube,
-        Priority    a_priority = kernel::task::Priority::Low,
+        Routine     a_routine,
+        Priority    a_priority = Priority::Low,
         uint32_t *  a_handle = nullptr,
         bool        a_create_suspended = false
         );

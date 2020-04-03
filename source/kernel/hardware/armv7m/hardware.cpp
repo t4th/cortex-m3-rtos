@@ -35,6 +35,27 @@ namespace kernel::hardware
     }
 }
 
+namespace kernel::hardware::task
+{
+    void Stack::init(uint32_t a_routine)
+    {
+        // TODO: Do something with magic numbers.
+        m_data[task_stack_size - 8] = 0xcdcdcdcd; // r0
+        m_data[task_stack_size - 7] = 0xcdcdcdcd; // r1
+        m_data[task_stack_size - 6] = 0xcdcdcdcd; // r2
+        m_data[task_stack_size - 5] = 0xcdcdcdcd; // r3
+        m_data[task_stack_size - 4] = 0; // r12
+        m_data[task_stack_size - 3] = 0; // lr r14
+        m_data[task_stack_size - 2] = a_routine;
+        m_data[task_stack_size - 1] = 0x01000000; // xPSR
+    }
+    
+    uint32_t Stack::getStackPointer()
+    {
+        return (uint32_t)&m_data[task_stack_size - 8];
+    }
+}
+
 
 extern "C"
 {

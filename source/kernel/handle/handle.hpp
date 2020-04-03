@@ -4,11 +4,11 @@
 
 namespace kernel::handle
 {
-    enum class ObjectType : uint32_t
+    enum class ObjectType
     {
-        task = 0,
-        timer,
-        event
+        Task = 0,
+        Timer,
+        Event
     };
     
     uint32_t create(uint32_t index, ObjectType type);
