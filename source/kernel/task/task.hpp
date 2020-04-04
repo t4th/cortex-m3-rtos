@@ -6,6 +6,9 @@ namespace kernel::task
 {
     typedef void(*Routine)(void);  // TODO: Add argument.
     
+    constexpr uint32_t max_task_number = 16;
+    constexpr uint32_t priorities_count = 3; // TODO: Can this be calculated during compile time?
+    
     enum class Priority
     {
         High,

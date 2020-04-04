@@ -6,8 +6,7 @@
 
 namespace
 {
-    constexpr uint32_t max_task_number = 16;
-    
+    // Task system object representation.
     struct Task
     {
         uint32_t                        m_sp;
@@ -20,7 +19,7 @@ namespace
     
     struct
     {
-        kernel::common::MemoryBuffer<Task, max_task_number> m_data;
+        kernel::common::MemoryBuffer<Task, kernel::task::max_task_number> m_data;
     } m_context;
 }
 
