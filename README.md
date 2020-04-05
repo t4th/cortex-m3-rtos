@@ -9,13 +9,13 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 ## Goals
 
 ### 1.0 Features
-* run-time thread creation/deletion ~~statically defined task before starting OS~~
-* events, 2-state SET/RESET
+* task: create, delete
 * software timers: create, remove
-* HW interrupts must be mapped to events
-* critical section
-* WaitForEvent function (or wait for object, ie. task, timer, event)
 * sleep function
+* events: create, remove
+* function WaitForEvent or WaitForObject
+* Critical section: enter, leave
+* HW interrupts must be mapped to events
 
 ### Other
 * C++ used, "c with namespaces" style though
@@ -24,16 +24,16 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
 ## Implementation decisions
 * no automatic cleanup when task is terminated/closed
-* tasks should not keep information about system objects created during it quanta time
+* tasks should not keep information about system objects created during its quanta time
 
 ### Scheduler
 * fully pre-emptive priority based multitasking
 * highest priority task are to be served first
 * tasks of the same priority should be running using Round Robin
-* idle task as lowest priority ~~or separated from user task?~~
+* idle task as lowest priority
 
 ### Memory
-* compile time defined reserved thread and stack space
+* static buffers for all kernel components
 * no dynamic allocations
 
 ## Requirement
@@ -41,13 +41,14 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 * keil Uvision 5 lite 529 (Monday, November 18, 2019) or up (needed for c++17)
 
 ## Build
+Install keil Uvision 5 lite 529 and set up path to install dir in **build.BAT** file,
+ ie. **set keil_dir=d:\Keil_v5\UV4**.  
+
 Open project **keil\rtos.uvprojx** or call:  
 **build.BAT** to build  
 **build.BAT clean** or **build.Bat c** to clean  
 **build.BAT re** to retranslate  
 **build.BAT debug** or **build.BAT d** to start debuging  
-
-In build.BAT file you must set Keil uvision location, ie. **set keil_dir=d:\Keil_v5\UV4**.  
 
 ## Edit
 VS Code or Uvision.
