@@ -5,7 +5,7 @@
 namespace kernel::common
 {
     // Abstract memory buffer. Idea behind it is to keep data and status separetly as
-    // array of structs data structure.
+    // array of structs data layout.
     template <typename TDataType, std::size_t MaxSize>
     class MemoryBuffer
     {
@@ -13,6 +13,8 @@ namespace kernel::common
             std::array<TDataType, MaxSize>  m_data;
             std::array<bool, MaxSize>       m_status; // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
         public:
+            MemoryBuffer() : m_data{}, m_status{{0}} {}
+            
             bool allocate(uint32_t & a_item_id)
             {
                 // Find first not used slot and return index as ID.
