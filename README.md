@@ -3,7 +3,7 @@
 This is experimental fun project, so no fancy build/tool sets are used.  
 Simple Keil Uvision Lite project due to free simulator.
 
-Check out prove of concept branches for technical stuff. Master will be empty until 1.0.  
+Check out prove of concept branches for technical stuff.  
 Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
 ## Goals
@@ -18,8 +18,8 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 * HW interrupts must be mapped to events
 
 ### Other
-* C++ used, "c with namespaces" style though
 * build and simulated via keil uvision
+* use ARM Compiler 6 for C++17 compatibility
 * runs on stm32f103ze
 
 ## Implementation decisions
@@ -49,6 +49,8 @@ Open project **keil\rtos.uvprojx** or call:
 **build.BAT clean** or **build.Bat c** to clean  
 **build.BAT re** to retranslate  
 **build.BAT debug** or **build.BAT d** to start debuging  
+
+...or just open project in Uvision and build/run using IDE.
 
 ## Edit
 VS Code or Uvision.
