@@ -9,7 +9,9 @@ namespace kernel::task
     constexpr uint32_t max_task_number = 16;
     constexpr uint32_t priorities_count = 3; // TODO: Can this be calculated during compile time?
     
-    enum class Priority
+    typedef uint32_t id;
+    
+    enum class Priority : uint32_t
     {
         High,
         Medium,

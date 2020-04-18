@@ -9,10 +9,9 @@ namespace kernel::common
     template <typename TDataType, std::size_t MaxSize>
     class CircularList
     {
-        private:
+        protected:
             struct Node
             {
-                uint32_t  m_prev;
                 uint32_t  m_next;
                 TDataType m_data;
             };
@@ -39,23 +38,26 @@ namespace kernel::common
                 switch(m_count)
                 {
                     case 0: // Create single Node that point to itself.
-                        m_first = new_node_id;
-                        new_node.m_next = new_node_id;
-                        new_node.m_prev = new_node_id;
+                        {
+                            m_first = new_node_id;
+                            new_node.m_next = new_node_id;
+                        }
                         break;
                     case 1: // New Node points to first Node.
-                        Node & first_node = m_buffer.get(m_first);
+                        {
+                            Node & first_node = m_buffer.get(m_first);
                         
-                        first_node.m_next = new_node_id;
-                        new_node.m_next = m_first;
-                        new_node.m_prev = m_first;
+                            first_node.m_next = new_node_id;
+                            new_node.m_next = m_first;
+                        }
                         break;
-                    defualt: // New Node at last position.
-                        Node & last_node = m_buffer.get(m_last);
+                    default: // New Node at last position.
+                        {
+                            Node & last_node = m_buffer.get(m_last);
                         
-                        last_node.m_next = new_node_id;
-                        new_node.m_prev = m_last;
-                        new_node.m_next = m_first;
+                            last_node.m_next = new_node_id;
+                            new_node.m_next = m_first;
+                        }
                     break;
                 }
                 
@@ -68,33 +70,45 @@ namespace kernel::common
             
             void remove(uint32_t a_data)
             {
-                switch (m_count)
+                if (0 == m_count)
                 {
-                    case 0:
-                        break;
-                    case 1:
-                        //m_buffer.free(
-                        break;
-                    default:
-                        break;
+                    return;
                 }
-                
-                // find data in linked list
-                Node * node = & (m_buffer.get(m_first));
-                
-                for (uint32_t i = 0; i < m_count; ++i)
+                else
                 {
-                    if (node->m_data == a_data)
+                    // find data in linked list
+                    uint32_t current_index = m_first;
+                    uint32_t previous_index = m_first;
+
+                    for (uint32_t i = 0; i < m_count; ++i)
                     {
-                        //m_first is the one
-                    }
-                    else
-                    {
-                        node = & (m_buffer.get(node->m_next));
+                        Node * current_node = & (m_buffer.get(current_index));
+                        Node * previous_node = & (m_buffer.get(previous_index));
+                    
+                        if (current_node->m_data == a_data)
+                        {
+                            //m_first is the one
+                            if (m_first == previous_index)
+                            {
+                                m_first = current_index;
+                            }
+
+                            if (m_last == current_index)
+                            {
+                                m_last = previous_index;
+                            }
+
+                            previous_node->m_next = current_node->m_next;
+
+                            m_buffer.free(current_index);
+                            m_count--;
+                            break;
+                        }
+
+                        previous_index = current_index;
+                        current_index = current_node->m_next;
                     }
                 }
-                
-                // remove node if found task
             }
     };
 }

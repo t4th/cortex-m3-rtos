@@ -5,7 +5,7 @@
 namespace kernel::common
 {
     // Abstract memory buffer. Idea behind it is to keep data and status separetly as
-    // array of structs data layout.
+    // arrays of structs.
     template <typename TDataType, std::size_t MaxSize>
     class MemoryBuffer
     {
