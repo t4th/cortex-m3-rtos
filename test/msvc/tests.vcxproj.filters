@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="external">
+      <UniqueIdentifier>{917cc139-6f77-4bc5-a99c-a2afdcd26e3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{2485a236-1682-4cc0-8bac-f97b802d1a61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests">
+      <UniqueIdentifier>{4604d6a8-02c7-4fd1-ab87-74e98ec81c71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests\kernel">
+      <UniqueIdentifier>{0d06762c-d0d1-418b-b9dc-1b75574ef5e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tests\kernel\common">
+      <UniqueIdentifier>{af513a26-d76d-4e2c-864f-2b2fe8c9771e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\source\kernel\common\circular_list.cpp">
+      <Filter>tests\kernel\common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\external\catch.hpp">
+      <Filter>external</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
