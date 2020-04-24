@@ -19,9 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\catch.cpp" />
     <ClCompile Include="..\source\kernel\common\circular_list.cpp" />
+    <ClCompile Include="..\source\kernel\common\memory_buffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\kernel\common\circular_list.hpp" />
+    <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

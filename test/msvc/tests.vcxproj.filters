@@ -16,15 +16,36 @@
     <Filter Include="tests\kernel\common">
       <UniqueIdentifier>{af513a26-d76d-4e2c-864f-2b2fe8c9771e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tested files">
+      <UniqueIdentifier>{d8f7b1b6-e07d-46fd-9d7a-b53ea235333c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel">
+      <UniqueIdentifier>{4eb01a03-ddca-4879-a492-06883a924bb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\common">
+      <UniqueIdentifier>{cc0f1b85-ca1d-4048-8de7-3b2540067823}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel\common\circular_list.cpp">
+      <Filter>tests\kernel\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\catch.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\common\memory_buffer.cpp">
       <Filter>tests\kernel\common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\catch.hpp">
       <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\common\circular_list.hpp">
+      <Filter>tested files\kernel\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp">
+      <Filter>tested files\kernel\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
