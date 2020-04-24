@@ -18,6 +18,7 @@ namespace kernel::common
             Context() : m_data{}, m_status{} {}
         };
 
+        MemoryBuffer() = delete;
         MemoryBuffer(Context & a_context)
             : m_context(a_context)
         {}
@@ -53,6 +54,7 @@ namespace kernel::common
 
             return m_context.m_data[a_item_id];
         }
+
     private:
         Context & m_context;
     };

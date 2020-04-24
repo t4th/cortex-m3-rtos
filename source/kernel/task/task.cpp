@@ -17,9 +17,12 @@ namespace
         kernel::task::Routine           m_routine;
     };
     
-    struct
+    struct Context
     {
+        typename kernel::common::MemoryBuffer<Task, kernel::task::max_task_number>::Context m_context;
         kernel::common::MemoryBuffer<Task, kernel::task::max_task_number> m_data;
+        
+        Context() : m_data(m_context) {}
     } m_context;
 }
 
@@ -47,7 +50,7 @@ namespace kernel::task
         }
         
         // Initialize new Task object.
-        Task & task = m_context.m_data.get(item_id);
+        Task & task = m_context.m_data.at(item_id);
         
         task.m_priority = a_priority;
         task.m_routine = a_routine;
