@@ -30,6 +30,7 @@ namespace kernel::common
                 Context() : m_first{0}, m_last{0}, m_count{0}, m_buffer(m_bufferContext) {}
             };
 
+            CircularList() = delete;
             CircularList(Context & a_context)
                 : m_context(a_context) {}
             
@@ -104,6 +105,28 @@ namespace kernel::common
                     m_context.m_buffer.free(a_node_index);
                     m_context.m_count--;
                 }
+            }
+
+            TDataType & at(uint32_t a_node_index)
+            {
+                return m_context.m_buffer.at(a_node_index).m_data;
+            }
+
+            TDataType & first()
+            {
+                const uint32_t first = m_context.m_first;
+
+                return m_context.m_buffer.at(first).m_data;
+            }
+
+            uint32_t nextIndex(uint32_t a_node_index)
+            {
+                return m_context.m_buffer.at(a_node_index).m_next;
+            }
+            
+            uint32_t count()
+            {
+                return m_context.m_count;
             }
 
     private:

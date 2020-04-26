@@ -19,7 +19,7 @@ namespace
     
     struct Context
     {
-        typename kernel::common::MemoryBuffer<Task, kernel::task::max_task_number>::Context m_context;
+        kernel::common::MemoryBuffer<Task, kernel::task::max_task_number>::Context m_context;
         kernel::common::MemoryBuffer<Task, kernel::task::max_task_number> m_data;
         
         Context() : m_data(m_context) {}
