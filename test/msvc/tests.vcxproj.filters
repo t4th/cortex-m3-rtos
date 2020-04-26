@@ -25,16 +25,28 @@
     <Filter Include="tested files\kernel\common">
       <UniqueIdentifier>{cc0f1b85-ca1d-4048-8de7-3b2540067823}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests\kernel\scheduler">
+      <UniqueIdentifier>{f6aaf80d-691c-45a9-b28f-bfd8b091f32f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\scheduler">
+      <UniqueIdentifier>{8a54eb15-f3de-4ed5-8a11-e6e29c31e234}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\kernel\common\circular_list.cpp">
-      <Filter>tests\kernel\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\catch.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\common\memory_buffer.cpp">
+    <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp">
+      <Filter>tests\kernel\scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp">
       <Filter>tests\kernel\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\common\circular_list_test.cpp">
+      <Filter>tests\kernel\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp">
+      <Filter>tested files\kernel\scheduler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -27,19 +27,26 @@ namespace
 
 namespace kernel::scheduler
 {
-    void addTask(kernel::task::Priority a_priority, kernel::task::id a_id)
+    bool addTask(kernel::task::Priority a_priority, kernel::task::id a_id)
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
         
         uint32_t new_node_idx;
         
-        m_context.m_task_list[prio].m_buffer.add(a_id, new_node_idx);
+        bool task_added = m_context.m_task_list[prio].m_buffer.add(a_id, new_node_idx);
         
+        if (false == task_added)
+        {
+            return false;
+        }
+
         if (0 == count)
         {
             m_context.m_task_list[prio].m_current = new_node_idx;
         }
+
+        return true;
     }
     
     void removeTask(kernel::task::Priority a_priority, kernel::task::id a_id)
@@ -47,13 +54,21 @@ namespace kernel::scheduler
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
         
-        uint32_t node_index = m_context.m_task_list[prio].m_buffer.first();
+        uint32_t node_index = m_context.m_task_list[prio].m_buffer.firstIndex();
         
         // Search task list for provided a_id.
         for (uint32_t i = 0; i < count; ++i)
         {
             if (a_id == m_context.m_task_list[prio].m_buffer.at(node_index))
             {
+                if (m_context.m_task_list[prio].m_current == node_index) // If removed task i current task.
+                {
+                    if (count > 1) // Update current task.
+                    {
+                        m_context.m_task_list[prio].m_current = m_context.m_task_list[prio].m_buffer.nextIndex(node_index);
+                    }
+                }
+
                 m_context.m_task_list[prio].m_buffer.remove(node_index);
                 break;
             }
@@ -75,6 +90,8 @@ namespace kernel::scheduler
             
             uint32_t next_index = m_context.m_task_list[prio].m_buffer.nextIndex(current);
             
+            m_context.m_task_list[prio].m_current = next_index;
+
             a_id = m_context.m_task_list[prio].m_buffer.at(next_index);
             return true;
         }

@@ -18,6 +18,8 @@ namespace kernel::common
             };
        
         public:
+            typedef uint32_t id;
+        
             struct Context
             {
                 uint32_t m_first;
@@ -112,11 +114,9 @@ namespace kernel::common
                 return m_context.m_buffer.at(a_node_index).m_data;
             }
 
-            TDataType & first()
+            uint32_t firstIndex()
             {
-                const uint32_t first = m_context.m_first;
-
-                return m_context.m_buffer.at(first).m_data;
+                return m_context.m_first;
             }
 
             uint32_t nextIndex(uint32_t a_node_index)

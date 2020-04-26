@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
     <ClCompile Include="..\source\catch.cpp" />
-    <ClCompile Include="..\source\kernel\common\circular_list.cpp" />
-    <ClCompile Include="..\source\kernel\common\memory_buffer.cpp" />
+    <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />
+    <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp" />
+    <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\kernel\common\circular_list.hpp" />
@@ -98,7 +100,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\source\kernel\common;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\git\rtos\source\kernel\task;D:\git\rtos\source\kernel\scheduler;..\..\source\kernel\common;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
