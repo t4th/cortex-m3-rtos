@@ -1,8 +1,7 @@
 #include <task.hpp>
 
 #include <memory_buffer.hpp>
-#include <handle.hpp>
-#include <hardware.hpp>
+//#include <handle.hpp>
 
 namespace
 {
@@ -31,7 +30,7 @@ namespace kernel::task
     bool create(
         Routine     a_routine,
         Priority    a_priority,
-        uint32_t *  a_handle,
+        id *        a_handle,
         bool        a_create_suspended
         )
     {
@@ -68,9 +67,27 @@ namespace kernel::task
         
         if (a_handle)
         {
-            *a_handle = kernel::handle::create(item_id, kernel::handle::ObjectType::Task);
+            *a_handle = item_id;
+            // TODO: is it needed in kernel or user api?
+            // *a_handle = kernel::handle::create(item_id, kernel::handle::ObjectType::Task);
         }
         
         return true;
+    }
+    
+
+    Priority    getPriority(id a_id)
+    {
+        return m_context.m_data.at(a_id).m_priority;
+    }
+    
+    kernel::hardware::task::Context *  getContext(id a_id)
+    {
+        return &m_context.m_data.at(a_id).m_context;
+    }
+    
+    uint32_t getSp(id a_id)
+    {
+        return m_context.m_data.at(a_id).m_sp;
     }
 }

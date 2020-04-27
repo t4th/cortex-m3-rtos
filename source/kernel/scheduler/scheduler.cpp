@@ -18,6 +18,7 @@ namespace
         TaskList() : m_buffer(m_context) {}
     };
     
+    // Create task lists, each for one priority.
     struct
     {
         std::array <TaskList, kernel::task::priorities_count> m_task_list;
@@ -87,8 +88,7 @@ namespace kernel::scheduler
         if (count > 1)
         {
             const uint32_t current = m_context.m_task_list[prio].m_current;
-            
-            uint32_t next_index = m_context.m_task_list[prio].m_buffer.nextIndex(current);
+            const uint32_t next_index = m_context.m_task_list[prio].m_buffer.nextIndex(current);
             
             m_context.m_task_list[prio].m_current = next_index;
 

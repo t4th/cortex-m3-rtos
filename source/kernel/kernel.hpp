@@ -6,10 +6,13 @@ namespace kernel
 {    
     void init();
     void start();
-    
+}
+
+namespace kernel::hardware
+{
     struct task_context
     {
-        uint32_t *  context; // Context 'must' stay at offset #0!
+        void *  context; // Context 'must' stay at offset #0!
         uint32_t    sp;
     };
     

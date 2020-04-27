@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <hardware.hpp>
 
 namespace kernel::task
 {
@@ -18,7 +19,7 @@ namespace kernel::task
         Low
     };
     
-    enum class State
+    enum State
     {
         Suspended,
         Waiting,
@@ -29,7 +30,11 @@ namespace kernel::task
     bool create(
         Routine     a_routine,
         Priority    a_priority = Priority::Low,
-        uint32_t *  a_handle = nullptr,
+        id *        a_handle = nullptr,
         bool        a_create_suspended = false
         );
+        
+    Priority    getPriority(id a_id);
+    kernel::hardware::task::Context *  getContext(id a_id);
+    uint32_t    getSp(id a_id);
 }
