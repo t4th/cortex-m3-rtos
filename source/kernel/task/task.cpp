@@ -1,7 +1,6 @@
 #include <task.hpp>
 
 #include <memory_buffer.hpp>
-//#include <handle.hpp>
 
 namespace
 {
@@ -18,8 +17,8 @@ namespace
     
     struct Context
     {
-        kernel::common::MemoryBuffer<Task, kernel::task::max_task_number>::Context m_context;
-        kernel::common::MemoryBuffer<Task, kernel::task::max_task_number> m_data;
+        kernel::common::MemoryBuffer<Task, kernel::task::MAX_TASK_NUMBER>::Context m_context;
+        kernel::common::MemoryBuffer<Task, kernel::task::MAX_TASK_NUMBER> m_data;
         
         Context() : m_data(m_context) {}
     } m_context;
@@ -30,7 +29,7 @@ namespace kernel::task
     bool create(
         Routine     a_routine,
         Priority    a_priority,
-        id *        a_handle,
+        Id *        a_handle,
         bool        a_create_suspended
         )
     {
@@ -76,18 +75,27 @@ namespace kernel::task
     }
     
 
-    Priority    getPriority(id a_id)
+    namespace priority
     {
-        return m_context.m_data.at(a_id).m_priority;
+        Priority get(Id a_id)
+        {
+            return m_context.m_data.at(a_id).m_priority;
+        }
+    }
+
+    namespace context
+    {
+        kernel::hardware::task::Context * getRef(Id a_id)
+        {
+            return &m_context.m_data.at(a_id).m_context;
+        }
     }
     
-    kernel::hardware::task::Context *  getContext(id a_id)
+    namespace sp
     {
-        return &m_context.m_data.at(a_id).m_context;
-    }
-    
-    uint32_t getSp(id a_id)
-    {
-        return m_context.m_data.at(a_id).m_sp;
+        uint32_t get(Id a_id)
+        {
+            return m_context.m_data.at(a_id).m_sp;
+        }
     }
 }

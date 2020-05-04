@@ -10,25 +10,25 @@ namespace
     // Track current task for given priority.
     struct TaskList
     {
-        kernel::common::CircularList<uint32_t, kernel::task::max_task_number>::Context m_context;
-        kernel::common::CircularList<uint32_t, kernel::task::max_task_number> m_buffer;
+        kernel::common::CircularList<uint32_t, kernel::task::MAX_TASK_NUMBER>::Context m_context;
+        kernel::common::CircularList<uint32_t, kernel::task::MAX_TASK_NUMBER> m_buffer;
         
         uint32_t m_current;
         
-        TaskList() : m_buffer(m_context) {}
+        TaskList() : m_context{}, m_buffer{m_context}, m_current{0U} {}
     };
     
     // Create task lists, each for one priority.
     struct
     {
-        std::array <TaskList, kernel::task::priorities_count> m_task_list;
+        std::array <TaskList, kernel::task::PRIORITIES_COUNT> m_task_list;
         
     } m_context;
 }
 
 namespace kernel::scheduler
 {
-    bool addTask(kernel::task::Priority a_priority, kernel::task::id a_id)
+    bool addTask(kernel::task::Priority a_priority, kernel::task::Id a_id)
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
@@ -50,7 +50,7 @@ namespace kernel::scheduler
         return true;
     }
     
-    void removeTask(kernel::task::Priority a_priority, kernel::task::id a_id)
+    void removeTask(kernel::task::Priority a_priority, kernel::task::Id a_id)
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
@@ -80,7 +80,7 @@ namespace kernel::scheduler
         }
     }
     
-    bool findNextTask(kernel::task::Priority a_priority, kernel::task::id & a_id)
+    bool findNextTask(kernel::task::Priority a_priority, kernel::task::Id & a_id)
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();

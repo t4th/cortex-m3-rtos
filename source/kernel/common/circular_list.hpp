@@ -18,7 +18,7 @@ namespace kernel::common
             };
        
         public:
-            typedef uint32_t id;
+            typedef uint32_t Id;
         
             struct Context
             {

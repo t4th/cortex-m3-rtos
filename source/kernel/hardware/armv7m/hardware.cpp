@@ -33,6 +33,19 @@ namespace kernel::hardware
         NVIC_EnableIRQ(SysTick_IRQn);
         NVIC_EnableIRQ(PendSV_IRQn);
     }
+
+    namespace sp
+    {
+        uint32_t get()
+        {
+            return __get_PSP();
+        }
+
+        void set(uint32_t a_new_sp)
+        {
+            __set_PSP(a_new_sp);
+        }
+    }
 }
 
 namespace kernel::hardware::task
@@ -40,36 +53,30 @@ namespace kernel::hardware::task
     void Stack::init(uint32_t a_routine)
     {
         // TODO: Do something with magic numbers.
-        m_data[task_stack_size - 8] = 0xcdcdcdcd; // r0
-        m_data[task_stack_size - 7] = 0xcdcdcdcd; // r1
-        m_data[task_stack_size - 6] = 0xcdcdcdcd; // r2
-        m_data[task_stack_size - 5] = 0xcdcdcdcd; // r3
-        m_data[task_stack_size - 4] = 0; // r12
-        m_data[task_stack_size - 3] = 0; // lr r14
-        m_data[task_stack_size - 2] = a_routine;
-        m_data[task_stack_size - 1] = 0x01000000; // xPSR
+        m_data[TASK_STACK_SIZE - 8] = 0xCD'CD'CD'CD; // R0
+        m_data[TASK_STACK_SIZE - 7] = 0xCD'CD'CD'CD; // R1
+        m_data[TASK_STACK_SIZE - 6] = 0xCD'CD'CD'CD; // R2
+        m_data[TASK_STACK_SIZE - 5] = 0xCD'CD'CD'CD; // R3
+        m_data[TASK_STACK_SIZE - 4] = 0; // R12
+        m_data[TASK_STACK_SIZE - 3] = 0; // LR R14
+        m_data[TASK_STACK_SIZE - 2] = a_routine;
+        m_data[TASK_STACK_SIZE - 1] = 0x01000000; // xPSR
     }
     
     uint32_t Stack::getStackPointer()
     {
-        return (uint32_t)&m_data[task_stack_size - 8];
+        return (uint32_t)&m_data[TASK_STACK_SIZE - 8];
     }
 }
-
 
 extern "C"
 {
     void SysTick_Handler(void)
     {
-        // TODO: this wont work. Move it to kernel.
-        current_task_context.sp = __get_PSP();
-        
         bool execute_context_switch = kernel::hardware::tick(current_task_context, next_task_context);  // TODO: Make this function explicitly inline.
         
         if (execute_context_switch)
         {
-            __set_PSP(next_task_context.sp);
-            
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
         }
         

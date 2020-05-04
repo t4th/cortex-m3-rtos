@@ -4,7 +4,7 @@
 
 namespace kernel::hardware
 {
-    constexpr uint32_t task_stack_size = 32;
+    constexpr uint32_t TASK_STACK_SIZE = 32U;
     
     namespace task
     {
@@ -20,10 +20,16 @@ namespace kernel::hardware
                 void        init(uint32_t a_routine);
                 uint32_t    getStackPointer();
             private:
-                uint32_t    m_data[task_stack_size];
+                uint32_t    m_data[TASK_STACK_SIZE];
         };
     }
     
     void init();
     void start();
+
+    namespace sp
+    {
+        uint32_t get();
+        void set(uint32_t);
+    }
 }

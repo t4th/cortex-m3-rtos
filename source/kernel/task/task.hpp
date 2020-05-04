@@ -7,10 +7,10 @@ namespace kernel::task
 {
     typedef void(*Routine)(void);  // TODO: Add argument.
     
-    constexpr uint32_t max_task_number = 16;
-    constexpr uint32_t priorities_count = 3; // TODO: Can this be calculated during compile time?
+    constexpr uint32_t MAX_TASK_NUMBER = 16U;
+    constexpr uint32_t PRIORITIES_COUNT = 3U; // TODO: Can this be calculated during compile time?
     
-    typedef uint32_t id;
+    typedef uint32_t Id;
     
     enum class Priority : uint32_t
     {
@@ -30,11 +30,22 @@ namespace kernel::task
     bool create(
         Routine     a_routine,
         Priority    a_priority = Priority::Low,
-        id *        a_handle = nullptr,
+        Id *        a_handle = nullptr,
         bool        a_create_suspended = false
         );
         
-    Priority    getPriority(id a_id);
-    kernel::hardware::task::Context *  getContext(id a_id);
-    uint32_t    getSp(id a_id);
+    namespace priority
+    {
+        Priority get(Id a_id);
+    }
+
+    namespace context
+    {
+        kernel::hardware::task::Context *  getRef(Id a_id);
+    }
+    
+    namespace sp
+    {
+        uint32_t get(Id a_id);
+    }
 }

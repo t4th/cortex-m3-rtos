@@ -7,18 +7,21 @@
 
 namespace
 {
-    constexpr uint32_t default_timer_interval = 10;
+    constexpr uint32_t DEFAULT_TIMER_INTERVAL = 10;
     
-    typedef uint32_t time_ms_t;
+    typedef uint32_t Time_ms;
     
     volatile struct
     {
-        time_ms_t   time = 0;
-        time_ms_t   interval = default_timer_interval;
+        bool    first_run;
+
+        Time_ms old_time;
+        Time_ms time;
+        Time_ms interval = DEFAULT_TIMER_INTERVAL;
         
         
-        uint32_t m_current;
-        uint32_t m_next;
+        kernel::task::Id m_current;
+        kernel::task::Id m_next;
         
     } m_context;
 
@@ -36,9 +39,12 @@ namespace kernel
 {
     void init()
     {
+        m_context.old_time = 0;
+        m_context.first_run = true;
+
         hardware::init();
         
-        task::id idle_task_handle;
+        task::Id idle_task_handle;
         kernel::task::create(idle_routine, task::Priority::Low, &idle_task_handle);
         
         scheduler::addTask(task::Priority::Low, idle_task_handle);
@@ -55,31 +61,35 @@ namespace kernel
 
 namespace kernel::hardware
 {
-    
+    // TODO: all data must be in critical section
     bool tick(volatile task_context & current, volatile task_context & next)
     {
-        static bool first_run =  true;
-        static time_ms_t old_time = 0;
+        bool execute_context_switch = false;
         
-        bool ret_val = false;
-        
-        if (m_context.time - old_time > m_context.interval)
+        if (m_context.time - m_context.old_time > m_context.interval)
         {
             // get current task prio
             // find next task in prio
             
-            if (first_run) // load first task - no storing of current task
+            if (!m_context.first_run) // first_run used to load first task - no storing of current task
             {
-                next.context = kernel::task::getContext(m_context.m_next);
-                next.sp = kernel::task::getSp(m_context.m_next);
-                
-                first_run = !first_run;
-                ret_val = true;
+                // Store context.
+                current.sp = hardware::sp::get();
+                current.context = kernel::task::context::getRef(m_context.m_current);
             }
+
+            // Load next task context.
+            next.context = kernel::task::context::getRef(m_context.m_next);
+            next.sp = kernel::task::sp::get(m_context.m_next);
+            hardware::sp::set(next.sp);
+
+            m_context.first_run = !m_context.first_run;
+
+            execute_context_switch = true;
         }
         
         m_context.time++;
         
-        return ret_val;
+        return execute_context_switch;
     }
 }
