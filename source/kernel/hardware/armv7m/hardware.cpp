@@ -6,8 +6,8 @@
 
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
-volatile kernel::hardware::task_context current_task_context;
-volatile kernel::hardware::task_context next_task_context;
+volatile kernel::task_context current_task_context;
+volatile kernel::task_context next_task_context;
 volatile uint32_t skip_store = 1;
 
 namespace kernel::hardware
@@ -73,7 +73,7 @@ extern "C"
 {
     void SysTick_Handler(void)
     {
-        bool execute_context_switch = kernel::hardware::tick(current_task_context, next_task_context);  // TODO: Make this function explicitly inline.
+        bool execute_context_switch = kernel::tick(current_task_context, next_task_context);  // TODO: Make this function explicitly inline.
         
         if (execute_context_switch)
         {

@@ -80,7 +80,7 @@ namespace kernel::scheduler
         }
     }
     
-    bool findNextTask(kernel::task::Priority a_priority, kernel::task::Id & a_id)
+    bool findNextTask(kernel::task::Priority a_priority, volatile kernel::task::Id & a_id)
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = m_context.m_task_list[prio].m_buffer.count();

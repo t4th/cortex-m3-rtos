@@ -8,7 +8,7 @@ namespace kernel
     void start();
 }
 
-namespace kernel::hardware
+namespace kernel
 {
     struct task_context
     {

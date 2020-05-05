@@ -14,6 +14,7 @@ namespace
     volatile struct
     {
         bool    first_run;
+        bool    switch_requested;
 
         Time_ms old_time;
         Time_ms time;
@@ -51,6 +52,8 @@ namespace kernel
         
         m_context.m_current = idle_task_handle;
         m_context.m_next = idle_task_handle;
+
+        m_context.switch_requested = true;
     }
     
     void start()
@@ -59,7 +62,7 @@ namespace kernel
     }
 }
 
-namespace kernel::hardware
+namespace kernel
 {
     // TODO: all data must be in critical section
     bool tick(volatile task_context & current, volatile task_context & next)
@@ -68,10 +71,33 @@ namespace kernel::hardware
         
         if (m_context.time - m_context.old_time > m_context.interval)
         {
-            // get current task prio
-            // find next task in prio
-            
-            if (!m_context.first_run) // first_run used to load first task - no storing of current task
+            if (false == m_context.switch_requested) // Do arbitration.
+            {
+                // Get current task priority.
+                const task::Priority current  = kernel::task::priority::get(m_context.m_current);
+                
+                // Find next task in priority.
+                scheduler::findNextTask(current, m_context.m_next);
+
+                if (m_context.m_current != m_context.m_next)
+                {
+                    m_context.switch_requested = true;
+                }
+            }
+            else  // Reset timestamp.
+            {
+                m_context.old_time = m_context.time;
+            }
+        }
+        
+        if (true == m_context.switch_requested)
+        {
+            // First_run used to load first task - skip Store Context. Workaround.
+            if (true == m_context.first_run)
+            {
+                m_context.first_run = false;
+            }
+            else
             {
                 // Store context.
                 current.sp = hardware::sp::get();
@@ -83,9 +109,10 @@ namespace kernel::hardware
             next.sp = kernel::task::sp::get(m_context.m_next);
             hardware::sp::set(next.sp);
 
-            m_context.first_run = !m_context.first_run;
+            m_context.m_current = m_context.m_next;
 
             execute_context_switch = true;
+            m_context.switch_requested = false;
         }
         
         m_context.time++;
