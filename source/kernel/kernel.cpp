@@ -100,14 +100,15 @@ namespace kernel
             else
             {
                 // Store context.
-                current.sp = hardware::sp::get();
+                const uint32_t current_sp = hardware::sp::get();
+                kernel::task::sp::set(m_context.m_current, current_sp);
                 current.context = kernel::task::context::getRef(m_context.m_current);
             }
 
             // Load next task context.
             next.context = kernel::task::context::getRef(m_context.m_next);
-            next.sp = kernel::task::sp::get(m_context.m_next);
-            hardware::sp::set(next.sp);
+            const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
+            hardware::sp::set(next_sp );
 
             m_context.m_current = m_context.m_next;
 

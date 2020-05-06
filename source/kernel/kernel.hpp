@@ -13,7 +13,7 @@ namespace kernel
     struct task_context
     {
         void *  context; // Context 'must' stay at offset #0!
-        uint32_t    sp;
+        //uint32_t    sp;
     };
     
     bool tick(volatile task_context & current, volatile task_context & next) __attribute__((always_inline));

@@ -47,5 +47,6 @@ namespace kernel::task
     namespace sp
     {
         uint32_t get(Id a_id);
+        void set(Id a_id, uint32_t a_new_sp);
     }
 }

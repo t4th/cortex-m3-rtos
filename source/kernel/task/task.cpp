@@ -97,5 +97,9 @@ namespace kernel::task
         {
             return m_context.m_data.at(a_id).m_sp;
         }
+        void set(Id a_id, uint32_t a_new_sp)
+        {
+            m_context.m_data.at(a_id).m_sp = a_new_sp;
+        }
     }
 }
