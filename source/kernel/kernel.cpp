@@ -80,12 +80,13 @@ namespace kernel
                 // Get current task priority.
                 const task::Priority current  = kernel::task::priority::get(m_context.m_current);
                 
-                // Find next task in priority.
-                scheduler::findNextTask(current, m_context.m_next);
-
-                if (m_context.m_current != m_context.m_next)
+                // Find next task in priority group.
+                if(true == scheduler::findNextTask(current, m_context.m_next))
                 {
-                    m_context.switch_requested = true;
+                    if (m_context.m_current != m_context.m_next)
+                    {
+                        m_context.switch_requested = true;
+                    }
                 }
             }
             else  // Reset timestamp.
