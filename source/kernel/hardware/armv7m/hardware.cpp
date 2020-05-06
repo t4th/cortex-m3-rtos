@@ -6,8 +6,8 @@
 
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
-volatile kernel::task_context current_task_context;
-volatile kernel::task_context next_task_context;
+volatile kernel::hardware::task::Context * current_task_context;
+volatile kernel::hardware::task::Context * next_task_context;
 volatile uint32_t skip_store = 1;
 
 namespace kernel::hardware

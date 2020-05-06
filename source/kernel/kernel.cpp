@@ -65,7 +65,11 @@ namespace kernel
 namespace kernel
 {
     // TODO: all data must be in critical section
-    bool tick(volatile task_context & current, volatile task_context & next)
+    bool tick
+        (
+        volatile kernel::hardware::task::Context * & a_current_task_context,
+        volatile kernel::hardware::task::Context * & a_next_task_context
+        )
     {
         bool execute_context_switch = false;
         
@@ -102,11 +106,11 @@ namespace kernel
                 // Store context.
                 const uint32_t current_sp = hardware::sp::get();
                 kernel::task::sp::set(m_context.m_current, current_sp);
-                current.context = kernel::task::context::getRef(m_context.m_current);
+                a_current_task_context = kernel::task::context::getRef(m_context.m_current);
             }
 
             // Load next task context.
-            next.context = kernel::task::context::getRef(m_context.m_next);
+            a_next_task_context = kernel::task::context::getRef(m_context.m_next);
             const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
             hardware::sp::set(next_sp );
 

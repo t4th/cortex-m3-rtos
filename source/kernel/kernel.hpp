@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <hardware.hpp> //TODO: create kerneli::api fascade
 
 namespace kernel
 {    
@@ -10,11 +11,9 @@ namespace kernel
 
 namespace kernel
 {
-    struct task_context
-    {
-        void *  context; // Context 'must' stay at offset #0!
-        //uint32_t    sp;
-    };
-    
-    bool tick(volatile task_context & current, volatile task_context & next) __attribute__((always_inline));
+    bool tick
+        (
+        volatile kernel::hardware::task::Context * & a_current_task_context,
+        volatile kernel::hardware::task::Context * & a_next_task_context
+        ) __attribute__((always_inline));
 }
