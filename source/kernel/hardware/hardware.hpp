@@ -24,6 +24,14 @@ namespace kernel::hardware
         };
     }
     
+    enum class SyscallId : uint8_t
+    {
+        StartFirstTask,
+        ExecuteContextSwitch
+    };
+
+    void syscall(SyscallId a_id);
+
     void init();
     void start();
 

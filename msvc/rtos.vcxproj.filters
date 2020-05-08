@@ -12,6 +12,9 @@
     <Filter Include="arm_cc_stubs">
       <UniqueIdentifier>{2bf49f5d-130a-403e-809e-06eca7f5a0e3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{cec71a4d-45ab-4aea-bdc0-41544748a18a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel\task\task.cpp">
@@ -76,5 +79,10 @@
     <ClInclude Include="..\source\kernel\critical_section\critical_section.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\external\st\STM32F10x\startup_stm32f10x_hd.s">
+      <Filter>external</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -5,13 +5,17 @@
 #include <task.hpp>
 #include <scheduler.hpp>
 
-namespace
+// This is workaround to use C++ variables symbols in inline assembly.
+extern volatile kernel::hardware::task::Context * current_task_context;
+extern volatile kernel::hardware::task::Context * next_task_context;
+
+namespace kernel::internal
 {
     constexpr uint32_t DEFAULT_TIMER_INTERVAL = 10;
     
     typedef uint32_t Time_ms;
     
-    volatile struct
+    volatile struct Context
     {
         bool    first_run;
         bool    switch_requested;
@@ -34,42 +38,54 @@ namespace
             i++;
         }
     }
+
+    void storeContext()
+    {
+        const uint32_t sp = hardware::sp::get();
+        kernel::task::sp::set(m_context.m_current, sp);
+        current_task_context = kernel::task::context::getRef(m_context.m_current);
+    }
+
+    void loadContext()
+    {
+        next_task_context = kernel::task::context::getRef(m_context.m_next);
+        const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
+        hardware::sp::set(next_sp );
+    }
 }
 
 namespace kernel
 {
     void init()
     {
-        m_context.old_time = 0;
-        m_context.first_run = true;
+        internal::m_context.old_time = 0;
+        internal::m_context.first_run = true;
 
         hardware::init();
         
         task::Id idle_task_handle;
-        kernel::task::create(idle_routine, task::Priority::Low, &idle_task_handle);
+        kernel::task::create(internal::idle_routine, task::Priority::Idle, &idle_task_handle);
         
-        scheduler::addTask(task::Priority::Low, idle_task_handle);
+        scheduler::addTask(task::Priority::Idle, idle_task_handle);
         
-        m_context.m_current = idle_task_handle;
-        m_context.m_next = idle_task_handle;
+        internal::m_context.m_current = idle_task_handle;
+        internal::m_context.m_next = idle_task_handle;
 
-        m_context.switch_requested = true;
+        internal::m_context.switch_requested = true;
     }
     
     void start()
     {
         hardware::start();
+        // system call - start first task
+        hardware::syscall(hardware::SyscallId::StartFirstTask);
     }
 }
 
-namespace kernel
+namespace kernel::internal
 {
     // TODO: all data must be in critical section
-    bool tick
-        (
-        volatile kernel::hardware::task::Context * & a_current_task_context,
-        volatile kernel::hardware::task::Context * & a_next_task_context
-        )
+    bool tick()
     {
         bool execute_context_switch = false;
         
@@ -104,16 +120,10 @@ namespace kernel
             }
             else
             {
-                // Store context.
-                const uint32_t current_sp = hardware::sp::get();
-                kernel::task::sp::set(m_context.m_current, current_sp);
-                a_current_task_context = kernel::task::context::getRef(m_context.m_current);
+                storeContext();
             }
 
-            // Load next task context.
-            a_next_task_context = kernel::task::context::getRef(m_context.m_next);
-            const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
-            hardware::sp::set(next_sp );
+            loadContext();
 
             m_context.m_current = m_context.m_next;
 

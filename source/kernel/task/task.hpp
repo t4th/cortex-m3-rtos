@@ -8,7 +8,7 @@ namespace kernel::task
     typedef void(*Routine)(void);  // TODO: Add argument.
     
     constexpr uint32_t MAX_TASK_NUMBER = 16U;
-    constexpr uint32_t PRIORITIES_COUNT = 3U; // TODO: Can this be calculated during compile time?
+    constexpr uint32_t PRIORITIES_COUNT = 4U; // TODO: Can this be calculated during compile time?
     
     typedef uint32_t Id;
     
@@ -16,7 +16,8 @@ namespace kernel::task
     {
         High,
         Medium,
-        Low
+        Low,
+        Idle
     };
     
     enum State

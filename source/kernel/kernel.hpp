@@ -9,11 +9,7 @@ namespace kernel
     void start();
 }
 
-namespace kernel
+namespace kernel::internal
 {
-    bool tick
-        (
-        volatile kernel::hardware::task::Context * & a_current_task_context,
-        volatile kernel::hardware::task::Context * & a_next_task_context
-        ) __attribute__((always_inline));
+    bool tick() __attribute__((always_inline));
 }
