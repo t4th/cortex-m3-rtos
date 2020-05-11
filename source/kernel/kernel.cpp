@@ -5,10 +5,6 @@
 #include <task.hpp>
 #include <scheduler.hpp>
 
-// This is workaround to use C++ variables symbols in inline assembly.
-extern volatile kernel::hardware::task::Context * current_task_context;
-extern volatile kernel::hardware::task::Context * next_task_context;
-
 namespace kernel::internal
 {
     constexpr uint32_t DEFAULT_TIMER_INTERVAL = 10;
@@ -32,10 +28,9 @@ namespace kernel::internal
 
     void idle_routine()
     {
-        volatile int i = 0;
         while(1)
         {
-            i++;
+            // TODO: calculate CPU load
         }
     }
 
@@ -43,14 +38,18 @@ namespace kernel::internal
     {
         const uint32_t sp = hardware::sp::get();
         kernel::task::sp::set(m_context.m_current, sp);
-        current_task_context = kernel::task::context::getRef(m_context.m_current);
+
+        kernel::hardware::task::Context * current_task = kernel::task::context::get(m_context.m_current);
+        kernel::hardware::context::current::set(current_task);
     }
 
     void loadContext()
     {
-        next_task_context = kernel::task::context::getRef(m_context.m_next);
+        kernel::hardware::task::Context * next_task = kernel::task::context::get(m_context.m_next);
+        kernel::hardware::context::next::set(next_task);
+
         const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
-        hardware::sp::set(next_sp );
+        kernel::hardware::sp::set(next_sp );
     }
 }
 

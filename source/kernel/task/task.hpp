@@ -42,7 +42,7 @@ namespace kernel::task
 
     namespace context
     {
-        kernel::hardware::task::Context *  getRef(Id a_id);
+        kernel::hardware::task::Context *  get(Id a_id);
     }
     
     namespace sp

@@ -1,13 +1,14 @@
 #include <hardware.hpp>
-#include <kernel.hpp>
+#include <kernel.hpp> // TODO: change to kernel_internal
 
 #include <stm32f10x.h>
-
 
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
 volatile kernel::hardware::task::Context * current_task_context;
 volatile kernel::hardware::task::Context * next_task_context;
+
+// TODO: change this to custom syscall for loading first task.
 volatile uint32_t skip_store = 1;
 
 namespace kernel::hardware
@@ -16,8 +17,16 @@ namespace kernel::hardware
     constexpr uint32_t target_systick_timestamp_us{1000};
     constexpr uint32_t systick_prescaler{core_clock_freq_hz/target_systick_timestamp_us};
     
+    namespace debug
+    {
+        void init()
+        {
+            ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
+            ITM->TER = 1UL;                  // ITM Port #0 enable
+        }
+    }
 
-#define EnablePrivilegedMode() __ASM("SVC #32")
+#define EnablePrivilegedMode() __ASM("SVC #0")
     void syscall(SyscallId a_id)
     {
         EnablePrivilegedMode();
@@ -27,8 +36,7 @@ namespace kernel::hardware
     {
         SysTick_Config(systick_prescaler - 1);
         
-        ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
-        ITM->TER = 1UL;                  // ITM Port #0 enable
+        debug::init();
 
         // Setup interrupts.
         // Set priorities - lower number is higher priority
@@ -57,6 +65,22 @@ namespace kernel::hardware
             __set_PSP(a_new_sp);
         }
     }
+
+    namespace context::current
+    {
+        void set(kernel::hardware::task::Context * a_context)
+        {
+            current_task_context = a_context;
+        }
+    }
+
+    namespace context::next
+    {
+        void set(kernel::hardware::task::Context * a_context)
+        {
+            next_task_context = a_context;
+        }
+    }
 }
 
 namespace kernel::hardware::task
@@ -82,34 +106,34 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-    void SVC_Handler_Main( unsigned int *svc_args )
+    void SVC_Handler_Main(unsigned int * svc_args)
     {
-      unsigned int svc_number;
-
-      /*
-      * Stack contains:
-      * r0, r1, r2, r3, r12, r14, the return address and xPSR
-      * First argument (r0) is svc_args[0]
-      */
-      svc_number = ( ( char * )svc_args[ 6 ] )[ -2 ] ;
-      switch( svc_number )
-      {
-        case 0:  /* EnablePrivilegedMode */
-          __set_CONTROL( __get_CONTROL( ) & ~CONTROL_nPRIV_Msk ) ;
-          break;
-        default:    /* unknown SVC */
-          break;
-      }
+        // This handler is taken from official reference manual.
+        // svc_args points to context stored when SVC interrupt was activated.
+ 
+        // Stack contains:
+        // r0, r1, r2, r3, r12, r14, the return address and xPSR
+        // First argument (r0) is svc_args[0]
+        unsigned int  svc_number = ( ( char * )svc_args[ 6 ] )[ -2 ] ; // TODO: simplify this bullshit obfuscation
+        switch( svc_number )
+        {
+          case 0:  /* EnablePrivilegedMode */
+            __set_CONTROL( __get_CONTROL( ) & ~CONTROL_nPRIV_Msk ) ;
+            break;
+          default:    /* unknown SVC */
+            break;
+        }
     }
 
     __attribute__ (( naked )) void SVC_Handler(void)
     {
-
-            __ASM("TST lr, #4\n"); // lr AND #4 - Test if masked bits are set. 
-            __ASM("ITE EQ\n" // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
-            "MRSEQ r0, MSP\n" // Move the contents of a special register to a general-purpose register. It block with EQ.
-            "MRSNE r0, PSP\n"); // It block with NE -> z == 0 Not equal
-            __ASM("B SVC_Handler_Main\n");
+        // This handler is taken from official reference manual. Since SVC assembly instruction store argument in opcode itself,
+        // code bellow track instruction address that invoked SVC interrupt via context stored when interrupt was activated.
+        __ASM("TST lr, #4\n"); // lr AND #4 - Test if masked bits are set. 
+        __ASM("ITE EQ\n" // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
+        "MRSEQ r0, MSP\n" // Move the contents of a special register to a general-purpose register. It block with EQ.
+        "MRSNE r0, PSP\n"); // It block with NE -> z == 0 Not equal
+        __ASM("B SVC_Handler_Main\n");
     }
 
 

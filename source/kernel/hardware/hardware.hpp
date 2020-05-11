@@ -40,4 +40,14 @@ namespace kernel::hardware
         uint32_t get();
         void set(uint32_t);
     }
+
+    namespace context::current
+    {
+        void set(kernel::hardware::task::Context * a_context);
+    }
+
+    namespace context::next
+    {
+        void set(kernel::hardware::task::Context * a_context);
+    }
 }

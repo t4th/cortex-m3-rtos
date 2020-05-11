@@ -85,7 +85,7 @@ namespace kernel::task
 
     namespace context
     {
-        kernel::hardware::task::Context * getRef(Id a_id)
+        kernel::hardware::task::Context * get(Id a_id)
         {
             return &m_context.m_data.at(a_id).m_context;
         }
