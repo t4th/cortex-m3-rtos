@@ -26,10 +26,17 @@ namespace kernel::hardware
         }
     }
 
-#define EnablePrivilegedMode() __ASM("SVC #0")
     void syscall(SyscallId a_id)
     {
-        EnablePrivilegedMode();
+        switch(a_id)
+        {
+        case SyscallId::StartFirstTask:
+            __ASM("SVC #0");
+            break;
+        case SyscallId::ExecuteContextSwitch:
+            __ASM("SVC #1");
+            break;
+        }
     }
 
     void init()
@@ -48,7 +55,7 @@ namespace kernel::hardware
     void start()
     {
         // Enable interrupts
-        NVIC_EnableIRQ(SVCall_IRQn);
+        //NVIC_EnableIRQ(SVCall_IRQn);
         //NVIC_EnableIRQ(SysTick_IRQn);
         NVIC_EnableIRQ(PendSV_IRQn);
     }
@@ -106,6 +113,23 @@ namespace kernel::hardware::task
 
 extern "C"
 {
+    __attribute__ (( naked )) void LoadFirstTask(void)
+    {
+        __ASM("CPSID I\n");
+
+        // Load task context
+        __ASM("ldr r0, =next_task_context\n");
+        __ASM("ldr r1, [r0]\n");
+        __ASM("ldm r1, {r4-r11}\n");
+
+        // 0xFFFFFFFD in r0 means 'return to thread mode' (use PSP).
+        // Without this PendSV would return to SysTick
+        // losing current thread state along the way.
+        __ASM("ldr r0, =0xFFFFFFFD \n");
+        __ASM("CPSIE I \n");
+        __ASM("bx r0");
+    }
+
     void SVC_Handler_Main(unsigned int * svc_args)
     {
         // This handler is taken from official reference manual.
@@ -117,11 +141,14 @@ extern "C"
         unsigned int  svc_number = ( ( char * )svc_args[ 6 ] )[ -2 ] ; // TODO: simplify this bullshit obfuscation
         switch( svc_number )
         {
-          case 0:  /* EnablePrivilegedMode */
-            __set_CONTROL( __get_CONTROL( ) & ~CONTROL_nPRIV_Msk ) ;
-            break;
-          default:    /* unknown SVC */
-            break;
+            case 0:       // SyscallId::StartFirstTask
+                LoadFirstTask();
+                break;
+            case 1:       // SyscallId::ExecuteContextSwitch
+                SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
+                break;
+            default:      // unknown SVC
+                break;
         }
     }
 

@@ -69,15 +69,14 @@ namespace kernel
         
         internal::m_context.m_current = idle_task_handle;
         internal::m_context.m_next = idle_task_handle;
-
-        internal::m_context.switch_requested = true;
+        internal::loadContext();
     }
     
     void start()
     {
         hardware::start();
         // system call - start first task
-        hardware::syscall(hardware::SyscallId::StartFirstTask);
+        hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw?
     }
 }
 
