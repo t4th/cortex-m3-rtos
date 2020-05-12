@@ -13,9 +13,6 @@ namespace kernel::internal
     
     volatile struct Context
     {
-        bool    first_run;
-        bool    switch_requested;
-
         Time_ms old_time;
         Time_ms time;
         Time_ms interval = DEFAULT_TIMER_INTERVAL;
@@ -32,6 +29,13 @@ namespace kernel::internal
         {
             // TODO: calculate CPU load
         }
+    }
+
+    void executeContextSwitch()
+    {
+        // TODO: implement
+        // this sucker will be used for kernel api calls (create thread, event, etc)
+        // m_context.old_time = m_context.time;
     }
 
     void storeContext()
@@ -58,7 +62,6 @@ namespace kernel
     void init()
     {
         internal::m_context.old_time = 0;
-        internal::m_context.first_run = true;
 
         hardware::init();
         
@@ -83,50 +86,30 @@ namespace kernel
 namespace kernel::internal
 {
     // TODO: all data must be in critical section
+    //  ...or dont. So far everything is designed to kernel m_context is
+    // accessed from handler mode only without nesting interrupts (int disabled during handler)
+    // - this must be confirmed. Also possible to use designed priority to handle critical section
     bool tick()
     {
         bool execute_context_switch = false;
         
+        // Calculate Round-Robin time stamp
+        // TODO: this looks like shit - make something nicer.
         if (m_context.time - m_context.old_time > m_context.interval)
         {
-            if (false == m_context.switch_requested) // Do arbitration.
-            {
-                // Get current task priority.
-                const task::Priority current  = kernel::task::priority::get(m_context.m_current);
+            // Get current task priority.
+            const task::Priority current  = kernel::task::priority::get(m_context.m_current);
                 
-                // Find next task in priority group.
-                if(true == scheduler::findNextTask(current, m_context.m_next))
-                {
-                    if (m_context.m_current != m_context.m_next)
-                    {
-                        m_context.switch_requested = true;
-                    }
-                }
-            }
-            else  // Reset timestamp.
-            {
-                m_context.old_time = m_context.time;
-            }
-        }
-        
-        if (true == m_context.switch_requested)
-        {
-            // First_run used to load first task - skip Store Context. Workaround.
-            if (true == m_context.first_run)
-            {
-                m_context.first_run = false;
-            }
-            else
+            // Find next task in priority group.
+            if(true == scheduler::findNextTask(current, m_context.m_next))
             {
                 storeContext();
+                loadContext();
+
+                m_context.m_current = m_context.m_next;
+
+                execute_context_switch = true;
             }
-
-            loadContext();
-
-            m_context.m_current = m_context.m_next;
-
-            execute_context_switch = true;
-            m_context.switch_requested = false;
         }
         
         m_context.time++;

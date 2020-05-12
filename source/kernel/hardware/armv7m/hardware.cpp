@@ -8,9 +8,6 @@
 volatile kernel::hardware::task::Context * current_task_context;
 volatile kernel::hardware::task::Context * next_task_context;
 
-// TODO: change this to custom syscall for loading first task.
-volatile uint32_t skip_store = 1;
-
 namespace kernel::hardware
 {
     constexpr uint32_t core_clock_freq_hz{72'000'000};
@@ -132,7 +129,7 @@ extern "C"
 
     void SVC_Handler_Main(unsigned int * svc_args)
     {
-        // This handler is taken from official reference manual.
+        // This handler implementation is taken from official reference manual.
         // svc_args points to context stored when SVC interrupt was activated.
  
         // Stack contains:
@@ -154,7 +151,7 @@ extern "C"
 
     __attribute__ (( naked )) void SVC_Handler(void)
     {
-        // This handler is taken from official reference manual. Since SVC assembly instruction store argument in opcode itself,
+        // This handler implementation is taken from official reference manual. Since SVC assembly instruction store argument in opcode itself,
         // code bellow track instruction address that invoked SVC interrupt via context stored when interrupt was activated.
         __ASM("TST lr, #4\n"); // lr AND #4 - Test if masked bits are set. 
         __ASM("ITE EQ\n" // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
@@ -182,26 +179,15 @@ extern "C"
     {
         __ASM("CPSID I\n");
         
-        // If skip_store is non-zero skip store_current_task. This is workaround for starting first task.
-        // TODO: This workaround has to go.
-        __ASM("ldr r2, =skip_store\n"); // TODO: this can be optimized to 1 instruction.
-        __ASM("ldr r0, [r2]\n");
-        __ASM("cbnz r0, load_next_task;\n");
-        
-        __ASM("store_current_task:\n");
+        // Store current task at address provided by current_task_context.
         __ASM("ldr r0, =current_task_context\n");
         __ASM("ldr r1, [r0]\n");
         __ASM("stm r1, {r4-r11}\n");
         
-        __ASM("load_next_task:\n");
+        // Load task context from address provided by next_task_context.
         __ASM("ldr r0, =next_task_context\n");
         __ASM("ldr r1, [r0]\n");
         __ASM("ldm r1, {r4-r11}\n");
-        
-        // Set skip_store to 0.
-        __ASM("mov r0, #0\n");
-        __ASM("nop\n");
-        __ASM("str r0, [r2]\n");
         
         // 0xFFFFFFFD in r0 means 'return to thread mode' (use PSP).
         // Without this PendSV would return to SysTick
