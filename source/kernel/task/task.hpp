@@ -2,52 +2,37 @@
 
 #include <cstdint>
 #include <hardware.hpp>
+#include <kernel.hpp>
 
-namespace kernel::task
+namespace kernel::internal::task
 {
-    typedef void(*Routine)(void);  // TODO: Add argument.
-    
     constexpr uint32_t MAX_TASK_NUMBER = 16U;
-    constexpr uint32_t PRIORITIES_COUNT = 4U; // TODO: Can this be calculated during compile time?
-    
-    typedef uint32_t Id;
-    
-    enum class Priority : uint32_t
-    {
-        High,
-        Medium,
-        Low,
-        Idle
-    };
-    
-    enum State
-    {
-        Suspended,
-        Waiting,
-        Ready,
-        Running
-    };
+
+    // TODO: Can this be calculated during compile time?
+    constexpr uint32_t PRIORITIES_COUNT = 4U;
     
     bool create(
-        Routine     a_routine,
-        Priority    a_priority = Priority::Low,
-        Id *        a_handle = nullptr,
-        bool        a_create_suspended = false
+        kernel::task::Routine   a_routine,
+        kernel::task::Priority  a_priority = kernel::task::Priority::Low,
+        kernel::task::Id *      a_handle = nullptr,
+        bool                    a_create_suspended = false
         );
+
+    void destroy(kernel::task::Id a_id);
         
     namespace priority
     {
-        Priority get(Id a_id);
+        kernel::task::Priority get(kernel::task::Id a_id);
     }
 
     namespace context
     {
-        kernel::hardware::task::Context *  get(Id a_id);
+        kernel::hardware::task::Context *  get(kernel::task::Id a_id);
     }
     
     namespace sp
     {
-        uint32_t get(Id a_id);
-        void set(Id a_id, uint32_t a_new_sp);
+        uint32_t get(kernel::task::Id a_id);
+        void set(kernel::task::Id a_id, uint32_t a_new_sp);
     }
 }

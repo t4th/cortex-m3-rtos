@@ -52,8 +52,8 @@ namespace kernel::hardware
     void start()
     {
         // Enable interrupts
-        //NVIC_EnableIRQ(SVCall_IRQn);
-        //NVIC_EnableIRQ(SysTick_IRQn);
+        NVIC_EnableIRQ(SVCall_IRQn);
+        NVIC_EnableIRQ(SysTick_IRQn);
         NVIC_EnableIRQ(PendSV_IRQn);
     }
 
@@ -61,11 +61,13 @@ namespace kernel::hardware
     {
         uint32_t get()
         {
+            // TODO: Thread mode should be used in final version
             return __get_PSP();
         }
 
         void set(uint32_t a_new_sp)
         {
+            // TODO: Thread mode should be used in final version
             __set_PSP(a_new_sp);
         }
     }
@@ -120,8 +122,7 @@ extern "C"
         __ASM("ldm r1, {r4-r11}\n");
 
         // 0xFFFFFFFD in r0 means 'return to thread mode' (use PSP).
-        // Without this PendSV would return to SysTick
-        // losing current thread state along the way.
+        // TODO: first task should be initialized to Thread Mode
         __ASM("ldr r0, =0xFFFFFFFD \n");
         __ASM("CPSIE I \n");
         __ASM("bx r0");

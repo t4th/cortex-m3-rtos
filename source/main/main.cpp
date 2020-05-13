@@ -1,6 +1,4 @@
 #include <kernel.hpp>
-#include <task.hpp>
-#include <scheduler.hpp>
 
 void routine()
 {
@@ -14,10 +12,8 @@ void routine()
 int main()
 {
     kernel::init();
-    
-    kernel::task::Id id;
-    kernel::task::create(routine, kernel::task::Priority::Low, &id);
-    kernel::scheduler::addTask(kernel::task::Priority::Low, id);
+
+    kernel::task::create(routine, kernel::task::Priority::Idle);
 
     kernel::start();
     

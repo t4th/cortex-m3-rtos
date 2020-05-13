@@ -10,8 +10,8 @@ namespace
     // Track current task for given priority.
     struct TaskList
     {
-        kernel::common::CircularList<uint32_t, kernel::task::MAX_TASK_NUMBER>::Context m_context;
-        kernel::common::CircularList<uint32_t, kernel::task::MAX_TASK_NUMBER> m_buffer;
+        kernel::common::CircularList<uint32_t, kernel::internal::task::MAX_TASK_NUMBER>::Context m_context;
+        kernel::common::CircularList<uint32_t, kernel::internal::task::MAX_TASK_NUMBER> m_buffer;
         
         uint32_t m_current;
         
@@ -21,7 +21,7 @@ namespace
     // Create task lists, each for one priority.
     struct
     {
-        std::array <TaskList, kernel::task::PRIORITIES_COUNT> m_task_list;
+        std::array <TaskList, kernel::internal::task::PRIORITIES_COUNT> m_task_list;
         
     } m_context;
 }

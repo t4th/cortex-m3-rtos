@@ -38,21 +38,21 @@ namespace kernel::internal
         // m_context.old_time = m_context.time;
     }
 
-    void storeContext()
+    void storeContext(kernel::task::Id a_task)
     {
         const uint32_t sp = hardware::sp::get();
-        kernel::task::sp::set(m_context.m_current, sp);
+        internal::task::sp::set(a_task, sp);
 
-        kernel::hardware::task::Context * current_task = kernel::task::context::get(m_context.m_current);
+        kernel::hardware::task::Context * current_task = internal::task::context::get(a_task);
         kernel::hardware::context::current::set(current_task);
     }
 
-    void loadContext()
+    void loadContext(kernel::task::Id a_task)
     {
-        kernel::hardware::task::Context * next_task = kernel::task::context::get(m_context.m_next);
+        kernel::hardware::task::Context * next_task = internal::task::context::get(a_task);
         kernel::hardware::context::next::set(next_task);
 
-        const uint32_t next_sp = kernel::task::sp::get(m_context.m_next);
+        const uint32_t next_sp = kernel::internal::task::sp::get(a_task);
         kernel::hardware::sp::set(next_sp );
     }
 }
@@ -61,18 +61,16 @@ namespace kernel
 {
     void init()
     {
-        internal::m_context.old_time = 0;
-
         hardware::init();
         
         task::Id idle_task_handle;
-        kernel::task::create(internal::idle_routine, task::Priority::Idle, &idle_task_handle);
+        kernel::internal::task::create(internal::idle_routine, task::Priority::Idle, &idle_task_handle);
         
         scheduler::addTask(task::Priority::Idle, idle_task_handle);
         
         internal::m_context.m_current = idle_task_handle;
         internal::m_context.m_next = idle_task_handle;
-        internal::loadContext();
+        internal::loadContext(internal::m_context.m_current);
     }
     
     void start()
@@ -80,6 +78,44 @@ namespace kernel
         hardware::start();
         // system call - start first task
         hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw?
+    }
+}
+
+namespace kernel::task
+{
+    bool create(
+        kernel::task::Routine   a_routine,
+        kernel::task::Priority  a_priority,
+        kernel::task::Id *      a_handle,
+        bool                    a_create_suspended
+    )
+    {
+        kernel::task::Id id;
+
+        bool task_created = kernel::internal::task::create(a_routine, a_priority, &id, a_create_suspended);
+        
+        if (false == task_created)
+        {
+            return false;
+        }
+
+        bool task_added = kernel::scheduler::addTask(a_priority, id);
+
+        if (false == task_added)
+        {
+            kernel::internal::task::destroy(id);
+            return false;
+        }
+
+        if (a_handle)
+        {
+            *a_handle = id;
+        }
+
+        // TODO: re-schedule here
+        // execute context switch here
+        
+        return true;
     }
 }
 
@@ -98,13 +134,13 @@ namespace kernel::internal
         if (m_context.time - m_context.old_time > m_context.interval)
         {
             // Get current task priority.
-            const task::Priority current  = kernel::task::priority::get(m_context.m_current);
+            const kernel::task::Priority current  = internal::task::priority::get(m_context.m_current);
                 
             // Find next task in priority group.
             if(true == scheduler::findNextTask(current, m_context.m_next))
             {
-                storeContext();
-                loadContext();
+                storeContext(m_context.m_current);
+                loadContext(m_context.m_next);
 
                 m_context.m_current = m_context.m_next;
 
