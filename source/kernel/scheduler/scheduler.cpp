@@ -100,4 +100,27 @@ namespace kernel::scheduler
             return false;
         }
     }
+
+    bool findHighestPrioTask(volatile kernel::task::Id & a_id)
+    {
+        bool task_found = false;
+
+        for (uint32_t prio = kernel::task::Priority::High;
+            prio < kernel::internal::task::PRIORITIES_COUNT;
+            ++prio)
+        {
+            const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
+
+            if (1 == count)
+            {
+                a_id = m_context.m_task_list[prio].m_current;
+            }
+            else if (count > 1)
+            {
+                findNextTask(static_cast<kernel::task::Priority>(prio), a_id);
+            }
+        }
+
+        return task_found;
+    }
 }

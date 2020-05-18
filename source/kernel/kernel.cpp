@@ -20,8 +20,30 @@ namespace kernel::internal
         
         kernel::task::Id m_current;
         kernel::task::Id m_next;
-        
+
+        bool started; // TODO: make status register
     } m_context;
+
+    struct CriticalSection
+    {
+        CriticalSection()  {kernel::hardware::interrupt::disableAll();}
+        ~CriticalSection() {kernel::hardware::interrupt::enableAll();}
+    };
+
+    void taskFinished(volatile kernel::task::Id a_id)
+    {
+        // TODO: cleanup
+        // TerminateTask?
+    }
+
+    void task_routine()
+    {
+        kernel::task::Routine routine = internal::task::routine::get(m_context.m_current);
+
+        routine(); // Call the actual task routine.
+
+        taskFinished(m_context.m_current);
+    }
 
     void idle_routine()
     {
@@ -29,13 +51,6 @@ namespace kernel::internal
         {
             // TODO: calculate CPU load
         }
-    }
-
-    void executeContextSwitch()
-    {
-        // TODO: implement
-        // this sucker will be used for kernel api calls (create thread, event, etc)
-        // m_context.old_time = m_context.time;
     }
 
     void storeContext(kernel::task::Id a_task)
@@ -77,6 +92,7 @@ namespace kernel
     {
         hardware::start();
         // system call - start first task
+        kernel::internal::m_context.started = true;
         hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw?
     }
 }
@@ -90,6 +106,8 @@ namespace kernel::task
         bool                    a_create_suspended
     )
     {
+        kernel::internal::CriticalSection cs;
+
         kernel::task::Id id;
 
         bool task_created = kernel::internal::task::create(a_routine, a_priority, &id, a_create_suspended);
@@ -112,9 +130,16 @@ namespace kernel::task
             *a_handle = id;
         }
 
-        // TODO: re-schedule here
-        // execute context switch here
-        
+        bool task_found = kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
+
+        if (task_found) // Ignore 'false', because Idle task is always available.
+        {
+            if (kernel::internal::m_context.started)
+            {
+                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+            }
+        }
+
         return true;
     }
 }
@@ -122,7 +147,7 @@ namespace kernel::task
 namespace kernel::internal
 {
     // TODO: all data must be in critical section
-    //  ...or dont. So far everything is designed to kernel m_context is
+    //  ...or dont. So far everything is designed assuming kernel m_context is
     // accessed from handler mode only without nesting interrupts (int disabled during handler)
     // - this must be confirmed. Also possible to use designed priority to handle critical section
     bool tick()
@@ -135,7 +160,7 @@ namespace kernel::internal
         {
             // Get current task priority.
             const kernel::task::Priority current  = internal::task::priority::get(m_context.m_current);
-                
+            
             // Find next task in priority group.
             if(true == scheduler::findNextTask(current, m_context.m_next))
             {

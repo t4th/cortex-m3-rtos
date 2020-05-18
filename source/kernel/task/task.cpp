@@ -52,7 +52,7 @@ namespace kernel::internal::task
         
         task.m_priority = a_priority;
         task.m_routine = a_routine;
-        task.m_stack.init((uint32_t)task.m_routine);
+        task.m_stack.init((uint32_t)&task_routine);
         task.m_sp = task.m_stack.getStackPointer();
         
         if (a_create_suspended)
@@ -104,6 +104,14 @@ namespace kernel::internal::task
         void set(kernel::task::Id a_id, uint32_t a_new_sp)
         {
             m_context.m_data.at(a_id).m_sp = a_new_sp;
+        }
+    }
+
+    namespace routine
+    {
+        kernel::task::Routine get(kernel::task::Id a_id)
+        {
+            return m_context.m_data.at(a_id).m_routine;
         }
     }
 }

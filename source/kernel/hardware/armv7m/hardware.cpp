@@ -21,6 +21,10 @@ namespace kernel::hardware
             ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
             ITM->TER = 1UL;                  // ITM Port #0 enable
         }
+        void putChar(char c)
+        {
+            ITM_SendChar(c);
+        }
     }
 
     void syscall(SyscallId a_id)
@@ -85,6 +89,18 @@ namespace kernel::hardware
         void set(kernel::hardware::task::Context * a_context)
         {
             next_task_context = a_context;
+        }
+    }
+
+    namespace interrupt
+    {
+        void enableAll()
+        {
+            __enable_irq();
+        }
+        void disableAll()
+        {
+            __disable_irq();
         }
     }
 }

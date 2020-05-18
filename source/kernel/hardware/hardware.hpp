@@ -50,4 +50,10 @@ namespace kernel::hardware
     {
         void set(kernel::hardware::task::Context * a_context);
     }
+
+    namespace interrupt
+    {
+        void enableAll();
+        void disableAll();
+    }
 }

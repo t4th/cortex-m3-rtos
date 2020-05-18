@@ -14,9 +14,9 @@ namespace kernel::task
     typedef uint32_t Id;
     typedef void(*Routine)(void);  // TODO: Add argument.
 
-    enum class Priority : uint32_t
+    enum Priority
     {
-        High,
+        High = 0U,
         Medium,
         Low,
         Idle
@@ -41,4 +41,5 @@ namespace kernel::task
 namespace kernel::internal
 {
     bool tick() __attribute__((always_inline));
+    void task_routine();
 }
