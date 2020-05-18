@@ -103,7 +103,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

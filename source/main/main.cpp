@@ -2,10 +2,8 @@
 
 void routine()
 {
-    volatile int a;
     while (1)
     {
-        a++;
     }
 }
 
