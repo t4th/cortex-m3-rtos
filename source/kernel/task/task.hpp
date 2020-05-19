@@ -6,11 +6,13 @@
 
 namespace kernel::internal::task
 {
-    constexpr uint32_t MAX_TASK_NUMBER = 16U;
+    typedef void(*TaskRoutine)(void);
 
+    constexpr uint32_t MAX_TASK_NUMBER = 16U;
     constexpr uint32_t PRIORITIES_COUNT = kernel::task::Priority::Idle + 1U;
     
     bool create(
+        TaskRoutine             a_task_routine,
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
         kernel::task::Id *      a_handle = nullptr,

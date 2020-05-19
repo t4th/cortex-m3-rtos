@@ -32,8 +32,12 @@ namespace kernel::internal
 
     void taskFinished(volatile kernel::task::Id a_id)
     {
-        // TODO: cleanup
-        // TerminateTask?
+        CriticalSection cs;
+
+        // TODO: cleanup?
+
+        scheduler::removeTask(internal::task::priority::get(a_id), a_id);
+        internal::task::destroy(a_id);
     }
 
     void task_routine()
@@ -79,7 +83,7 @@ namespace kernel
         hardware::init();
         
         task::Id idle_task_handle;
-        kernel::internal::task::create(internal::idle_routine, task::Priority::Idle, &idle_task_handle);
+        kernel::internal::task::create(internal::task_routine, internal::idle_routine, task::Priority::Idle, &idle_task_handle);
         
         scheduler::addTask(task::Priority::Idle, idle_task_handle);
         
@@ -110,7 +114,7 @@ namespace kernel::task
 
         kernel::task::Id id;
 
-        bool task_created = kernel::internal::task::create(a_routine, a_priority, &id, a_create_suspended);
+        bool task_created = kernel::internal::task::create(internal::task_routine, a_routine, a_priority, &id, a_create_suspended);
         
         if (false == task_created)
         {
