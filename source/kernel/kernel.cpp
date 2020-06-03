@@ -30,6 +30,17 @@ namespace kernel::internal
         ~CriticalSection() {kernel::hardware::interrupt::enableAll();}
     };
 
+    void reschedule()
+    {
+        bool task_found = kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
+
+        // Ignore 'false', because Idle task is always available.
+        if (task_found)
+        {
+             hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+        }
+    }
+
     void taskFinished(volatile kernel::task::Id a_id)
     {
         CriticalSection cs;
@@ -38,6 +49,7 @@ namespace kernel::internal
 
         scheduler::removeTask(internal::task::priority::get(a_id), a_id);
         internal::task::destroy(a_id);
+        internal::reschedule(); // TODO: will syscall set SVC interrupt to Pending state when interrupts are disabled?
     }
 
     void task_routine()
@@ -97,6 +109,7 @@ namespace kernel
         hardware::start();
         // system call - start first task
         kernel::internal::m_context.started = true;
+        internal::reschedule(); // Reschedule all tasks created before kernel::start
         hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw?
     }
 }
@@ -133,15 +146,10 @@ namespace kernel::task
         {
             *a_handle = id;
         }
-
-        bool task_found = kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
-
-        if (task_found) // Ignore 'false', because Idle task is always available.
+        
+        if (kernel::internal::m_context.started)
         {
-            if (kernel::internal::m_context.started)
-            {
-                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
-            }
+            kernel::internal::reschedule();
         }
 
         return true;
