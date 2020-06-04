@@ -101,10 +101,8 @@ namespace kernel::scheduler
         }
     }
 
-    bool findHighestPrioTask(volatile kernel::task::Id & a_id)
+    void findHighestPrioTask(volatile kernel::task::Id & a_id)
     {
-        bool task_found = false;
-
         for (uint32_t prio = kernel::task::Priority::High;
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
@@ -120,7 +118,5 @@ namespace kernel::scheduler
                 findNextTask(static_cast<kernel::task::Priority>(prio), a_id);
             }
         }
-
-        return task_found;
     }
 }

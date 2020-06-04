@@ -30,6 +30,7 @@ namespace kernel::hardware
         ExecuteContextSwitch
     };
 
+    // When called while interrupts are disabled will cause HardFault exception.
     void syscall(SyscallId a_id);
 
     void init();
