@@ -185,7 +185,7 @@ extern "C"
         
         if (execute_context_switch)
         {
-            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
+            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV interrupt to pending state.
         }
         
         __DMB(); // This is not needed in this case, due to write buffer being cleared on interrupt exit,
