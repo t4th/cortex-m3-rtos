@@ -25,6 +25,15 @@ namespace kernel::hardware
         {
             ITM_SendChar(c);
         }
+
+        void print(const char * s)
+        {
+            while (*s != '\0')
+            {
+                kernel::hardware::debug::putChar(*s);
+                ++s;
+            }
+        }
     }
 
     void syscall(SyscallId a_id)
@@ -36,6 +45,9 @@ namespace kernel::hardware
             break;
         case SyscallId::ExecuteContextSwitch:
             __ASM("SVC #1");
+            break;
+        case SyscallId::LoadNextTask:
+            __ASM("SVC #2");
             break;
         }
     }
@@ -160,6 +172,12 @@ extern "C"
                 break;
             case 1:       // SyscallId::ExecuteContextSwitch
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
+                break;
+            case 2:       // SyscallId::LoadNextTask:
+                {
+                kernel::internal::loadNextTask();
+                LoadFirstTask();
+                }
                 break;
             default:      // unknown SVC
                 break;

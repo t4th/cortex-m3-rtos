@@ -41,4 +41,5 @@ namespace kernel::task
 namespace kernel::internal
 {
     bool tick() __attribute__((always_inline));
+    void loadNextTask() __attribute__((always_inline));
 }

@@ -71,21 +71,17 @@ namespace kernel::internal
         {
             // TODO: cleanup system objects
 
-            scheduler::removeTask(internal::task::priority::get(a_id), a_id);
+            kernel::task::Priority prio = internal::task::priority::get(a_id);
+            scheduler::removeTask(prio, a_id);
             internal::task::destroy(a_id);
             
             // TODO: only reschedule if next task prio is higher - check if needed
             // Since task is finished, only load m_next context without storing m_current.
             kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
-            
-#if 1 // TODO: this need to be called from handler mode or MSP stack!
-            loadContext(internal::m_context.m_next);
-            internal::m_context.m_current = internal::m_context.m_next;
-#endif
         }
-        unlockScheduler();
+        unlockScheduler(); // todo: make loadNextTask unlock scheduler
 
-        hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+        hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
 
     void task_routine()
@@ -99,8 +95,11 @@ namespace kernel::internal
 
     void idle_routine()
     {
+        volatile int i = 0;
         while(1)
         {
+            kernel::hardware::debug::print("idle\r\n");
+            for (i = 0; i < 100000; i++);
             // TODO: calculate CPU load
         }
     }
@@ -114,6 +113,7 @@ namespace kernel
         
         internal::m_context.old_time = 0U;
         internal::m_context.time = 0U;
+        kernel::internal::m_context.schedule_lock = 0U;
 
         task::Id idle_task_handle;
         kernel::internal::task::create(internal::task_routine, internal::idle_routine, task::Priority::Idle, &idle_task_handle);
@@ -122,13 +122,11 @@ namespace kernel
         
         internal::m_context.m_current = idle_task_handle;
         internal::m_context.m_next = idle_task_handle;
-        internal::loadContext(internal::m_context.m_current);
     }
     
     void start()
     {
         kernel::internal::m_context.started = true;
-        kernel::internal::m_context.schedule_lock = false;
 
         // Reschedule all tasks created before kernel::start
         kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
@@ -136,6 +134,9 @@ namespace kernel
         hardware::start();
         
         // system call - start first task
+        internal::loadContext(internal::m_context.m_next);
+        internal::m_context.m_current = internal::m_context.m_next;
+
         hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw start?
     }
 }
@@ -194,6 +195,12 @@ namespace kernel::task
 
 namespace kernel::internal
 {
+    void loadNextTask()
+    {
+        loadContext(internal::m_context.m_next);
+        internal::m_context.m_current = internal::m_context.m_next;
+    }
+
     // TODO: all data must be in critical section
     //  ...or dont. So far everything is designed assuming kernel m_context is
     // accessed from handler mode only without nesting interrupts (int disabled during handler)

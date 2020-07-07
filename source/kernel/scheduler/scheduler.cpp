@@ -111,11 +111,16 @@ namespace kernel::scheduler
 
             if (1 == count)
             {
-                a_id = m_context.m_task_list[prio].m_current;
+                uint32_t current = m_context.m_task_list[prio].m_current;
+                a_id = m_context.m_task_list[prio].m_buffer.at(current);
+                break;
             }
             else if (count > 1)
             {
-                findNextTask(static_cast<kernel::task::Priority>(prio), a_id);
+                uint32_t current;
+                findNextTask(static_cast<kernel::task::Priority>(prio), current);
+                a_id = m_context.m_task_list[prio].m_buffer.at(current);
+                break;
             }
         }
     }

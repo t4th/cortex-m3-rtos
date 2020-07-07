@@ -27,7 +27,8 @@ namespace kernel::hardware
     enum class SyscallId : uint8_t
     {
         StartFirstTask,
-        ExecuteContextSwitch
+        ExecuteContextSwitch,
+        LoadNextTask
     };
 
     // When called while interrupts are disabled will cause HardFault exception.
@@ -56,5 +57,11 @@ namespace kernel::hardware
     {
         void enableAll();
         void disableAll();
+    }
+
+    namespace debug
+    {
+        void putChar(char c);
+        void print(const char * s);
     }
 }
