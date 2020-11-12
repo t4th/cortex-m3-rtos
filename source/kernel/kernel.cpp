@@ -2,7 +2,6 @@
 
 #include <hardware.hpp>
 
-#include <task.hpp>
 #include <scheduler.hpp>
 
 namespace kernel::internal
@@ -11,12 +10,11 @@ namespace kernel::internal
     
     typedef uint32_t Time_ms;
     
-    volatile struct Context
+    struct Context
     {
         Time_ms old_time;
         Time_ms time;
         Time_ms interval = DEFAULT_TIMER_INTERVAL;
-        
         
         kernel::task::Id m_current;
         kernel::task::Id m_next;
@@ -26,25 +24,29 @@ namespace kernel::internal
         // !0 'tick' will have no effect; 0 - 'tick' works normally
         // This is used as critical section
         volatile uint32_t schedule_lock;
+
+        // data
+        internal::task::Context      m_tasks;
+        internal::scheduler::Context m_scheduler;
     } m_context;
 
     // this can be only called from handler mode (MSP stack) since it is modifying psp
     void storeContext(kernel::task::Id a_task)
     {
         const uint32_t sp = hardware::sp::get();
-        internal::task::sp::set(a_task, sp);
+        internal::task::sp::set(m_context.m_tasks, a_task, sp);
 
-        kernel::hardware::task::Context * current_task = internal::task::context::get(a_task);
+        kernel::hardware::task::Context * current_task = internal::task::context::get(m_context.m_tasks, a_task);
         kernel::hardware::context::current::set(current_task);
     }
 
     // this can be only called from handler mode (MSP stack) since it is modifying psp
     void loadContext(kernel::task::Id a_task)
     {
-        kernel::hardware::task::Context * next_task = internal::task::context::get(a_task);
+        kernel::hardware::task::Context * next_task = internal::task::context::get(m_context.m_tasks, a_task);
         kernel::hardware::context::next::set(next_task);
 
-        const uint32_t next_sp = kernel::internal::task::sp::get(a_task);
+        const uint32_t next_sp = kernel::internal::task::sp::get(m_context.m_tasks, a_task);
         kernel::hardware::sp::set(next_sp);
     }
 
@@ -65,28 +67,15 @@ namespace kernel::internal
         --internal::m_context.schedule_lock;
     }
 
-    void taskFinished(volatile kernel::task::Id a_id)
+    void taskFinished(kernel::task::Id a_id)
     {
-        lockScheduler();
-        {
-            // TODO: cleanup system objects
-
-            kernel::task::Priority prio = internal::task::priority::get(a_id);
-            scheduler::removeTask(prio, a_id);
-            internal::task::destroy(a_id);
-            
-            // TODO: only reschedule if next task prio is higher - check if needed
-            // Since task is finished, only load m_next context without storing m_current.
-            kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
-        }
-        unlockScheduler(); // todo: make loadNextTask unlock scheduler
 
         hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
 
     void task_routine()
     {
-        kernel::task::Routine routine = internal::task::routine::get(m_context.m_current);
+        kernel::task::Routine routine = internal::task::routine::get(m_context.m_tasks, m_context.m_current);
 
         routine(); // Call the actual task routine.
 
@@ -113,12 +102,18 @@ namespace kernel
         
         internal::m_context.old_time = 0U;
         internal::m_context.time = 0U;
-        kernel::internal::m_context.schedule_lock = 0U;
+        internal::m_context.schedule_lock = 0U;
 
         task::Id idle_task_handle;
-        kernel::internal::task::create(internal::task_routine, internal::idle_routine, task::Priority::Idle, &idle_task_handle);
+        internal::task::create(
+            internal::m_context.m_tasks,
+            internal::task_routine,
+            internal::idle_routine,
+            task::Priority::Idle,
+            &idle_task_handle
+        );
         
-        scheduler::addTask(task::Priority::Idle, idle_task_handle);
+        internal::scheduler::addTask(internal::m_context.m_scheduler, task::Priority::Idle, idle_task_handle);
         
         internal::m_context.m_current = idle_task_handle;
         internal::m_context.m_next = idle_task_handle;
@@ -126,10 +121,10 @@ namespace kernel
     
     void start()
     {
-        kernel::internal::m_context.started = true;
+        internal::m_context.started = true;
 
         // Reschedule all tasks created before kernel::start
-        kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
+        internal::scheduler::findHighestPrioTask(internal::m_context.m_scheduler, internal::m_context.m_next);
         
         hardware::start();
         
@@ -154,7 +149,13 @@ namespace kernel::task
         {
             kernel::task::Id id;
 
-            bool task_created = kernel::internal::task::create(internal::task_routine, a_routine, a_priority, &id, a_create_suspended);
+            bool task_created = kernel::internal::task::create(
+                internal::m_context.m_tasks,
+                internal::task_routine,
+                a_routine, a_priority,
+                &id,
+                a_create_suspended
+            );
         
             if (false == task_created)
             {
@@ -162,11 +163,15 @@ namespace kernel::task
                 return false;
             }
 
-            bool task_added = kernel::scheduler::addTask(a_priority, id);
+            bool task_added = kernel::internal::scheduler::addTask(
+                kernel::internal::m_context.m_scheduler,
+                a_priority,
+                id
+            );
 
             if (false == task_added)
             {
-                kernel::internal::task::destroy(id);
+                kernel::internal::task::destroy(internal::m_context.m_tasks, id);
                 internal::unlockScheduler();
                 return false;
             }
@@ -176,10 +181,17 @@ namespace kernel::task
                 *a_handle = id;
             }
         
-            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(internal::m_context.m_current);
+            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                internal::m_context.m_current
+            );
+
             if (a_priority > currentTaskPrio)
             {
-                kernel::scheduler::findHighestPrioTask(kernel::internal::m_context.m_next);
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
+                );
             }
         }
         internal::unlockScheduler();
@@ -197,6 +209,14 @@ namespace kernel::internal
 {
     void loadNextTask()
     {
+        kernel::task::Priority prio = internal::task::priority::get(m_context.m_tasks, m_context.m_current);
+        internal::scheduler::removeTask(m_context.m_scheduler, prio, m_context.m_current);
+        internal::task::destroy(m_context.m_tasks, m_context.m_current);
+
+        // TODO: only reschedule if next task prio is higher - check if needed
+        // Since task is finished, only load m_next context without storing m_current.
+        internal::scheduler::findHighestPrioTask(m_context.m_scheduler, m_context.m_next);
+
         loadContext(internal::m_context.m_next);
         internal::m_context.m_current = internal::m_context.m_next;
     }
@@ -219,10 +239,10 @@ namespace kernel::internal
                 m_context.old_time = m_context.time;
 
                 // Get current task priority.
-                const kernel::task::Priority current  = internal::task::priority::get(m_context.m_current);
+                const kernel::task::Priority current  = internal::task::priority::get(internal::m_context.m_tasks, m_context.m_current);
             
                 // Find next task in priority group.
-                if(true == scheduler::findNextTask(current, m_context.m_next))
+                if(true == scheduler::findNextTask(m_context.m_scheduler, current, m_context.m_next))
                 {
                     storeContext(m_context.m_current);
                     loadContext(m_context.m_next);

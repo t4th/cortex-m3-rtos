@@ -22,7 +22,7 @@ TEST_CASE("Scheduler")
     {
         kernel::scheduler::addTask(kernel::task::Priority::High, 'a');
 
-        kernel::task::id next_task_id = 0;
+        kernel::task::Id next_task_id = 0;
         REQUIRE(false == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
         REQUIRE(0 == next_task_id);
 

@@ -2,31 +2,10 @@
 
 #include <memory_buffer.hpp>
 
-namespace
-{
-    // Task system object representation.
-    struct Task
-    {
-        uint32_t                        m_sp;
-        kernel::hardware::task::Context m_context;
-        kernel::hardware::task::Stack   m_stack;
-        kernel::task::Priority          m_priority;
-        kernel::task::State             m_state;
-        kernel::task::Routine           m_routine;
-    };
-    
-    struct Context
-    {
-        kernel::common::MemoryBuffer<Task, kernel::internal::task::MAX_TASK_NUMBER>::Context m_context;
-        kernel::common::MemoryBuffer<Task, kernel::internal::task::MAX_TASK_NUMBER> m_data;
-        
-        Context() : m_data(m_context) {}
-    } m_context;
-}
-
 namespace kernel::internal::task
 {
     bool create(
+        Context &               a_context,
         TaskRoutine             a_task_routine,
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
@@ -43,13 +22,13 @@ namespace kernel::internal::task
         // Create new Task object.
         uint32_t item_id;
         
-        if (false == m_context.m_data.allocate(item_id))
+        if (false == a_context.m_data.allocate(item_id))
         {
             return false;
         }
         
         // Initialize new Task object.
-        Task & task = m_context.m_data.at(item_id);
+        Task & task = a_context.m_data.at(item_id);
         
         task.m_priority = a_priority;
         task.m_routine = a_routine;
@@ -67,7 +46,7 @@ namespace kernel::internal::task
         
         if (a_handle)
         {
-            *a_handle = item_id;
+            a_handle->m_id = item_id;
             // TODO: is it needed in kernel or user api?
             // *a_handle = kernel::handle::create(item_id, kernel::handle::ObjectType::Task);
         }
@@ -75,44 +54,66 @@ namespace kernel::internal::task
         return true;
     }
     
-    void destroy(kernel::task::Id a_id)
+    void destroy(
+        Context &               a_context,
+        kernel::task::Id        a_id
+    )
     {
-        m_context.m_data.free(a_id);
+        a_context.m_data.free(a_id.m_id);
     }
 
     namespace priority
     {
-        kernel::task::Priority get(kernel::task::Id a_id)
+        kernel::task::Priority get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        )
         {
-            return m_context.m_data.at(a_id).m_priority;
+            return a_context.m_data.at(a_id.m_id).m_priority;
         }
     }
 
     namespace context
     {
-        kernel::hardware::task::Context * get(kernel::task::Id a_id)
+        kernel::hardware::task::Context * get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        )
         {
-            return &m_context.m_data.at(a_id).m_context;
+            // NOTE: now that context moved out of anonymous namespace this
+            //       construct is just a bad practice...
+            return &a_context.m_data.at(a_id.m_id).m_context;
         }
     }
     
     namespace sp
     {
-        uint32_t get(kernel::task::Id a_id)
+        uint32_t get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        )
         {
-            return m_context.m_data.at(a_id).m_sp;
+            return a_context.m_data.at(a_id.m_id).m_sp;
         }
-        void set(kernel::task::Id a_id, uint32_t a_new_sp)
+
+        void set(
+            Context &           a_context,
+            kernel::task::Id    a_id,
+            uint32_t            a_new_sp
+        )
         {
-            m_context.m_data.at(a_id).m_sp = a_new_sp;
+            a_context.m_data.at(a_id.m_id).m_sp = a_new_sp;
         }
     }
 
     namespace routine
     {
-        kernel::task::Routine get(kernel::task::Id a_id)
+        kernel::task::Routine get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        )
         {
-            return m_context.m_data.at(a_id).m_routine;
+            return a_context.m_data.at(a_id.m_id).m_routine;
         }
     }
 }

@@ -11,7 +11,11 @@ namespace kernel
 
 namespace kernel::task
 {
-    typedef uint32_t Id;
+    typedef struct // This is struct for typesafety
+    {
+        uint32_t m_id;
+    } Id;
+
     typedef void(*Routine)(void);  // TODO: Add argument.
 
     enum Priority
@@ -40,6 +44,6 @@ namespace kernel::task
 
 namespace kernel::internal
 {
-    bool tick() __attribute__((always_inline));
-    void loadNextTask() __attribute__((always_inline));
+    bool tick();// __attribute__((always_inline));
+    void loadNextTask();// __attribute__((always_inline));
 }

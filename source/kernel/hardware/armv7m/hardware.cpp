@@ -140,7 +140,7 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-    __attribute__ (( naked )) void LoadFirstTask(void)
+    __attribute__ (( naked )) void LoadTask(void)
     {
         __ASM("CPSID I\n");
 
@@ -168,7 +168,7 @@ extern "C"
         switch( svc_number )
         {
             case 0:       // SyscallId::StartFirstTask
-                LoadFirstTask();
+                LoadTask();
                 break;
             case 1:       // SyscallId::ExecuteContextSwitch
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
@@ -176,7 +176,7 @@ extern "C"
             case 2:       // SyscallId::LoadNextTask:
                 {
                 kernel::internal::loadNextTask();
-                LoadFirstTask();
+                LoadTask();
                 }
                 break;
             default:      // unknown SVC

@@ -5,37 +5,20 @@
 #include <array>
 #include <cstdint>
 
-namespace
+namespace kernel::internal::scheduler
 {
-    // Track current task for given priority.
-    struct TaskList
-    {
-        kernel::common::CircularList<uint32_t, kernel::internal::task::MAX_TASK_NUMBER>::Context m_context;
-        kernel::common::CircularList<uint32_t, kernel::internal::task::MAX_TASK_NUMBER> m_buffer;
-        
-        uint32_t m_current;
-        
-        TaskList() : m_context{}, m_buffer{m_context}, m_current{0U} {}
-    };
-    
-    // Create task lists, each for one priority.
-    struct
-    {
-        std::array <TaskList, kernel::internal::task::PRIORITIES_COUNT> m_task_list;
-        
-    } m_context;
-}
-
-namespace kernel::scheduler
-{
-    bool addTask(kernel::task::Priority a_priority, kernel::task::Id a_id)
+    bool addTask(
+        kernel::internal::scheduler::Context &  a_context,
+        kernel::task::Priority                  a_priority,
+        kernel::task::Id                        a_id
+    )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
-        const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
+        const uint32_t count = a_context.m_task_list[prio].m_list.count();
         
         uint32_t new_node_idx;
         
-        bool task_added = m_context.m_task_list[prio].m_buffer.add(a_id, new_node_idx);
+        bool task_added = a_context.m_task_list[prio].m_list.add(a_id, new_node_idx);
         
         if (false == task_added)
         {
@@ -44,55 +27,63 @@ namespace kernel::scheduler
 
         if (0 == count)
         {
-            m_context.m_task_list[prio].m_current = new_node_idx;
+            a_context.m_task_list[prio].m_current = new_node_idx;
         }
 
         return true;
     }
     
-    void removeTask(kernel::task::Priority a_priority, kernel::task::Id a_id)
+    void removeTask(
+        kernel::internal::scheduler::Context &  a_context,
+        kernel::task::Priority                  a_priority,
+        kernel::task::Id                        a_id
+    )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
-        const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
+        const uint32_t count = a_context.m_task_list[prio].m_list.count();
         
-        uint32_t node_index = m_context.m_task_list[prio].m_buffer.firstIndex();
+        uint32_t node_index = a_context.m_task_list[prio].m_list.firstIndex();
         
         // Search task list for provided a_id.
         for (uint32_t i = 0; i < count; ++i)
         {
-            if (a_id == m_context.m_task_list[prio].m_buffer.at(node_index))
+            if (a_id.m_id == a_context.m_task_list[prio].m_list.at(node_index).m_id)
             {
-                if (m_context.m_task_list[prio].m_current == node_index) // If removed task i current task.
+                if (a_context.m_task_list[prio].m_current == node_index) // If removed task i current task.
                 {
                     if (count > 1) // Update current task.
                     {
-                        m_context.m_task_list[prio].m_current = m_context.m_task_list[prio].m_buffer.nextIndex(node_index);
+                        a_context.m_task_list[prio].m_current = a_context.m_task_list[prio].m_list.nextIndex(node_index);
                     }
                 }
 
-                m_context.m_task_list[prio].m_buffer.remove(node_index);
+                a_context.m_task_list[prio].m_list.remove(node_index);
                 break;
             }
             else
             {
-                node_index = m_context.m_task_list[prio].m_buffer.nextIndex(node_index);
+                node_index = a_context.m_task_list[prio].m_list.nextIndex(node_index);
             }
         }
     }
     
-    bool findNextTask(kernel::task::Priority a_priority, volatile kernel::task::Id & a_id)
+    bool findNextTask(
+        kernel::internal::scheduler::Context &  a_context,
+        kernel::task::Priority                  a_priority,
+        kernel::task::Id &                      a_id
+    )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
-        const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
+        const uint32_t count = a_context.m_task_list[prio].m_list.count();
         
         if (count > 1)
         {
-            const uint32_t current = m_context.m_task_list[prio].m_current;
-            const uint32_t next_index = m_context.m_task_list[prio].m_buffer.nextIndex(current);
+            const uint32_t current = a_context.m_task_list[prio].m_current;
+            const uint32_t next_index = a_context.m_task_list[prio].m_list.nextIndex(current);
             
-            m_context.m_task_list[prio].m_current = next_index;
+            a_context.m_task_list[prio].m_current = next_index;
 
-            a_id = m_context.m_task_list[prio].m_buffer.at(next_index);
+            a_id.m_id = a_context.m_task_list[prio].m_list.at(next_index).m_id;
             return true;
         }
         else
@@ -101,26 +92,26 @@ namespace kernel::scheduler
         }
     }
 
-    void findHighestPrioTask(volatile kernel::task::Id & a_id)
+    void findHighestPrioTask(
+        kernel::internal::scheduler::Context &  a_context,
+        kernel::task::Id &                      a_id
+    )
     {
         for (uint32_t prio = kernel::task::Priority::High;
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {
-            const uint32_t count = m_context.m_task_list[prio].m_buffer.count();
+            const uint32_t count = a_context.m_task_list[prio].m_list.count();
+            const uint32_t current = a_context.m_task_list[prio].m_current;
 
-            if (1 == count)
+            if (count >= 1)
             {
-                uint32_t current = m_context.m_task_list[prio].m_current;
-                a_id = m_context.m_task_list[prio].m_buffer.at(current);
+                a_id.m_id = a_context.m_task_list[prio].m_list.at(current).m_id;
                 break;
             }
-            else if (count > 1)
+            else
             {
-                uint32_t current;
-                findNextTask(static_cast<kernel::task::Priority>(prio), current);
-                a_id = m_context.m_task_list[prio].m_buffer.at(current);
-                break;
+                // No task in queue.
             }
         }
     }
