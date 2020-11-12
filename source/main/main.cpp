@@ -1,53 +1,81 @@
 #include <kernel.hpp>
 #include <hardware.hpp>
 
-void printTask(const char * text, volatile int asd)
+void printTask(const char * text)
 {
     kernel::hardware::debug::print(text);
+}
+
+void task0();
+void task1();
+void task2();
+void task3();
+
+struct
+{
+    kernel::task::Id task0;
+    kernel::task::Id task3;
+} ids;
+
+void cleanupTask()
+{
+    volatile int i = 0;
+    for (i = 0; i < 5000000; i++);
+    
+    printTask("terminate task 0 and 3\r\n");
+    kernel::task::terminate(ids.task0);
+    kernel::task::terminate(ids.task3);
+    printTask("cleanup task - end\r\n");
 }
 
 void task0()
 {
     volatile int i = 0;
-    volatile int b = 0x123;
+    printTask("task 0 - start\r\n");
     while (1)
     {
-        printTask("task 0\r\n", b);
         for (i = 0; i < 100000; i++);
+        printTask("task 0 - ping\r\n");
     }
 }
 
 void task1()
 {
     volatile int i = 0;
-    volatile int b = 0x456;
+    printTask("task 1 - start\r\n");
     while (1)
     {
-        printTask("task 1\r\n",b);
         for (i = 0; i < 1000000; i++);
+        printTask("task 1 - created new task 2 Medium\r\n");
+        kernel::task::create(task2, kernel::task::Priority::Medium);
+        printTask("task 1 - end\r\n");
+        break;
     }
 }
 
 void task2()
 {
     volatile int i = 0;
-    volatile int b = 0x887;
+    printTask("task 2 - start\r\n");
     while (1)
     {
-        printTask("task 2\r\n",b);
-        for (i = 0; i < 100000; i++);
+        for (i = 0; i < 1000000; i++);
+        printTask("task 2 - created new task 1 Low\r\n");
+        kernel::task::create(task1, kernel::task::Priority::Low);
+        printTask("task 2 - end\r\n");
+        break;
     }
 }
 
 void task3()
 {
     volatile int i = 0;
+    printTask("task 3 - start\r\n");
     while (1)
     {
 
-        for (i = 0; i < 600000; i++);
-        printTask("task 3 end\r\n", 0xdeadbeef);
-        break;
+        for (i = 0; i < 100000; i++);
+        printTask("task 3 - ping\r\n");
     }
 }
 
@@ -55,11 +83,10 @@ int main()
 {
     kernel::init();
     
-    //kernel::task::create(routine, kernel::task::Priority::Idle);
-    kernel::task::create(task0, kernel::task::Priority::Low);
+    kernel::task::create(task0, kernel::task::Priority::Low, &ids.task0);
     kernel::task::create(task1, kernel::task::Priority::Low);
-    kernel::task::create(task2, kernel::task::Priority::Low);
-    kernel::task::create(task3, kernel::task::Priority::Low);
+    kernel::task::create(task3, kernel::task::Priority::Low, &ids.task3);
+    kernel::task::create(cleanupTask, kernel::task::Priority::Low);
 
 
     kernel::start();

@@ -40,10 +40,13 @@ namespace kernel::task
         kernel::task::Id *      a_handle = nullptr,
         bool                    a_create_suspended = false
     );
+
+    void terminate(kernel::task::Id a_id);
 }
 
 namespace kernel::internal
 {
+    void loadNextTask(); // __attribute__((always_inline));
+    void switchContext(); // __attribute__((always_inline));
     bool tick();// __attribute__((always_inline));
-    void loadNextTask();// __attribute__((always_inline));
 }

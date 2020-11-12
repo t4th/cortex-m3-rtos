@@ -40,14 +40,11 @@ namespace kernel::hardware
     {
         switch(a_id)
         {
-        case SyscallId::StartFirstTask:
+        case SyscallId::LoadNextTask:
             __ASM("SVC #0");
             break;
         case SyscallId::ExecuteContextSwitch:
             __ASM("SVC #1");
-            break;
-        case SyscallId::LoadNextTask:
-            __ASM("SVC #2");
             break;
         }
     }
@@ -167,17 +164,15 @@ extern "C"
         unsigned int  svc_number = ( ( char * )svc_args[ 6 ] )[ -2 ] ; // TODO: simplify this bullshit obfuscation
         switch( svc_number )
         {
-            case 0:       // SyscallId::StartFirstTask
-                LoadTask();
-                break;
-            case 1:       // SyscallId::ExecuteContextSwitch
-                SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state.
-                break;
-            case 2:       // SyscallId::LoadNextTask:
+            case 0:       // SyscallId::LoadNextTask:
                 {
                 kernel::internal::loadNextTask();
                 LoadTask();
                 }
+                break;
+            case 1:       // SyscallId::ExecuteContextSwitch
+                kernel::internal::switchContext();
+                SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state so it can tail chain from SVC.
                 break;
             default:      // unknown SVC
                 break;

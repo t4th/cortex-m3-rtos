@@ -4,7 +4,7 @@
 
 namespace kernel::hardware
 {
-    constexpr uint32_t TASK_STACK_SIZE = 32U;
+    constexpr uint32_t TASK_STACK_SIZE = 64U;
     
     namespace task
     {
@@ -20,15 +20,15 @@ namespace kernel::hardware
                 void        init(uint32_t a_routine);
                 uint32_t    getStackPointer();
             private:
+                // TODO: Add sanity magic numbers.
                 uint32_t    m_data[TASK_STACK_SIZE];
         };
     }
     
     enum class SyscallId : uint8_t
     {
-        StartFirstTask,
-        ExecuteContextSwitch,
-        LoadNextTask
+        LoadNextTask,
+        ExecuteContextSwitch
     };
 
     // When called while interrupts are disabled will cause HardFault exception.

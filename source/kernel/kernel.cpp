@@ -56,6 +56,9 @@ namespace kernel::internal
         ~CriticalSection() {kernel::hardware::interrupt::enableAll();}
     };
 
+    // TODO: Lock/unlock need more elegant implementation.
+    //       Most likely each kernel task ended with some kind of
+    //       context switch would have its own SVC call.
     void lockScheduler()
     {
         ++internal::m_context.schedule_lock;
@@ -69,6 +72,18 @@ namespace kernel::internal
 
     void taskFinished(kernel::task::Id a_id)
     {
+        internal::lockScheduler();
+        {
+            kernel::task::Priority prio = internal::task::priority::get(
+                m_context.m_tasks,
+                m_context.m_current
+            );
+
+            internal::scheduler::removeTask(m_context.m_scheduler, prio, m_context.m_current);
+            internal::task::destroy(m_context.m_tasks, m_context.m_current);
+
+            internal::scheduler::findHighestPrioTask(m_context.m_scheduler, m_context.m_next);
+        }
 
         hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
@@ -121,18 +136,15 @@ namespace kernel
     
     void start()
     {
+        internal::lockScheduler();
         internal::m_context.started = true;
 
         // Reschedule all tasks created before kernel::start
         internal::scheduler::findHighestPrioTask(internal::m_context.m_scheduler, internal::m_context.m_next);
         
         hardware::start();
-        
-        // system call - start first task
-        internal::loadContext(internal::m_context.m_next);
-        internal::m_context.m_current = internal::m_context.m_next;
-
-        hardware::syscall(hardware::SyscallId::StartFirstTask); // TODO: can this be moved to hw start?
+        // Load first task
+        hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
 }
 
@@ -145,6 +157,12 @@ namespace kernel::task
         bool                    a_create_suspended
     )
     {
+
+        const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
+            internal::m_context.m_tasks,
+            internal::m_context.m_current
+        );
+
         internal::lockScheduler();
         {
             kernel::task::Id id;
@@ -181,12 +199,8 @@ namespace kernel::task
                 *a_handle = id;
             }
         
-            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
-                internal::m_context.m_tasks,
-                internal::m_context.m_current
-            );
 
-            if (a_priority > currentTaskPrio)
+            if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
                 kernel::internal::scheduler::findHighestPrioTask(
                     kernel::internal::m_context.m_scheduler,
@@ -194,14 +208,50 @@ namespace kernel::task
                 );
             }
         }
-        internal::unlockScheduler();
 
-        if (kernel::internal::m_context.started)
+        if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
         {
             hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
         }
+        else
+        {
+            internal::unlockScheduler();
+        }
 
         return true;
+    }
+
+    void terminate(kernel::task::Id a_id)
+    {
+        internal::lockScheduler();
+        {
+            kernel::task::Priority prio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                a_id
+            );
+
+            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, a_id);
+            internal::task::destroy(internal::m_context.m_tasks, a_id);
+
+            // reschedule in case task is killing itself
+            if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
+            {
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
+                );
+            }
+        }
+
+        // If task is terminating itself, dont store the context.
+        if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
+        {
+            hardware::syscall(hardware::SyscallId::LoadNextTask);
+        }
+        else
+        {
+            internal::unlockScheduler();
+        }
     }
 }
 
@@ -209,16 +259,20 @@ namespace kernel::internal
 {
     void loadNextTask()
     {
-        kernel::task::Priority prio = internal::task::priority::get(m_context.m_tasks, m_context.m_current);
-        internal::scheduler::removeTask(m_context.m_scheduler, prio, m_context.m_current);
-        internal::task::destroy(m_context.m_tasks, m_context.m_current);
-
-        // TODO: only reschedule if next task prio is higher - check if needed
-        // Since task is finished, only load m_next context without storing m_current.
-        internal::scheduler::findHighestPrioTask(m_context.m_scheduler, m_context.m_next);
-
         loadContext(internal::m_context.m_next);
         internal::m_context.m_current = internal::m_context.m_next;
+        
+        internal::unlockScheduler();
+    }
+
+    void switchContext()
+    {
+        storeContext(m_context.m_current);
+        loadContext(m_context.m_next);
+
+        m_context.m_current = m_context.m_next;
+        
+        internal::unlockScheduler();
     }
 
     // TODO: all data must be in critical section
