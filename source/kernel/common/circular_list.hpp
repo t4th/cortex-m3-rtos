@@ -18,7 +18,6 @@ namespace kernel::common
             };
        
         public:
-            typedef uint32_t Id;
 
             CircularList() : m_first{0}, m_last{0}, m_count{0}, m_buffer() {}
             

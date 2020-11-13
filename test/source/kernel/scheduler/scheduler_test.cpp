@@ -18,46 +18,54 @@ namespace kernel::task
 
 TEST_CASE("Scheduler")
 {
+    kernel::internal::scheduler::Context context;
+
     SECTION( "Add new tasks to scheduler")
     {
-        kernel::scheduler::addTask(kernel::task::Priority::High, 'a');
+        kernel::task::Id next_task_id;
 
-        kernel::task::Id next_task_id = 0;
-        REQUIRE(false == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE(0 == next_task_id);
+        next_task_id.m_id = 'a';
+        kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id);
 
-        kernel::scheduler::addTask(kernel::task::Priority::High, 'b');
+        REQUIRE(false == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('a' == next_task_id.m_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id);
+        next_task_id.m_id = 'b';
+        kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('a' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('b' == next_task_id.m_id);
 
-        kernel::scheduler::addTask(kernel::task::Priority::High, 'c');
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('a' == next_task_id.m_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id);
+        next_task_id.m_id = 'c';
+        kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('b' == next_task_id.m_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('a' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('c' == next_task_id.m_id);
 
-        kernel::scheduler::removeTask(kernel::task::Priority::High, 'a');
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('a' == next_task_id.m_id);
+        
+        next_task_id.m_id = 'a';
+        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, next_task_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('c' == next_task_id.m_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('b' == next_task_id.m_id);
 
-        REQUIRE(true == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id);
+        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
+        REQUIRE('c' == next_task_id.m_id);
 
-        kernel::scheduler::removeTask(kernel::task::Priority::High, 'b');
+        next_task_id.m_id = 'b';
+        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, next_task_id);
 
-        REQUIRE(false == kernel::scheduler::findNextTask(kernel::task::Priority::High, next_task_id));
+        REQUIRE(false == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
     }
 }

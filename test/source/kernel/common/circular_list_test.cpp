@@ -4,10 +4,9 @@
 
 TEST_CASE("CircularList")
 {
-    kernel::common::CircularList<uint32_t, 3>::Context context;
-    kernel::common::CircularList<uint32_t, 3> list(context);
+    kernel::common::CircularList<uint32_t, 3> list;
 
-    REQUIRE(0 == context.m_count);
+    REQUIRE(0 == list.count());
 
     /*
      * Expected result
@@ -27,44 +26,35 @@ TEST_CASE("CircularList")
 
         REQUIRE(true == list.add(0xabc, new_node_index));
         {
-            REQUIRE(0 == context.m_first);
-            REQUIRE(0 == context.m_last);
-            REQUIRE(1 == context.m_count);
-            REQUIRE(0xabc == context.m_buffer.at(new_node_index).m_data);
+            REQUIRE(0 == list.firstIndex());
+            REQUIRE(1 == list.count());
+            REQUIRE(0xabc == list.at(new_node_index));
 
-            REQUIRE(0 == context.m_buffer.at(new_node_index).m_prev);
-            REQUIRE(0 == context.m_buffer.at(new_node_index).m_next);
+            REQUIRE(0 == list.nextIndex(new_node_index));
         }
 
         REQUIRE(true == list.add(0x123, new_node_index));
         {
-            REQUIRE(0 == context.m_first);
-            REQUIRE(1 == context.m_last);
-            REQUIRE(2 == context.m_count);
-            REQUIRE(0x123 == context.m_buffer.at(new_node_index).m_data);
+            REQUIRE(0 == list.firstIndex());
+            REQUIRE(2 == list.count());
+            REQUIRE(0x123 == list.at(new_node_index));
 
-            REQUIRE(1 == context.m_buffer.at(0).m_prev);
-            REQUIRE(1 == context.m_buffer.at(0).m_next);
+            REQUIRE(1 == list.nextIndex(0));
 
-            REQUIRE(0 == context.m_buffer.at(new_node_index).m_prev);
-            REQUIRE(0 == context.m_buffer.at(new_node_index).m_next);
+            REQUIRE(0 == list.nextIndex(new_node_index));
         }
 
         REQUIRE(true == list.add(0xbaba, new_node_index));
         {
-            REQUIRE(0 == context.m_first);
-            REQUIRE(2 == context.m_last);
-            REQUIRE(3 == context.m_count);
-            REQUIRE(0xbaba == context.m_buffer.at(new_node_index).m_data);
+            REQUIRE(0 == list.firstIndex());
+            REQUIRE(3 == list.count());
+            REQUIRE(0xbaba == list.at(new_node_index));
 
-            REQUIRE(2 == context.m_buffer.at(0).m_prev);
-            REQUIRE(1 == context.m_buffer.at(0).m_next);
+            REQUIRE(1 == list.nextIndex(0));
 
-            REQUIRE(0 == context.m_buffer.at(1).m_prev);
-            REQUIRE(2 == context.m_buffer.at(1).m_next);
+            REQUIRE(2 == list.nextIndex(1));
 
-            REQUIRE(1 == context.m_buffer.at(2).m_prev);
-            REQUIRE(0 == context.m_buffer.at(2).m_next);
+            REQUIRE(0 == list.nextIndex(2));
         }
 
         SECTION( "Try to overflow")
@@ -88,15 +78,12 @@ TEST_CASE("CircularList")
         {
             list.remove(1);
             {
-                REQUIRE(0 == context.m_first);
-                REQUIRE(2 == context.m_last);
-                REQUIRE(2 == context.m_count);
+                REQUIRE(0 == list.firstIndex());
+                REQUIRE(2 == list.count());
 
-                REQUIRE(2 == context.m_buffer.at(0).m_prev);
-                REQUIRE(2 == context.m_buffer.at(0).m_next);
+                REQUIRE(2 == list.nextIndex(0));
                 
-                REQUIRE(0 == context.m_buffer.at(2).m_prev);
-                REQUIRE(0 == context.m_buffer.at(2).m_next);
+                REQUIRE(0 == list.nextIndex(2));
             }
 
             /*
@@ -115,19 +102,15 @@ TEST_CASE("CircularList")
             {
                 REQUIRE(true == list.add(0xb33f, new_node_index));
                 {
-                    REQUIRE(0 == context.m_first);
-                    REQUIRE(1 == context.m_last);
-                    REQUIRE(3 == context.m_count);
-                    REQUIRE(0xb33f == context.m_buffer.at(new_node_index).m_data);
+                    REQUIRE(0 == list.firstIndex());
+                    REQUIRE(3 == list.count());
+                    REQUIRE(0xb33f == list.at(new_node_index));
 
-                    REQUIRE(1 == context.m_buffer.at(0).m_prev);
-                    REQUIRE(2 == context.m_buffer.at(0).m_next);
+                    REQUIRE(2 == list.nextIndex(0));
 
-                    REQUIRE(0 == context.m_buffer.at(2).m_prev);
-                    REQUIRE(1 == context.m_buffer.at(2).m_next);
+                    REQUIRE(1 == list.nextIndex(2));
 
-                    REQUIRE(2 == context.m_buffer.at(1).m_prev);
-                    REQUIRE(0 == context.m_buffer.at(1).m_next);
+                    REQUIRE(0 == list.nextIndex(1));
                 }
             }
         }
@@ -148,15 +131,12 @@ TEST_CASE("CircularList")
         {
             list.remove(0);
             {
-                REQUIRE(1 == context.m_first);
-                REQUIRE(2 == context.m_last);
-                REQUIRE(2 == context.m_count);
+                REQUIRE(1 == list.firstIndex());
+                REQUIRE(2 == list.count());
 
-                REQUIRE(2 == context.m_buffer.at(1).m_prev);
-                REQUIRE(2 == context.m_buffer.at(1).m_next);
+                REQUIRE(2 == list.nextIndex(1));
 
-                REQUIRE(1 == context.m_buffer.at(2).m_prev);
-                REQUIRE(1 == context.m_buffer.at(2).m_next);
+                REQUIRE(1 == list.nextIndex(2));
             }
 
             /*
@@ -175,19 +155,15 @@ TEST_CASE("CircularList")
             {
                 REQUIRE(true == list.add(0xb33f1, new_node_index));
                 {
-                    REQUIRE(1 == context.m_first);
-                    REQUIRE(0 == context.m_last);
-                    REQUIRE(3 == context.m_count);
-                    REQUIRE(0xb33f1 == context.m_buffer.at(new_node_index).m_data);
+                    REQUIRE(1 == list.firstIndex());
+                    REQUIRE(3 == list.count());
+                    REQUIRE(0xb33f1 == list.at(new_node_index));
 
-                    REQUIRE(0 == context.m_buffer.at(1).m_prev);
-                    REQUIRE(2 == context.m_buffer.at(1).m_next);
+                    REQUIRE(2 == list.nextIndex(1));
 
-                    REQUIRE(1 == context.m_buffer.at(2).m_prev);
-                    REQUIRE(0 == context.m_buffer.at(2).m_next);
+                    REQUIRE(0 == list.nextIndex(2));
 
-                    REQUIRE(2 == context.m_buffer.at(0).m_prev);
-                    REQUIRE(1 == context.m_buffer.at(0).m_next);
+                    REQUIRE(1 == list.nextIndex(0));
                 }
             }
         }
@@ -208,15 +184,12 @@ TEST_CASE("CircularList")
         {
             list.remove(2);
             {
-                REQUIRE(0 == context.m_first);
-                REQUIRE(1 == context.m_last);
-                REQUIRE(2 == context.m_count);
+                REQUIRE(0 == list.firstIndex());
+                REQUIRE(2 == list.count());
 
-                REQUIRE(1 == context.m_buffer.at(0).m_prev);
-                REQUIRE(1 == context.m_buffer.at(0).m_next);
+                REQUIRE(1 == list.nextIndex(0));
 
-                REQUIRE(0 == context.m_buffer.at(1).m_prev);
-                REQUIRE(0 == context.m_buffer.at(1).m_next);
+                REQUIRE(0 == list.nextIndex(1));
             }
 
             /*
@@ -235,19 +208,15 @@ TEST_CASE("CircularList")
             {
                 REQUIRE(true == list.add(0xb33f1, new_node_index));
                 {
-                    REQUIRE(0 == context.m_first);
-                    REQUIRE(2 == context.m_last);
-                    REQUIRE(3 == context.m_count);
-                    REQUIRE(0xb33f1 == context.m_buffer.at(new_node_index).m_data);
+                    REQUIRE(0 == list.firstIndex());
+                    REQUIRE(3 == list.count());
+                    REQUIRE(0xb33f1 == list.at(new_node_index));
 
-                    REQUIRE(2 == context.m_buffer.at(0).m_prev);
-                    REQUIRE(1 == context.m_buffer.at(0).m_next);
+                    REQUIRE(1 == list.nextIndex(0));
 
-                    REQUIRE(0 == context.m_buffer.at(1).m_prev);
-                    REQUIRE(2 == context.m_buffer.at(1).m_next);
+                    REQUIRE(2 == list.nextIndex(1));
 
-                    REQUIRE(1 == context.m_buffer.at(2).m_prev);
-                    REQUIRE(0 == context.m_buffer.at(2).m_next);
+                    REQUIRE(0 == list.nextIndex(2));
                 }
             }
         }
