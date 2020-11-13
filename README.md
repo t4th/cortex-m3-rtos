@@ -1,21 +1,28 @@
-# Small cortex-m3 RTOS
+# ARM Cortex-m3 RTOS
 
-This is experimental fun project, so no fancy build/tool sets are used.  
-Simple Keil Uvision Lite project due to free simulator.
+This is hobby project to create small RTOS with just enough features to make it interesting.
+Unlike other CM3 projects (and there is many of them) my goal is not to create fastest/safest/hackest version,
+but elegant and easy to navigate version. That's why I used this oppurtinity to test some C++17 features and different
+programming paradigms/architect decisons.
+
+No fancy build system set - simple Keil Uvision Lite project due to free simulator. (it should be easy enough to setup this project with any other compiler/system)
 
 Check out prove of concept branches for technical stuff.  
 Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
+## Notes
+11/13/2020 - after doing this project in spare time it finally reached version 0.1! It is possible to create and remove tasks statically and in runtime. Stability is good, but I am still experimenting with optimal stack size and until stack overflow detection is done one must be careful with number of function entries in task routine!
+
 ## Goals
 
 ### 1.0 Features
-* task: create, delete
+* ~~task: create, delete~~
 * software timers: create, remove
 * sleep function
 * events: create, remove
 * function WaitForEvent or WaitForObject
 * Critical section: enter, leave
-* HW interrupts must be mapped to events
+* way to map HW interrupts to events
 
 ### Other
 * build and simulated via keil uvision
@@ -53,7 +60,7 @@ Open project **keil\rtos.uvprojx** or call:
 ...or just open project in Uvision and build/run using IDE.
 
 ## Edit
-VS Code or Uvision.
+Visual Studio Community 2019 or Uvision (VS Code should do fine too).
 
 ## Experimental POC branches
 Scheduler prove-of-concept
@@ -64,8 +71,9 @@ https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 
 ## After POC branch decisions
 * HANDLE system like in windows (generlized handle to system objects for easier user API) - better than raw pointers
-* ~~API function will use win32 function names (since I like it)~~ - since c++ will be used this is no longer valid
+* ~~API function will use win32 function names~~ - since c++ will be used this is no longer valid
 * task queue circular linked list ~~or b-tree~~ - make it work, not CS degree viable
 
 ## ToDo never
 - setup gcc project with cmake
+- adapt HW layer to Cortex-M4
