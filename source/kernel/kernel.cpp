@@ -23,7 +23,7 @@ namespace kernel::internal
 
         // !0 'tick' will have no effect; 0 - 'tick' works normally
         // This is used as critical section
-        volatile uint32_t schedule_lock = 0U;;
+        volatile uint32_t schedule_lock = 0U;
 
         // data
         internal::task::Context      m_tasks;
@@ -191,7 +191,6 @@ namespace kernel::task
             {
                 *a_handle = id;
             }
-        
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
