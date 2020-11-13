@@ -78,12 +78,17 @@ namespace kernel::internal
             m_context.m_current
         );
 
-        routine(); // Call the actual task routine.
+        void * parameter = internal::task::parameter::get(
+            m_context.m_tasks,
+            m_context.m_current
+        );
+
+        routine(parameter); // Call the actual task routine.
 
         kernel::task::terminate(m_context.m_current);
     }
 
-    void idle_routine()
+    void idle_routine(void * a_parameter)
     {
         volatile int i = 0;
         while(1)
@@ -140,6 +145,7 @@ namespace kernel::task
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
         kernel::task::Id *      a_handle,
+        void *                  a_parameter,
         bool                    a_create_suspended
     )
     {
@@ -158,6 +164,7 @@ namespace kernel::task
                 internal::task_routine,
                 a_routine, a_priority,
                 &id,
+                a_parameter,
                 a_create_suspended
             );
         

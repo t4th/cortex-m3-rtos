@@ -6,10 +6,10 @@ void printTask(const char * text)
     kernel::hardware::debug::print(text);
 }
 
-void task0();
-void task1();
-void task2();
-void task3();
+void task0(void * a_parameter);
+void task1(void * a_parameter);
+void task2(void * a_parameter);
+void task3(void * a_parameter);
 
 struct
 {
@@ -17,7 +17,7 @@ struct
     kernel::task::Id task3;
 } ids;
 
-void cleanupTask()
+void cleanupTask(void * a_parameter)
 {
     volatile int i = 0;
     for (i = 0; i < 3000000; i++);
@@ -28,7 +28,7 @@ void cleanupTask()
     printTask("cleanup task - end\r\n");
 }
 
-void task0()
+void task0(void * a_parameter)
 {
     volatile int i = 0;
     printTask("task 0 - start\r\n");
@@ -39,7 +39,7 @@ void task0()
     }
 }
 
-void task1()
+void task1(void * a_parameter)
 {
     volatile int i = 0;
     static bool once = true;
@@ -75,7 +75,7 @@ void task1()
     }
 }
 
-void task2()
+void task2(void * a_parameter)
 {
     volatile int i = 0;
     printTask("task 2 - start\r\n");
@@ -92,7 +92,7 @@ void task2()
     }
 }
 
-void task3()
+void task3(void * a_parameter)
 {
     volatile int i = 0;
     printTask("task 3 - start\r\n");

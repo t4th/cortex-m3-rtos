@@ -10,6 +10,7 @@ namespace kernel::internal::task
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
         kernel::task::Id *      a_handle,
+        void *                  a_parameter,
         bool                    a_create_suspended
         )
     {
@@ -34,6 +35,7 @@ namespace kernel::internal::task
         task.m_routine = a_routine;
         task.m_stack.init((uint32_t)a_task_routine);
         task.m_sp = task.m_stack.getStackPointer();
+        task.m_parameter = a_parameter;
         
         if (a_create_suspended)
         {
@@ -114,6 +116,17 @@ namespace kernel::internal::task
         )
         {
             return a_context.m_data.at(a_id.m_id).m_routine;
+        }
+    }
+
+    namespace parameter
+    {
+        void * get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        )
+        {
+            return a_context.m_data.at(a_id.m_id).m_parameter;
         }
     }
 }

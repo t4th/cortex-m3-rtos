@@ -16,7 +16,7 @@ namespace kernel::task
         uint32_t m_id;
     } Id;
 
-    typedef void(*Routine)();  // TODO: Add argument.
+    typedef void(*Routine)(void * a_parameter);  // TODO: Add argument.
 
     enum Priority
     {
@@ -38,6 +38,7 @@ namespace kernel::task
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
         kernel::task::Id *      a_handle = nullptr,
+        void *                  a_parameter = nullptr,
         bool                    a_create_suspended = false
     );
 

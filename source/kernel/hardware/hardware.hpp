@@ -4,7 +4,7 @@
 
 namespace kernel::hardware
 {
-    constexpr uint32_t TASK_STACK_SIZE = 64U;
+    constexpr uint32_t TASK_STACK_SIZE = 128U;
     
     namespace task
     {

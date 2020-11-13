@@ -17,6 +17,7 @@ namespace kernel::internal::task
         kernel::hardware::task::Stack   m_stack;
         kernel::task::Priority          m_priority;
         kernel::task::State             m_state;
+        void *                          m_parameter;
         kernel::task::Routine           m_routine;
     };
 
@@ -33,6 +34,7 @@ namespace kernel::internal::task
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
         kernel::task::Id *      a_handle = nullptr,
+        void *                  a_parameter = nullptr,
         bool                    a_create_suspended = false
         );
 
@@ -74,6 +76,14 @@ namespace kernel::internal::task
     namespace routine
     {
         kernel::task::Routine get(
+            Context &           a_context,
+            kernel::task::Id    a_id
+        );
+    }
+
+    namespace parameter
+    {
+        void * get(
             Context &           a_context,
             kernel::task::Id    a_id
         );
