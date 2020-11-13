@@ -12,18 +12,18 @@ namespace kernel::internal
     
     struct Context
     {
-        Time_ms old_time;
-        Time_ms time;
+        Time_ms old_time = 0U;
+        Time_ms time = 0U;
         Time_ms interval = DEFAULT_TIMER_INTERVAL;
         
         kernel::task::Id m_current;
         kernel::task::Id m_next;
 
-        bool started; // TODO: make status register
+        bool started = false; // TODO: make status register
 
         // !0 'tick' will have no effect; 0 - 'tick' works normally
         // This is used as critical section
-        volatile uint32_t schedule_lock;
+        volatile uint32_t schedule_lock = 0U;;
 
         // data
         internal::task::Context      m_tasks;
@@ -66,35 +66,21 @@ namespace kernel::internal
 
     void unlockScheduler()
     {
+        // TODO: thinker about removing it.
         m_context.old_time = m_context.time; // Reset Round-Robin schedule time.
         --internal::m_context.schedule_lock;
     }
 
-    void taskFinished(kernel::task::Id a_id)
-    {
-        internal::lockScheduler();
-        {
-            kernel::task::Priority prio = internal::task::priority::get(
-                m_context.m_tasks,
-                m_context.m_current
-            );
-
-            internal::scheduler::removeTask(m_context.m_scheduler, prio, m_context.m_current);
-            internal::task::destroy(m_context.m_tasks, m_context.m_current);
-
-            internal::scheduler::findHighestPrioTask(m_context.m_scheduler, m_context.m_next);
-        }
-
-        hardware::syscall(hardware::SyscallId::LoadNextTask);
-    }
-
     void task_routine()
     {
-        kernel::task::Routine routine = internal::task::routine::get(m_context.m_tasks, m_context.m_current);
+        kernel::task::Routine routine = internal::task::routine::get(
+            m_context.m_tasks,
+            m_context.m_current
+        );
 
         routine(); // Call the actual task routine.
 
-        taskFinished(m_context.m_current);
+        kernel::task::terminate(m_context.m_current);
     }
 
     void idle_routine()

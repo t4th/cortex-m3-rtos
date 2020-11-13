@@ -20,7 +20,7 @@ struct
 void cleanupTask()
 {
     volatile int i = 0;
-    for (i = 0; i < 5000000; i++);
+    for (i = 0; i < 3000000; i++);
     
     printTask("terminate task 0 and 3\r\n");
     kernel::task::terminate(ids.task0);
@@ -42,14 +42,36 @@ void task0()
 void task1()
 {
     volatile int i = 0;
+    static bool once = true;
+
     printTask("task 1 - start\r\n");
     while (1)
     {
-        for (i = 0; i < 1000000; i++);
-        printTask("task 1 - created new task 2 Medium\r\n");
-        kernel::task::create(task2, kernel::task::Priority::Medium);
-        printTask("task 1 - end\r\n");
-        break;
+        if (once)
+        {
+            for (i = 0; i < 1000000; i++);
+            once = false;
+            printTask("task 1 - created new task 2 Medium\r\n");
+            if (false == kernel::task::create(task2, kernel::task::Priority::Medium))
+            {
+                printTask("task 1 failed to create task 2\r\n");
+            }
+            printTask("task 1 - end\r\n");
+            break;
+        }
+        else
+        {
+            static int die = 0;
+            die ++;
+            if ( die >= 20)
+            {
+                printTask("task 1 - end\r\n");
+                break;
+            }
+
+            for (i = 0; i < 100000; i++);
+            printTask("task 1 - ping\r\n");
+        }
     }
 }
 
@@ -59,9 +81,12 @@ void task2()
     printTask("task 2 - start\r\n");
     while (1)
     {
-        for (i = 0; i < 1000000; i++);
+        for (i = 0; i < 1200000; i++);
         printTask("task 2 - created new task 1 Low\r\n");
-        kernel::task::create(task1, kernel::task::Priority::Low);
+        if (false == kernel::task::create(task1, kernel::task::Priority::Low))
+        {
+            printTask("task 2 failed to create task 1\r\n");
+        }
         printTask("task 2 - end\r\n");
         break;
     }

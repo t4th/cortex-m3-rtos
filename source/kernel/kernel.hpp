@@ -16,7 +16,7 @@ namespace kernel::task
         uint32_t m_id;
     } Id;
 
-    typedef void(*Routine)(void);  // TODO: Add argument.
+    typedef void(*Routine)();  // TODO: Add argument.
 
     enum Priority
     {
