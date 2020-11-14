@@ -1,8 +1,8 @@
 # ARM Cortex-m3 RTOS
 
 This is hobby project to create small RTOS with just enough features to make it interesting.
-Unlike other CM3 projects (and there is many of them) my goal is not to create fastest/safest/hackest version,
-but elegant and easy to navigate version. That's why I used this oppurtinity to test some C++17 features and different
+Unlike other cortex-m RTOS projects (and there are many of them) my goal is not to create fastest/safest/hackest version,
+but elegant and easy to navigate version for education purpose. That's why I used this oppurtinity to test some C++17 features and different
 programming paradigms/architect decisons.
 
 No fancy build system set - simple Keil Uvision Lite project due to free simulator. (it should be easy enough to setup this project with any other compiler/system)
