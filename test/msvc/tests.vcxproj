@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
+    <ClCompile Include="..\..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\source\catch.cpp" />
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />
     <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp" />
+    <ClCompile Include="..\source\kernel\task\task_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\kernel\common\circular_list.hpp" />
