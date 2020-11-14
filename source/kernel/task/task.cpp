@@ -48,8 +48,8 @@ namespace kernel::internal::task
         
         if (a_handle)
         {
+            // Task ID, is task index in memory buffer by design.
             a_handle->m_id = item_id;
-            // TODO: is it needed in kernel or user api?
             // *a_handle = kernel::handle::create(item_id, kernel::handle::ObjectType::Task);
         }
         

@@ -31,6 +31,12 @@
     <Filter Include="tested files\kernel\scheduler">
       <UniqueIdentifier>{8a54eb15-f3de-4ed5-8a11-e6e29c31e234}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests\kernel\task">
+      <UniqueIdentifier>{7c1f80d4-843f-4742-a608-2dbf72eaa5d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\task">
+      <UniqueIdentifier>{db6939e3-e882-4e5d-abf1-3fca3972ddd4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\catch.cpp">
@@ -47,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp">
       <Filter>tested files\kernel\scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\task\task_test.cpp">
+      <Filter>tests\kernel\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\kernel\task\task.cpp">
+      <Filter>tested files\kernel\task</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
