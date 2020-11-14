@@ -19,7 +19,7 @@ namespace kernel::common
        
         public:
 
-            CircularList() : m_first{0}, m_last{0}, m_count{0}, m_buffer() {}
+            CircularList() : m_first{0U}, m_last{0U}, m_count{0U}, m_buffer() {}
             
             bool add(TDataType a_new_data, uint32_t & a_new_node_index)
             {
@@ -35,7 +35,7 @@ namespace kernel::common
                 
                 switch(m_count)
                 {
-                    case 0: // Create single Node that point to itself.
+                    case 0U: // Create single Node that point to itself.
                         {
                             m_first = new_node_index;
 
@@ -43,7 +43,7 @@ namespace kernel::common
                             new_node.m_prev = new_node_index;
                         }
                         break;
-                    case 1: // New Node points to first Node.
+                    case 1U: // New Node points to first Node.
                         {
                             Node & first_node = m_buffer.at(m_first);
                         
@@ -68,16 +68,16 @@ namespace kernel::common
                 
                 m_last = new_node_index; // Close the circle.
                 new_node.m_data = a_new_data;
-                m_count++;
+                ++m_count;
                 
                 return true;
             }
 
             void remove(uint32_t a_node_index)
             {
-                if (m_count > 0)
+                if (m_count > 0U)
                 {
-                    if (m_count > 1)
+                    if (m_count > 1U)
                     {
                         const uint32_t prev = m_buffer.at(a_node_index).m_prev;
                         const uint32_t next = m_buffer.at(a_node_index).m_next;
@@ -90,7 +90,7 @@ namespace kernel::common
                     }
 
                     m_buffer.free(a_node_index);
-                    m_count--;
+                    --m_count;
                 }
             }
 

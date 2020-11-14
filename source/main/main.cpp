@@ -1,120 +1,141 @@
+// Contains example used to verify if tasks are switching correctly.
+
 #include <kernel.hpp>
 #include <hardware.hpp>
 
-void printTask(const char * text)
+struct Task_ids
 {
-    kernel::hardware::debug::print(text);
+    kernel::task::Id task0;
+    kernel::task::Id task3;
+};
+
+void delay(uint32_t a_ticks)
+{
+    for (uint32_t i = 0U; i < a_ticks; i++);
+}
+
+void printTask(const char * a_text)
+{
+    kernel::hardware::debug::print(a_text);
 }
 
 void task0(void * a_parameter);
 void task1(void * a_parameter);
 void task2(void * a_parameter);
 void task3(void * a_parameter);
+void cleanupTask(void * a_parameter);
 
-struct
-{
-    kernel::task::Id task0;
-    kernel::task::Id task3;
-} ids;
-
+// Terminate task0 and task3 after some delay and exit.
 void cleanupTask(void * a_parameter)
 {
-    volatile int i = 0;
-    for (i = 0; i < 3000000; i++);
-    
+    Task_ids * ids = (Task_ids*)a_parameter;
+
+    delay(2000000U);
+
     printTask("terminate task 0 and 3\r\n");
-    kernel::task::terminate(ids.task0);
-    kernel::task::terminate(ids.task3);
+    kernel::task::terminate(ids->task0);
+    kernel::task::terminate(ids->task3);
     printTask("cleanup task - end\r\n");
 }
 
+// Delayed ping.
 void task0(void * a_parameter)
 {
-    volatile int i = 0;
     printTask("task 0 - start\r\n");
-    while (1)
+
+    while (true)
     {
-        for (i = 0; i < 100000; i++);
+        delay(100000U);
         printTask("task 0 - ping\r\n");
     }
 }
 
+// After first creation, create Medium task2 and exit.
+// On second creation ping for some time until killing itself.
 void task1(void * a_parameter)
 {
-    volatile int i = 0;
+    int die = 0;
     static bool once = true;
 
     printTask("task 1 - start\r\n");
-    while (1)
+
+    while (true)
     {
         if (once)
         {
-            for (i = 0; i < 1000000; i++);
             once = false;
+
+            delay(1000000U);
+
             printTask("task 1 - created new task 2 Medium\r\n");
+
             if (false == kernel::task::create(task2, kernel::task::Priority::Medium))
             {
                 printTask("task 1 failed to create task 2\r\n");
             }
+
             printTask("task 1 - end\r\n");
             break;
         }
         else
         {
-            static int die = 0;
-            die ++;
-            if ( die >= 20)
+            if ( ++die >= 20)
             {
                 printTask("task 1 - end\r\n");
                 break;
             }
 
-            for (i = 0; i < 100000; i++);
+            delay(100000U);
+
             printTask("task 1 - ping\r\n");
         }
     }
 }
 
+// Medium priority task blocks all Low tasks.
 void task2(void * a_parameter)
 {
-    volatile int i = 0;
-    printTask("task 2 - start\r\n");
-    while (1)
+    printTask("task 2 - start and block LOW\r\n");
+
+    while (true)
     {
-        for (i = 0; i < 1200000; i++);
+        delay(1200000U);
+
         printTask("task 2 - created new task 1 Low\r\n");
+
         if (false == kernel::task::create(task1, kernel::task::Priority::Low))
         {
             printTask("task 2 failed to create task 1\r\n");
         }
-        printTask("task 2 - end\r\n");
+        printTask("task 2 - end and release LOW\r\n");
         break;
     }
 }
 
+// Delayed ping.
 void task3(void * a_parameter)
 {
-    volatile int i = 0;
     printTask("task 3 - start\r\n");
-    while (1)
-    {
 
-        for (i = 0; i < 100000; i++);
+    while (true)
+    {
+        delay(100000U);
         printTask("task 3 - ping\r\n");
     }
 }
 
 int main()
 {
-    kernel::init();
-    
-    kernel::task::create(task0, kernel::task::Priority::Low, &ids.task0);
-    kernel::task::create(task1, kernel::task::Priority::Low);
-    kernel::task::create(task3, kernel::task::Priority::Low, &ids.task3);
-    kernel::task::create(cleanupTask, kernel::task::Priority::Low);
+    Task_ids task_ids;
 
+    kernel::init();
+
+    kernel::task::create(task0, kernel::task::Priority::Low, &task_ids.task0);
+    kernel::task::create(task1, kernel::task::Priority::Low);
+    kernel::task::create(task3, kernel::task::Priority::Low, &task_ids.task3);
+    kernel::task::create(cleanupTask, kernel::task::Priority::Low, nullptr, &task_ids);
 
     kernel::start();
-    
+
     for(;;);
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+// Scheduler is used to order wihch task is to be served next.
+// For each priority there is circular list holding task IDs.
+
 #include <circular_list.hpp>
 #include <task.hpp>
 
@@ -7,8 +10,10 @@ namespace kernel::internal::scheduler
 {
     struct TaskList
     {
-        kernel::common::CircularList<kernel::task::Id,
-            kernel::internal::task::MAX_TASK_NUMBER> m_list;
+        kernel::common::CircularList<
+            kernel::task::Id,
+            kernel::internal::task::MAX_TASK_NUMBER
+        > m_list;
 
         uint32_t m_current;
 

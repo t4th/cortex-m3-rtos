@@ -27,7 +27,7 @@ namespace kernel::hardware
     
     enum class SyscallId : uint8_t
     {
-        LoadNextTask,
+        LoadNextTask = 0U,
         ExecuteContextSwitch
     };
 

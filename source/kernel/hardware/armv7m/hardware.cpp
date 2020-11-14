@@ -1,5 +1,5 @@
 #include <hardware.hpp>
-#include <kernel.hpp> // TODO: change to kernel_internal
+#include <kernel.hpp>
 
 #include <stm32f10x.h>
 
@@ -8,11 +8,13 @@
 volatile kernel::hardware::task::Context * current_task_context;
 volatile kernel::hardware::task::Context * next_task_context;
 
+// This containt hardware specific implementation.
+// In current case its stm32f103ze clocked at 72MHz.
 namespace kernel::hardware
 {
-    constexpr uint32_t core_clock_freq_hz{72'000'000};
-    constexpr uint32_t target_systick_timestamp_us{1000};
-    constexpr uint32_t systick_prescaler{core_clock_freq_hz/target_systick_timestamp_us};
+    constexpr uint32_t CORE_CLOCK_FREQ_HZ{72'000'000U};
+    constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_US{1000U};
+    constexpr uint32_t SYSTICK_PRESCALER{CORE_CLOCK_FREQ_HZ/TARGET_SYSTICK_TIMESTAMP_US};
     
     namespace debug
     {
@@ -51,7 +53,7 @@ namespace kernel::hardware
 
     void init()
     {
-        SysTick_Config(systick_prescaler - 1);
+        SysTick_Config(SYSTICK_PRESCALER - 1);
         
         debug::init();
 
@@ -164,16 +166,18 @@ extern "C"
         unsigned int  svc_number = ( ( char * )svc_args[ 6 ] )[ -2 ] ; // TODO: simplify this bullshit obfuscation
         switch( svc_number )
         {
-            case 0:       // SyscallId::LoadNextTask:
-                {
+            case 0U:       // SyscallId::LoadNextTask:
+            {
                 kernel::internal::loadNextTask();
                 LoadTask();
-                }
                 break;
-            case 1:       // SyscallId::ExecuteContextSwitch
+            }
+            case 1U:       // SyscallId::ExecuteContextSwitch
+            {
                 kernel::internal::switchContext();
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state so it can tail chain from SVC.
                 break;
+            }
             default:      // unknown SVC
                 break;
         }
@@ -183,13 +187,12 @@ extern "C"
     {
         // This handler implementation is taken from official reference manual. Since SVC assembly instruction store argument in opcode itself,
         // code bellow track instruction address that invoked SVC interrupt via context stored when interrupt was activated.
-        __ASM("TST lr, #4\n"); // lr AND #4 - Test if masked bits are set. 
-        __ASM("ITE EQ\n" // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
-        "MRSEQ r0, MSP\n" // Move the contents of a special register to a general-purpose register. It block with EQ.
-        "MRSNE r0, PSP\n"); // It block with NE -> z == 0 Not equal
+        __ASM("TST lr, #4\n");  // lr AND #4 - Test if masked bits are set. 
+        __ASM("ITE EQ\n"        // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
+        "MRSEQ r0, MSP\n"       // Move the contents of a special register to a general-purpose register. It block with EQ.
+        "MRSNE r0, PSP\n");     // It block with NE -> z == 0 Not equal
         __ASM("B SVC_Handler_Main\n");
     }
-
 
     void SysTick_Handler(void)
     {

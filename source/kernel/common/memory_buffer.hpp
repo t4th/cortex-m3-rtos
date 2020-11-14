@@ -15,7 +15,7 @@ namespace kernel::common
         bool allocate(uint32_t & a_item_id)
         {
             // Find first not used slot and return index as ID.
-            for (uint32_t i = 0; i < MaxSize; ++i)
+            for (uint32_t i = 0U; i < MaxSize; ++i)
             {
                 if (false == m_status[i])
                 {

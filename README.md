@@ -60,7 +60,7 @@ Open project **keil\rtos.uvprojx** or call:
 ...or just open project in Uvision and build/run using IDE.
 
 ## Edit
-Visual Studio Community 2019 or Uvision (VS Code should do fine too).
+Visual Studio Community 2019 (set x86 in Configuration Manager) or Uvision (VS Code should do fine too).
 
 ## Experimental POC branches
 Scheduler prove-of-concept

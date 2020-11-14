@@ -1,36 +1,35 @@
 #include <kernel.hpp>
-
 #include <hardware.hpp>
-
 #include <scheduler.hpp>
 
 namespace kernel::internal
 {
-    constexpr uint32_t DEFAULT_TIMER_INTERVAL = 10;
-    
     typedef uint32_t Time_ms;
+
+    constexpr Time_ms CONTEXT_SWITCH_INTERVAL_MS = 10U;
     
     struct Context
     {
-        Time_ms old_time = 0U;
-        Time_ms time = 0U;
-        Time_ms interval = DEFAULT_TIMER_INTERVAL;
+        Time_ms old_time = 0U;  // Used to calculate round-robin context switch intervals.
+        Time_ms time = 0U;      // Time in miliseconds elapsed since kernel started.
+        Time_ms interval = CONTEXT_SWITCH_INTERVAL_MS; // Round-robin context switch intervals in miliseconds.
         
-        kernel::task::Id m_current;
-        kernel::task::Id m_next;
+        kernel::task::Id m_current; // Indicate currently running task ID.
+        kernel::task::Id m_next;    // Indicate next task ID.
 
-        bool started = false; // TODO: make status register
+        // TODO: make status register
+        bool started = false; // Indicate if kernel is started by kernel::Start function.
 
-        // !0 'tick' will have no effect; 0 - 'tick' works normally
-        // This is used as critical section
+        // Lock used to stop kernel from round-robin context switches.
+        // 0 - context switch unlocked; !0 - context switch locked
         volatile uint32_t schedule_lock = 0U;
 
-        // data
+        // Data
         internal::task::Context      m_tasks;
         internal::scheduler::Context m_scheduler;
     } m_context;
 
-    // this can be only called from handler mode (MSP stack) since it is modifying psp
+    // Must only be called from handler mode (MSP stack) since it is modifying psp.
     void storeContext(kernel::task::Id a_task)
     {
         const uint32_t sp = hardware::sp::get();
@@ -40,7 +39,7 @@ namespace kernel::internal
         kernel::hardware::context::current::set(current_task);
     }
 
-    // this can be only called from handler mode (MSP stack) since it is modifying psp
+    // Must only be called from handler mode (MSP stack) since it is modifying psp.
     void loadContext(kernel::task::Id a_task)
     {
         kernel::hardware::task::Context * next_task = internal::task::context::get(m_context.m_tasks, a_task);
@@ -49,12 +48,6 @@ namespace kernel::internal
         const uint32_t next_sp = kernel::internal::task::sp::get(m_context.m_tasks, a_task);
         kernel::hardware::sp::set(next_sp);
     }
-
-    struct CriticalSection
-    {
-        CriticalSection()  {kernel::hardware::interrupt::disableAll();}
-        ~CriticalSection() {kernel::hardware::interrupt::enableAll();}
-    };
 
     // TODO: Lock/unlock need more elegant implementation.
     //       Most likely each kernel task ended with some kind of
@@ -67,25 +60,18 @@ namespace kernel::internal
     void unlockScheduler()
     {
         // TODO: thinker about removing it.
-        m_context.old_time = m_context.time; // Reset Round-Robin schedule time.
         --internal::m_context.schedule_lock;
     }
 
+    // User task routine wrapper used by kernel.
     void task_routine()
     {
-        kernel::task::Routine routine = internal::task::routine::get(
-            m_context.m_tasks,
-            m_context.m_current
-        );
-
-        void * parameter = internal::task::parameter::get(
-            m_context.m_tasks,
-            m_context.m_current
-        );
+        kernel::task::Routine routine = internal::task::routine::get(m_context.m_tasks, m_context.m_current );
+        void * parameter = internal::task::parameter::get(m_context.m_tasks, m_context.m_current);
 
         routine(parameter); // Call the actual task routine.
 
-        kernel::task::terminate(m_context.m_current);
+        kernel::task::terminate(m_context.m_current); // Cleanup task data.
     }
 
     void idle_routine(void * a_parameter)
@@ -111,6 +97,8 @@ namespace kernel
         internal::m_context.schedule_lock = 0U;
 
         task::Id idle_task_handle;
+
+        // Idle task is always available as system task.
         internal::task::create(
             internal::m_context.m_tasks,
             internal::task_routine,
@@ -130,11 +118,9 @@ namespace kernel
         internal::lockScheduler();
         internal::m_context.started = true;
 
-        // Reschedule all tasks created before kernel::start
         internal::scheduler::findHighestPrioTask(internal::m_context.m_scheduler, internal::m_context.m_next);
         
         hardware::start();
-        // Load first task
         hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
 }
@@ -149,14 +135,13 @@ namespace kernel::task
         bool                    a_create_suspended
     )
     {
-
-        const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
-            internal::m_context.m_tasks,
-            internal::m_context.m_current
-        );
-
         internal::lockScheduler();
         {
+            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                internal::m_context.m_current
+            );
+
             kernel::task::Id id;
 
             bool task_created = kernel::internal::task::create(
@@ -174,17 +159,20 @@ namespace kernel::task
                 return false;
             }
 
-            bool task_added = kernel::internal::scheduler::addTask(
-                kernel::internal::m_context.m_scheduler,
-                a_priority,
-                id
-            );
-
-            if (false == task_added)
+            if (false == a_create_suspended)
             {
-                kernel::internal::task::destroy(internal::m_context.m_tasks, id);
-                internal::unlockScheduler();
-                return false;
+                bool task_added = kernel::internal::scheduler::addTask(
+                    kernel::internal::m_context.m_scheduler,
+                    a_priority,
+                    id
+                );
+
+                if (false == task_added)
+                {
+                    kernel::internal::task::destroy(internal::m_context.m_tasks, id);
+                    internal::unlockScheduler();
+                    return false;
+                }
             }
 
             if (a_handle)
@@ -199,15 +187,15 @@ namespace kernel::task
                     kernel::internal::m_context.m_next
                 );
             }
-        }
 
-        if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
-        {
-            hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
-        }
-        else
-        {
-            internal::unlockScheduler();
+            if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
+            {
+                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+            }
+            else
+            {
+                internal::unlockScheduler();
+            }
         }
 
         return true;
@@ -225,24 +213,20 @@ namespace kernel::task
             internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, a_id);
             internal::task::destroy(internal::m_context.m_tasks, a_id);
 
-            // reschedule in case task is killing itself
+            // Reschedule in case task is killing itself.
             if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
             {
                 kernel::internal::scheduler::findHighestPrioTask(
                     kernel::internal::m_context.m_scheduler,
                     kernel::internal::m_context.m_next
                 );
-            }
-        }
 
-        // If task is terminating itself, dont store the context.
-        if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
-        {
-            hardware::syscall(hardware::SyscallId::LoadNextTask);
-        }
-        else
-        {
-            internal::unlockScheduler();
+                hardware::syscall(hardware::SyscallId::LoadNextTask);
+            }
+            else
+            {
+                internal::unlockScheduler();
+            }
         }
     }
 }
@@ -267,10 +251,6 @@ namespace kernel::internal
         internal::unlockScheduler();
     }
 
-    // TODO: all data must be in critical section
-    //  ...or dont. So far everything is designed assuming kernel m_context is
-    // accessed from handler mode only without nesting interrupts (int disabled during handler)
-    // - this must be confirmed. Also possible to use designed priority to handle critical section
     bool tick()
     {
         bool execute_context_switch = false;
@@ -279,7 +259,6 @@ namespace kernel::internal
         if (0 == m_context.schedule_lock)
         {
             // Calculate Round-Robin time stamp
-            // TODO: this looks like shit - make something nicer.
             if (m_context.time - m_context.old_time > m_context.interval)
             {
                 m_context.old_time = m_context.time;

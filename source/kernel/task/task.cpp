@@ -33,7 +33,7 @@ namespace kernel::internal::task
         
         task.m_priority = a_priority;
         task.m_routine = a_routine;
-        task.m_stack.init((uint32_t)a_task_routine);
+        task.m_stack.init(reinterpret_cast<uint32_t>(a_task_routine));
         task.m_sp = task.m_stack.getStackPointer();
         task.m_parameter = a_parameter;
         
