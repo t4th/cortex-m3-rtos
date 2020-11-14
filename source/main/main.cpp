@@ -5,8 +5,8 @@
 
 struct Task_ids
 {
-    kernel::task::Id task0;
-    kernel::task::Id task3;
+    kernel::Handle task0;
+    kernel::Handle task3;
 };
 
 void delay(uint32_t a_ticks)
@@ -75,7 +75,10 @@ void task1(void * a_parameter)
             }
 
             printTask("task 1 - end\r\n");
-            break;
+            
+            // Terminate itself.
+            kernel::Handle handle = kernel::task::getCurrent();
+            kernel::task::terminate(handle);
         }
         else
         {

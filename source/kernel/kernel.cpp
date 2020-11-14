@@ -1,6 +1,7 @@
 #include <kernel.hpp>
 #include <hardware.hpp>
 #include <scheduler.hpp>
+#include <handle.hpp>
 
 namespace kernel::internal
 {
@@ -14,8 +15,8 @@ namespace kernel::internal
         Time_ms time = 0U;      // Time in miliseconds elapsed since kernel started.
         Time_ms interval = CONTEXT_SWITCH_INTERVAL_MS; // Round-robin context switch intervals in miliseconds.
         
-        kernel::task::Id m_current; // Indicate currently running task ID.
-        kernel::task::Id m_next;    // Indicate next task ID.
+        kernel::internal::task::Id m_current; // Indicate currently running task ID.
+        kernel::internal::task::Id m_next;    // Indicate next task ID.
 
         // TODO: make status register
         bool started = false; // Indicate if kernel is started by kernel::Start function.
@@ -30,7 +31,7 @@ namespace kernel::internal
     } m_context;
 
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    void storeContext(kernel::task::Id a_task)
+    void storeContext(kernel::internal::task::Id a_task)
     {
         const uint32_t sp = hardware::sp::get();
         internal::task::sp::set(m_context.m_tasks, a_task, sp);
@@ -40,7 +41,7 @@ namespace kernel::internal
     }
 
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    void loadContext(kernel::task::Id a_task)
+    void loadContext(kernel::internal::task::Id a_task)
     {
         kernel::hardware::task::Context * next_task = internal::task::context::get(m_context.m_tasks, a_task);
         kernel::hardware::context::next::set(next_task);
@@ -63,6 +64,35 @@ namespace kernel::internal
         --internal::m_context.schedule_lock;
     }
 
+    void terminateTask(kernel::internal::task::Id a_id)
+    {
+        internal::lockScheduler();
+        {
+            kernel::task::Priority prio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                a_id
+            );
+
+            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, a_id);
+            internal::task::destroy(internal::m_context.m_tasks, a_id);
+
+            // Reschedule in case task is killing itself.
+            if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
+            {
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
+                );
+
+                hardware::syscall(hardware::SyscallId::LoadNextTask);
+            }
+            else
+            {
+                internal::unlockScheduler();
+            }
+        }
+    }
+
     // User task routine wrapper used by kernel.
     void task_routine()
     {
@@ -71,7 +101,7 @@ namespace kernel::internal
 
         routine(parameter); // Call the actual task routine.
 
-        kernel::task::terminate(m_context.m_current); // Cleanup task data.
+        kernel::internal::terminateTask(m_context.m_current); // Cleanup task data.
     }
 
     void idle_routine(void * a_parameter)
@@ -96,7 +126,7 @@ namespace kernel
         internal::m_context.time = 0U;
         internal::m_context.schedule_lock = 0U;
 
-        task::Id idle_task_handle;
+        internal::task::Id idle_task_handle;
 
         // Idle task is always available as system task.
         internal::task::create(
@@ -130,7 +160,7 @@ namespace kernel::task
     bool create(
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
-        kernel::task::Id *      a_handle,
+        kernel::Handle *        a_handle,
         void *                  a_parameter,
         bool                    a_create_suspended
     )
@@ -142,7 +172,7 @@ namespace kernel::task
                 internal::m_context.m_current
             );
 
-            kernel::task::Id id;
+            kernel::internal::task::Id id;
 
             bool task_created = kernel::internal::task::create(
                 internal::m_context.m_tasks,
@@ -169,7 +199,7 @@ namespace kernel::task
 
                 if (false == task_added)
                 {
-                    kernel::internal::task::destroy(internal::m_context.m_tasks, id);
+                    kernel::internal::task::destroy( internal::m_context.m_tasks, id);
                     internal::unlockScheduler();
                     return false;
                 }
@@ -177,7 +207,7 @@ namespace kernel::task
 
             if (a_handle)
             {
-                *a_handle = id;
+                *a_handle = internal::handle::create( internal::handle::ObjectType::Task, id.m_id);
             }
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
@@ -190,7 +220,7 @@ namespace kernel::task
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
-                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -201,32 +231,33 @@ namespace kernel::task
         return true;
     }
 
-    void terminate(kernel::task::Id a_id)
+    kernel::Handle getCurrent()
     {
+        kernel::Handle new_handle{};
+
         internal::lockScheduler();
         {
-            kernel::task::Priority prio = internal::task::priority::get(
-                internal::m_context.m_tasks,
-                a_id
+            new_handle = internal::handle::create(
+                internal::handle::ObjectType::Task,
+                internal::m_context.m_current.m_id
             );
+        }
+        internal::unlockScheduler();
 
-            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, a_id);
-            internal::task::destroy(internal::m_context.m_tasks, a_id);
+        return new_handle;
+    }
 
-            // Reschedule in case task is killing itself.
-            if (kernel::internal::m_context.m_current.m_id == a_id.m_id)
-            {
-                kernel::internal::scheduler::findHighestPrioTask(
-                    kernel::internal::m_context.m_scheduler,
-                    kernel::internal::m_context.m_next
-                );
-
-                hardware::syscall(hardware::SyscallId::LoadNextTask);
-            }
-            else
-            {
-                internal::unlockScheduler();
-            }
+    void terminate(kernel::Handle a_id)
+    {
+        switch(internal::handle::getObjectType(a_id))
+        {
+        case internal::handle::ObjectType::Task:
+        {
+            internal::terminateTask({internal::handle::getIndex(a_id)});
+            break;
+        }
+        default:
+            break;
         }
     }
 }

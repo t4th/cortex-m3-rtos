@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include <kernel.hpp>
 
-namespace kernel::handle
+namespace kernel::internal::handle
 {
     enum class ObjectType
     {
@@ -11,9 +11,9 @@ namespace kernel::handle
         Event
     };
     
-    uint32_t create(uint32_t index, ObjectType type);
-    void close(uint32_t & handle);
+    kernel::Handle create(ObjectType a_type, uint32_t & a_index);
     
-    uint32_t getIndex(uint32_t handle);
-    ObjectType getObjectType(uint32_t handle);
+    uint32_t getIndex(kernel::Handle & a_handle);
+
+    ObjectType getObjectType(kernel::Handle & a_handle);
 }

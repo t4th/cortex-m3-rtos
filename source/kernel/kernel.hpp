@@ -5,6 +5,12 @@
 // User API
 namespace kernel
 {
+    // Abstract pointing to system object. Should only be used with kernel API.
+    typedef struct
+    {
+        uint32_t m_data;
+    } Handle;
+
     // Initialize kernel.
     void init();
 
@@ -16,11 +22,6 @@ namespace kernel
 // User API for controling tasks.
 namespace kernel::task
 {
-    typedef struct // This is struct for typesafety
-    {
-        uint32_t m_id;
-    } Id;
-
     typedef void(*Routine)(void * a_parameter);  // TODO: Add argument.
 
     enum Priority
@@ -43,13 +44,16 @@ namespace kernel::task
     bool create(
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
-        kernel::task::Id *      a_handle = nullptr,
+        kernel::Handle *        a_handle = nullptr,
         void *                  a_parameter = nullptr,
         bool                    a_create_suspended = false
     );
 
+    // Get Handle to currently running task.
+    kernel::Handle getCurrent();
+
     // Brute force terminate task.
-    void terminate(kernel::task::Id a_id);
+    void terminate(kernel::Handle a_id);
 }
 
 // System API used by kernel::hardware layer.

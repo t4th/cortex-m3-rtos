@@ -10,7 +10,7 @@ namespace kernel::internal::scheduler
     bool addTask(
         kernel::internal::scheduler::Context &  a_context,
         kernel::task::Priority                  a_priority,
-        kernel::task::Id                        a_id
+        kernel::internal::task::Id              a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -36,7 +36,7 @@ namespace kernel::internal::scheduler
     void removeTask(
         kernel::internal::scheduler::Context &  a_context,
         kernel::task::Priority                  a_priority,
-        kernel::task::Id                        a_id
+        kernel::internal::task::Id              a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -70,7 +70,7 @@ namespace kernel::internal::scheduler
     bool findNextTask(
         kernel::internal::scheduler::Context &  a_context,
         kernel::task::Priority                  a_priority,
-        kernel::task::Id &                      a_id
+        kernel::internal::task::Id &            a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -94,7 +94,7 @@ namespace kernel::internal::scheduler
 
     void findHighestPrioTask(
         kernel::internal::scheduler::Context &  a_context,
-        kernel::task::Id &                      a_id
+        kernel::internal::task::Id &            a_id
     )
     {
         for (uint32_t prio = kernel::task::Priority::High;

@@ -9,7 +9,7 @@ namespace kernel::internal::task
         TaskRoutine             a_task_routine,
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
-        kernel::task::Id *      a_handle,
+        Id *                    a_handle,
         void *                  a_parameter,
         bool                    a_create_suspended
         )
@@ -56,20 +56,14 @@ namespace kernel::internal::task
         return true;
     }
     
-    void destroy(
-        Context &               a_context,
-        kernel::task::Id        a_id
-    )
+    void destroy( Context &   a_context, Id a_id)
     {
         a_context.m_data.free(a_id.m_id);
     }
 
     namespace priority
     {
-        kernel::task::Priority get(
-            Context &           a_context,
-            kernel::task::Id    a_id
-        )
+        kernel::task::Priority get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_priority;
         }
@@ -77,10 +71,7 @@ namespace kernel::internal::task
 
     namespace context
     {
-        kernel::hardware::task::Context * get(
-            Context &           a_context,
-            kernel::task::Id    a_id
-        )
+        kernel::hardware::task::Context *  get( Context & a_context, Id a_id)
         {
             // NOTE: now that context moved out of anonymous namespace this
             //       construct is just a bad practice...
@@ -90,19 +81,12 @@ namespace kernel::internal::task
     
     namespace sp
     {
-        uint32_t get(
-            Context &           a_context,
-            kernel::task::Id    a_id
-        )
+        uint32_t get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_sp;
         }
 
-        void set(
-            Context &           a_context,
-            kernel::task::Id    a_id,
-            uint32_t            a_new_sp
-        )
+        void set( Context & a_context, Id a_id, uint32_t a_new_sp )
         {
             a_context.m_data.at(a_id.m_id).m_sp = a_new_sp;
         }
@@ -110,10 +94,7 @@ namespace kernel::internal::task
 
     namespace routine
     {
-        kernel::task::Routine get(
-            Context &           a_context,
-            kernel::task::Id    a_id
-        )
+        kernel::task::Routine get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_routine;
         }
@@ -121,10 +102,7 @@ namespace kernel::internal::task
 
     namespace parameter
     {
-        void * get(
-            Context &           a_context,
-            kernel::task::Id    a_id
-        )
+        void * get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_parameter;
         }

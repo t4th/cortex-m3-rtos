@@ -1,27 +1,22 @@
 #include <handle.hpp>
 
-namespace kernel::handle
+namespace kernel::internal::handle
 {
-    uint32_t create(uint32_t index, ObjectType type)
+    kernel::Handle create(ObjectType a_type, uint32_t & a_index)
     {
-        uint32_t new_handle = (static_cast<uint32_t>(type) << 16) | (index & 0xFFFF);
+        uint32_t new_handle = (static_cast<uint32_t>(a_type) << 16) | (a_index & 0xFFFF);
         
-        return new_handle;
+        return {new_handle};
     }
     
-    void close(uint32_t & handle)
+    uint32_t getIndex(kernel::Handle & a_handle)
     {
-        
+        return a_handle.m_data & 0xFFFF;
     }
     
-    uint32_t getIndex(uint32_t handle)
+    ObjectType getObjectType(kernel::Handle & a_handle)
     {
-        return handle & 0xFFFF;
-    }
-    
-    ObjectType getObjectType(uint32_t handle)
-    {
-        uint32_t object_type = (handle >> 16) & 0xFFFF;
+        uint32_t object_type = (a_handle.m_data >> 16) & 0xFFFF;
         
         return static_cast<ObjectType>(object_type);
     }
