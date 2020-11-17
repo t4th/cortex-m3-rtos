@@ -2,7 +2,7 @@
 
 #include <array>
 
-namespace kernel::common
+namespace kernel::internal::common
 {
     // Abstract memory buffer. Idea behind it is to keep data and status separetly as
     // arrays of structs.

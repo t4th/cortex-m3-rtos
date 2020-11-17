@@ -39,7 +39,7 @@ TEST_CASE("Task")
     SECTION ("create new task and verify context data")
     {
         kernel::internal::task::Context context{};
-        kernel::task::Id task_id{};
+        kernel::internal::task::Id task_id{};
         uint32_t parameter;
 
         // create maximum number of tasks

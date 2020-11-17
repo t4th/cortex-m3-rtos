@@ -4,7 +4,7 @@
 
 TEST_CASE("MemoryBuffer")
 {
-    kernel::common::MemoryBuffer<uint32_t, 3> buffer;
+    kernel::internal::common::MemoryBuffer<uint32_t, 3> buffer;
     uint32_t new_item_id = 0;
 
     SECTION ( "check if 'status' field is set correctly when adding new items")

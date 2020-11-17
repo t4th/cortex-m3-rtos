@@ -2,7 +2,7 @@
 
 #include <memory_buffer.hpp>
 
-namespace kernel::common
+namespace kernel::internal::common
 {
     // Each task priority group has individual circular linked list with static data buffer.
     // TDataType must be of primitive type.

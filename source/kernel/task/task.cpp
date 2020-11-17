@@ -1,7 +1,5 @@
 #include <task.hpp>
 
-#include <memory_buffer.hpp>
-
 namespace kernel::internal::task
 {
     bool create(
@@ -50,7 +48,6 @@ namespace kernel::internal::task
         {
             // Task ID, is task index in memory buffer by design.
             a_handle->m_id = item_id;
-            // *a_handle = kernel::handle::create(item_id, kernel::handle::ObjectType::Task);
         }
         
         return true;

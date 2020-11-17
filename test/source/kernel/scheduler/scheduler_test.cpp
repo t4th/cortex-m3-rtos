@@ -8,7 +8,7 @@ TEST_CASE("Scheduler")
 
     SECTION( "Add task 'a', 'b', 'c' and see if findNextTask is working")
     {
-        kernel::task::Id next_task_id;
+        kernel::internal::task::Id next_task_id;
 
         // add task 'a'
         next_task_id.m_id = 'a';
@@ -66,7 +66,7 @@ TEST_CASE("Scheduler")
 
     SECTION( "try to add too many task")
     {
-        kernel::task::Id next_task_id;
+        kernel::internal::task::Id next_task_id;
 
         for (uint32_t i = 0U; i < kernel::internal::task::MAX_TASK_NUMBER; i++)
         {
@@ -81,7 +81,7 @@ TEST_CASE("Scheduler")
 
     SECTION( "test finding highest priority task")
     {
-        kernel::task::Id next_task_id;
+        kernel::internal::task::Id next_task_id;
         // Add 2 task to each priority group
 
         // High: 

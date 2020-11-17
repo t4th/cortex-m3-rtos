@@ -4,7 +4,7 @@
 
 TEST_CASE("CircularList")
 {
-    kernel::common::CircularList<uint32_t, 3> list;
+    kernel::internal::common::CircularList<uint32_t, 3> list;
 
     REQUIRE(0 == list.count());
 

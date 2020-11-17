@@ -16,13 +16,13 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 ## Goals
 
 ### 1.0 Features
-* ~~task: create, delete~~
-* software timers: create, remove
-* sleep function
-* events: create, remove
-* function WaitForEvent or WaitForObject
-* Critical section: enter, leave
-* way to map HW interrupts to events
+- [x] task: create, delete
+- [ ] software timers: create, remove
+- [ ] sleep function
+- [ ] events: create, remove
+- [ ] function WaitForEvent or WaitForObject
+- [ ] Critical section: enter, leave
+- [ ] way to map HW interrupts to events
 
 ### Other
 * build and simulated via keil uvision

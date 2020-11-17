@@ -10,7 +10,7 @@ namespace kernel::internal::scheduler
 {
     struct TaskList
     {
-        kernel::common::CircularList<
+        kernel::internal::common::CircularList<
             kernel::internal::task::Id,
             kernel::internal::task::MAX_TASK_NUMBER
         > m_list;
