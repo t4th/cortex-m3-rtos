@@ -43,7 +43,11 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 * static buffers for all kernel components
 * no dynamic allocations
 
-## Requirement
+## Architecture
+Initial preview using UML
+![Alt arch](/doc/arch.png?raw=true)
+
+## Tools
 * windows
 * keil Uvision 5 lite 529 (Monday, November 18, 2019) or up (needed for c++17)
 

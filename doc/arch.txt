@@ -1,0 +1,105 @@
+@startuml
+set namespaceSeparator ::
+
+class kernel::kernel{
++init()
++start()
+}
+kernel::kernel -> kernel::hardware::hardware
+kernel::kernel -> kernel::internal::task
+kernel::kernel -> kernel::internal::internal
+kernel::kernel -d-> kernel::task
+kernel::kernel -d-> kernel::critical_section
+kernel::kernel -d-> kernel::event
+kernel::kernel -d-> kernel::timer
+
+kernel::kernel -d-> kernel::internal::scheduler
+kernel::kernel -d-> kernel::internal::handle
+
+kernel::internal::internal -d-> kernel::hardware::context
+
+class kernel::task {
+ +create()
+ +terminate()
+ + getCurrent()
+}
+
+kernel::task -d-> kernel::internal::task
+
+class kernel::critical_section {
++init()
++enter()
++leave()
+}
+
+class kernel::event {
++create()
++set()
++reset()
++destroy()
+}
+
+class kernel::timer {
++create()
++destroy()
+}
+
+
+
+class kernel::internal::common {
+ memory_buffer
+ circular_list
+}
+
+class kernel::internal::internal
+{
+-storeContext()
+-loadContext()
++loadNextTask()
++switchContext()
++tick()
+}
+
+class kernel::internal::task {
+
+}
+
+kernel::internal::task -d-> kernel::hardware::task
+
+kernel::internal::task -d-> kernel::hardware::sp
+
+class kernel::internal::scheduler {
+
+}
+
+class kernel::internal::handle {
+
+}
+
+class kernel::hardware::hardware {
++init()
++start()
++syscall(SyscallId)
+}
+
+
+class kernel::hardware::context {
+
+}
+
+class kernel::hardware::debug {
+
+}
+
+class kernel::hardware::interrupt {
+
+}
+
+class kernel::hardware::sp {
+
+}
+
+class kernel::hardware::task {
+
+}
+@enduml
