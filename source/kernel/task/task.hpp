@@ -8,7 +8,7 @@
 namespace kernel::internal::task
 {
     constexpr uint32_t MAX_TASK_NUMBER = 16U;
-    constexpr uint32_t PRIORITIES_COUNT = kernel::task::Priority::Idle + 1U;
+    constexpr uint32_t PRIORITIES_COUNT = static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
 
     typedef struct // This is struct for typesafety
     {

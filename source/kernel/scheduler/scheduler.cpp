@@ -97,7 +97,7 @@ namespace kernel::internal::scheduler
         kernel::internal::task::Id &            a_id
     )
     {
-        for (uint32_t prio = kernel::task::Priority::High;
+        for (uint32_t prio = static_cast<uint32_t>(kernel::task::Priority::High);
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {

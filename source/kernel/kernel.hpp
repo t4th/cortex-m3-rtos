@@ -24,7 +24,7 @@ namespace kernel::task
 {
     typedef void(*Routine)(void * a_parameter);  // TODO: Add argument.
 
-    enum Priority
+    enum class Priority
     {
         High = 0U,
         Medium,
@@ -32,7 +32,7 @@ namespace kernel::task
         Idle
     };
 
-    enum State
+    enum class State
     {
         Suspended,
         Waiting,
