@@ -3,7 +3,6 @@
 #include <kernel.hpp>
 #include <memory_buffer.hpp>
 
-
 namespace kernel::internal::timer
 {
     constexpr uint32_t MAX_TIMER_NUMBER = 16U;

@@ -83,7 +83,10 @@ namespace kernel::internal
                     kernel::internal::m_context.m_next
                 );
 
-                hardware::syscall(hardware::SyscallId::LoadNextTask);
+                if (kernel::internal::m_context.started)
+                {
+                    hardware::syscall(hardware::SyscallId::LoadNextTask);
+                }
             }
             else
             {
@@ -119,6 +122,11 @@ namespace kernel
 {
     void init()
     {
+        if (kernel::internal::m_context.started)
+        {
+            return;
+        }
+
         hardware::init();
         
         internal::m_context.old_time = 0U;
@@ -128,6 +136,7 @@ namespace kernel
         internal::task::Id idle_task_handle;
 
         // Idle task is always available as system task.
+        // todo: check if kernel::task::create can be used instead of internal::task::create
         internal::task::create(
             internal::m_context.m_tasks,
             internal::task_routine,
@@ -144,6 +153,11 @@ namespace kernel
     
     void start()
     {
+        if (kernel::internal::m_context.started)
+        {
+            return;
+        }
+
         internal::lockScheduler();
         internal::m_context.started = true;
 
@@ -262,6 +276,52 @@ namespace kernel::task
         }
         default:
             break;
+        }
+    }
+
+    void suspend(kernel::Handle & a_id)
+    {
+
+    }
+
+    void resume(kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::lockScheduler();
+        {
+            internal::task::Id resumedTaskId{internal::handle::getIndex(a_id)};
+
+            const kernel::task::Priority resumedTaskPrio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                resumedTaskId
+            );
+
+            // Add resumed task back to scheduler.
+            if (false == internal::scheduler::addTask(
+                internal::m_context.m_scheduler, resumedTaskPrio, resumedTaskId))
+            {
+                internal::unlockScheduler();
+                return;
+            }
+
+            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                internal::m_context.m_current
+            );
+
+            // If resumed task is higher priority than current, issue context switch
+            if (kernel::internal::m_context.started && (resumedTaskPrio < currentTaskPrio))
+            {
+                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+            }
+            else
+            {
+                internal::unlockScheduler();
+            }
         }
     }
 }

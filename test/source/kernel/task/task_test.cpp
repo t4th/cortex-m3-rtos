@@ -59,7 +59,7 @@ TEST_CASE("Task")
             REQUIRE(i == task_id.m_id); // task ID, is task index in memory buffer
 
             // priority
-            REQUIRE(kernel::task::Medium == kernel::internal::task::priority::get(context, task_id));
+            REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
         
             // context
             REQUIRE(&context.m_data.at(i).m_context == kernel::internal::task::context::get(context, task_id));
@@ -111,7 +111,7 @@ TEST_CASE("Task")
         REQUIRE(3 == task_id.m_id);
 
         // priority
-        REQUIRE(kernel::task::Medium == kernel::internal::task::priority::get(context, task_id));
+        REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
 
         // context
         REQUIRE(&context.m_data.at(3).m_context == kernel::internal::task::context::get(context, task_id));

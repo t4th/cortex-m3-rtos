@@ -1,4 +1,5 @@
 #include <timer.hpp>
+#include <handle.hpp>
 
 namespace kernel::internal::timer
 {
@@ -62,9 +63,23 @@ namespace kernel::internal::timer
                     {
                         timer.m_state = State::Finished;
 
-                        // todo: get handle type and do stuff
-                        // resume task
-                        // set event
+                        if (timer.m_signal)
+                        {
+                            handle::ObjectType objType;
+                            objType = handle::getObjectType(*timer.m_signal);
+
+                            switch(objType)
+                            {
+                            case handle::ObjectType::Event:
+                                // todo: set event
+                                break;
+                            case handle::ObjectType::Task:
+                                // todo: resume task
+                                break;
+                            default:
+                                break;
+                            }
+                        }
                     }
                 }
             }

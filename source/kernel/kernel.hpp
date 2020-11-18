@@ -59,6 +59,10 @@ namespace kernel::task
 
     // Brute force terminate task.
     void terminate(kernel::Handle & a_id);
+
+    void suspend(kernel::Handle & a_id);
+
+    void resume(kernel::Handle & a_id);
 }
 
 namespace kernel::timer

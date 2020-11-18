@@ -7,6 +7,34 @@
 
 namespace kernel::internal::scheduler
 {
+    // private
+    bool isDataAdded(
+        kernel::internal::common::CircularList<
+        kernel::internal::task::Id,
+        kernel::internal::task::MAX_TASK_NUMBER
+    > & a_list, kernel::internal::task::Id a_id)
+    {
+        if (a_list.count() == 0U)
+        {
+            return false;
+        }
+
+        uint32_t index = a_list.firstIndex();
+
+        for (uint32_t i = 0U; i < a_list.count(); ++i)
+        {
+            if (a_list.at(index).m_id == a_id.m_id)
+            {
+                return true;
+            }
+
+            index = a_list.nextIndex(index);
+        }
+
+        return false;
+    }
+
+    // public
     bool addTask(
         kernel::internal::scheduler::Context &  a_context,
         kernel::task::Priority                  a_priority,
@@ -16,6 +44,12 @@ namespace kernel::internal::scheduler
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = a_context.m_task_list[prio].m_list.count();
         
+        // Look for dublicate.
+        if (true == isDataAdded(a_context.m_task_list[prio].m_list, a_id))
+        {
+            return false;
+        }
+
         uint32_t new_node_idx;
         
         bool task_added = a_context.m_task_list[prio].m_list.add(a_id, new_node_idx);
