@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <hardware.hpp>
 #include <kernel.hpp>
 #include <memory_buffer.hpp>
@@ -28,7 +27,7 @@ namespace kernel::internal::task
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<Task, kernel::internal::task::MAX_TASK_NUMBER> m_data;
+        kernel::internal::common::MemoryBuffer<Task, MAX_TASK_NUMBER> m_data;
     };
 
     typedef void(*TaskRoutine)(void);
@@ -38,7 +37,7 @@ namespace kernel::internal::task
         TaskRoutine             a_task_routine,
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
-        Id *                    a_handle = nullptr,
+        Id *                    a_id = nullptr,
         void *                  a_parameter = nullptr,
         bool                    a_create_suspended = false
         );

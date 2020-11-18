@@ -5,6 +5,8 @@
 // User API
 namespace kernel
 {
+    typedef uint32_t Time_ms;
+
     // Abstract pointing to system object. Should only be used with kernel API.
     typedef struct
     {
@@ -17,6 +19,9 @@ namespace kernel
     // Start kernel.
     // Pre-condition: run kernel::init() before.
     void start();
+
+    // Get time elapsed since kernel started in miliseconds.
+    Time_ms getTime();
 }
 
 // User API for controling tasks.
@@ -53,7 +58,21 @@ namespace kernel::task
     kernel::Handle getCurrent();
 
     // Brute force terminate task.
-    void terminate(kernel::Handle a_id);
+    void terminate(kernel::Handle & a_id);
+}
+
+namespace kernel::timer
+{
+    // a_signal can point to task which will be woken up or event that will be set.
+    bool create( kernel::Handle & a_id, Time_ms a_interval, kernel::Handle * a_signal = nullptr);
+    void destroy( kernel::Handle & a_id);
+    void start( kernel::Handle & a_id);
+    void stop( kernel::Handle & a_id);
+}
+
+namespace kernel::sync
+{
+    void waitForSingleObject(kernel::Handle & a_id);
 }
 
 // System API used by kernel::hardware layer.

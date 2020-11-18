@@ -5,14 +5,12 @@
 
 namespace kernel::internal
 {
-    typedef uint32_t Time_ms;
-
     constexpr Time_ms CONTEXT_SWITCH_INTERVAL_MS = 10U;
     
     struct Context
     {
-        Time_ms old_time = 0U;  // Used to calculate round-robin context switch intervals.
-        Time_ms time = 0U;      // Time in miliseconds elapsed since kernel started.
+        Time_ms old_time = 0U;      // Used to calculate round-robin context switch intervals.
+        volatile Time_ms time = 0U; // Time in miliseconds elapsed since kernel started.
         Time_ms interval = CONTEXT_SWITCH_INTERVAL_MS; // Round-robin context switch intervals in miliseconds.
         
         kernel::internal::task::Id m_current; // Indicate currently running task ID.
@@ -154,6 +152,11 @@ namespace kernel
         hardware::start();
         hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
+
+    Time_ms getTime()
+    {
+        return internal::m_context.time;
+    }
 }
 
 namespace kernel::task
@@ -248,7 +251,7 @@ namespace kernel::task
         return new_handle;
     }
 
-    void terminate(kernel::Handle a_id)
+    void terminate(kernel::Handle & a_id)
     {
         switch(internal::handle::getObjectType(a_id))
         {
