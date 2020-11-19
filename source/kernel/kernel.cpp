@@ -236,18 +236,15 @@ namespace kernel::task
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
-                kernel::internal::scheduler::findHighestPrioTask(
-                    kernel::internal::m_context.m_scheduler,
-                    kernel::internal::m_context.m_next
-                );
-            }
-
-            if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
-            {
                 kernel::internal::task::state::set(
                     internal::m_context.m_tasks,
                     internal::m_context.m_current,
                     kernel::task::State::Ready
+                );
+
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
                 );
 
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
@@ -293,7 +290,47 @@ namespace kernel::task
 
     void suspend(kernel::Handle & a_id)
     {
+        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
 
+        const internal::task::Id id{internal::handle::getIndex(a_id)};
+
+        internal::lockScheduler();
+        {
+            kernel::task::Priority prio = internal::task::priority::get(
+                internal::m_context.m_tasks,
+                id
+            );
+
+            // Remove suspended task from scheduler.
+            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, id);
+
+            kernel::internal::task::state::set(
+                internal::m_context.m_tasks,
+                id,
+                kernel::task::State::Suspended
+            );
+
+            // Reschedule in case task is suspending itself.
+            if (kernel::internal::m_context.m_current.m_id == id.m_id)
+            {
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
+                );
+
+                if (kernel::internal::m_context.started)
+                {
+                    hardware::syscall(hardware::SyscallId::LoadNextTask);
+                }
+            }
+            else
+            {
+                internal::unlockScheduler();
+            }
+        }
     }
 
     void resume(kernel::Handle & a_id)

@@ -59,7 +59,7 @@ namespace kernel::internal::scheduler
             return false;
         }
 
-        if (0 == count)
+        if (0U == count)
         {
             a_context.m_task_list[prio].m_current = new_node_idx;
         }
@@ -79,7 +79,7 @@ namespace kernel::internal::scheduler
         uint32_t node_index = a_context.m_task_list[prio].m_list.firstIndex();
         
         // Search task list for provided a_id.
-        for (uint32_t i = 0; i < count; ++i)
+        for (uint32_t i = 0U; i < count; ++i)
         {
             if (a_id.m_id == a_context.m_task_list[prio].m_list.at(node_index).m_id)
             {

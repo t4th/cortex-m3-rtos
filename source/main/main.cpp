@@ -25,6 +25,23 @@ void task2(void * a_parameter);
 void task3(void * a_parameter);
 void cleanupTask(void * a_parameter);
 
+
+int main()
+{
+    Task_ids task_ids;
+
+    kernel::init();
+
+    kernel::task::create(task0, kernel::task::Priority::Low, &task_ids.task0);
+    kernel::task::create(task1, kernel::task::Priority::Low);
+    kernel::task::create(task3, kernel::task::Priority::Low, &task_ids.task3);
+    kernel::task::create(cleanupTask, kernel::task::Priority::Low, nullptr, &task_ids);
+
+    kernel::start();
+
+    for(;;);
+}
+
 // Terminate task0 and task3 after some delay and exit.
 void cleanupTask(void * a_parameter)
 {
@@ -75,7 +92,7 @@ void task1(void * a_parameter)
             }
 
             printTask("task 1 - end\r\n");
-            
+
             // Terminate itself.
             kernel::Handle handle = kernel::task::getCurrent();
             kernel::task::terminate(handle);
@@ -125,20 +142,4 @@ void task3(void * a_parameter)
         delay(100000U);
         printTask("task 3 - ping\r\n");
     }
-}
-
-int main()
-{
-    Task_ids task_ids;
-
-    kernel::init();
-
-    kernel::task::create(task0, kernel::task::Priority::Low, &task_ids.task0);
-    kernel::task::create(task1, kernel::task::Priority::Low);
-    kernel::task::create(task3, kernel::task::Priority::Low, &task_ids.task3);
-    kernel::task::create(cleanupTask, kernel::task::Priority::Low, nullptr, &task_ids);
-
-    kernel::start();
-
-    for(;;);
 }
