@@ -60,6 +60,9 @@ TEST_CASE("Task")
 
             // priority
             REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
+            
+            // state
+            REQUIRE(kernel::task::State::Ready == kernel::internal::task::state::get(context, task_id));
         
             // context
             REQUIRE(&context.m_data.at(i).m_context == kernel::internal::task::context::get(context, task_id));
@@ -127,5 +130,35 @@ TEST_CASE("Task")
 
         // parameter
         REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
+    }
+
+    SECTION ("create new task and modify context data with API")
+    {
+        kernel::internal::task::Context context{};
+        kernel::internal::task::Id task_id{};
+        uint32_t parameter;
+
+        bool result = kernel::internal::task::create(
+            context,
+            stubs::kernel_task_routine,
+            stubs::task_routine,
+            kernel::task::Priority::Medium,
+            &task_id,
+            &parameter,
+            false
+            );
+
+            REQUIRE(true == result);
+
+            // check task state after creating
+            REQUIRE(kernel::task::State::Ready == kernel::internal::task::state::get(context, task_id));
+
+            // change task state
+            kernel::internal::task::state::set(context, task_id, kernel::task::State::Running);
+
+            // verify if state has changed
+            REQUIRE(kernel::task::State::Running == kernel::internal::task::state::get(context, task_id));
+
+
     }
 }

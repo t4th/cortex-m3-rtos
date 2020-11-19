@@ -66,6 +66,19 @@ namespace kernel::internal::task
         }
     }
 
+    namespace state
+    {
+        kernel::task::State get( Context & a_context, Id a_id)
+        {
+            return a_context.m_data.at(a_id.m_id).m_state;
+        }
+
+        void set( Context & a_context, Id a_id, kernel::task::State a_state )
+        {
+            a_context.m_data.at(a_id.m_id).m_state = a_state;
+        }
+    }
+
     namespace context
     {
         kernel::hardware::task::Context *  get( Context & a_context, Id a_id)

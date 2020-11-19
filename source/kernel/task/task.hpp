@@ -49,6 +49,13 @@ namespace kernel::internal::task
         kernel::task::Priority get( Context & a_context, Id a_id);
     }
 
+    namespace state
+    {
+        kernel::task::State get( Context & a_context, Id a_id);
+
+        void set( Context & a_context, Id a_id, kernel::task::State a_state );
+    }
+
     namespace context
     {
         kernel::hardware::task::Context *  get( Context & a_context, Id a_id);
