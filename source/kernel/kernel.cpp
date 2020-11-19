@@ -42,6 +42,12 @@ namespace kernel::internal
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
     void loadContext(kernel::internal::task::Id a_task)
     {
+        kernel::internal::task::state::set(
+            internal::m_context.m_tasks,
+            a_task,
+            kernel::task::State::Running
+        );
+
         kernel::hardware::task::Context * next_task = internal::task::context::get(m_context.m_tasks, a_task);
         kernel::hardware::context::next::set(next_task);
 
@@ -238,6 +244,12 @@ namespace kernel::task
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
+                kernel::internal::task::state::set(
+                    internal::m_context.m_tasks,
+                    internal::m_context.m_current,
+                    kernel::task::State::Ready
+                );
+
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
@@ -316,6 +328,12 @@ namespace kernel::task
             // If resumed task is higher priority than current, issue context switch
             if (kernel::internal::m_context.started && (resumedTaskPrio < currentTaskPrio))
             {
+                kernel::internal::task::state::set(
+                    internal::m_context.m_tasks,
+                    internal::m_context.m_current,
+                    kernel::task::State::Ready
+                );
+
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
@@ -364,6 +382,12 @@ namespace kernel::internal
                 // Find next task in priority group.
                 if(true == scheduler::findNextTask(m_context.m_scheduler, current, m_context.m_next))
                 {
+                    kernel::internal::task::state::set(
+                        internal::m_context.m_tasks,
+                        internal::m_context.m_current,
+                        kernel::task::State::Ready
+                    );
+
                     storeContext(m_context.m_current);
                     loadContext(m_context.m_next);
 
