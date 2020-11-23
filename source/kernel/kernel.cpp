@@ -323,7 +323,7 @@ namespace kernel::task
 
                 if (kernel::internal::m_context.started)
                 {
-                    hardware::syscall(hardware::SyscallId::LoadNextTask);
+                    hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
                 }
             }
             else
@@ -369,6 +369,13 @@ namespace kernel::task
                     internal::m_context.m_tasks,
                     internal::m_context.m_current,
                     kernel::task::State::Ready
+                );
+
+                // todo: this might be changed since resumed task ID is known and stored in
+                //       resumedTaskId by this point
+                kernel::internal::scheduler::findHighestPrioTask(
+                    kernel::internal::m_context.m_scheduler,
+                    kernel::internal::m_context.m_next
                 );
 
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);

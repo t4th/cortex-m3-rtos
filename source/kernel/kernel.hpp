@@ -27,7 +27,7 @@ namespace kernel
 // User API for controling tasks.
 namespace kernel::task
 {
-    typedef void(*Routine)(void * a_parameter);  // TODO: Add argument.
+    typedef void(*Routine)(void * a_parameter);
 
     enum class Priority
     {

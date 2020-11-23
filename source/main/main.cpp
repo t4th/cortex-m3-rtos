@@ -6,6 +6,7 @@
 struct Task_ids
 {
     kernel::Handle task0;
+    kernel::Handle task2;
     kernel::Handle task3;
 };
 
@@ -33,7 +34,7 @@ int main()
     kernel::init();
 
     kernel::task::create(task0, kernel::task::Priority::Low, &task_ids.task0);
-    kernel::task::create(task1, kernel::task::Priority::Low);
+    kernel::task::create(task1, kernel::task::Priority::Low, nullptr, &task_ids);
     kernel::task::create(task3, kernel::task::Priority::Low, &task_ids.task3);
     kernel::task::create(cleanupTask, kernel::task::Priority::Low, nullptr, &task_ids);
 
@@ -52,6 +53,7 @@ void cleanupTask(void * a_parameter)
     printTask("terminate task 0 and 3\r\n");
     kernel::task::terminate(ids->task0);
     kernel::task::terminate(ids->task3);
+    kernel::task::resume(ids->task2);
     printTask("cleanup task - end\r\n");
 }
 
@@ -71,6 +73,7 @@ void task0(void * a_parameter)
 // On second creation ping for some time until killing itself.
 void task1(void * a_parameter)
 {
+    Task_ids * ids = (Task_ids*)a_parameter;
     int die = 0;
     static bool once = true;
 
@@ -86,7 +89,7 @@ void task1(void * a_parameter)
 
             printTask("task 1 - created new task 2 Medium\r\n");
 
-            if (false == kernel::task::create(task2, kernel::task::Priority::Medium))
+            if (false == kernel::task::create(task2, kernel::task::Priority::Medium, &(ids->task2), a_parameter))
             {
                 printTask("task 1 failed to create task 2\r\n");
             }
@@ -123,12 +126,14 @@ void task2(void * a_parameter)
 
         printTask("task 2 - created new task 1 Low\r\n");
 
-        if (false == kernel::task::create(task1, kernel::task::Priority::Low))
+        if (false == kernel::task::create(task1, kernel::task::Priority::Low, nullptr, a_parameter))
         {
             printTask("task 2 failed to create task 1\r\n");
         }
         printTask("task 2 - end and release LOW\r\n");
-        break;
+
+        auto handle = kernel::task::getCurrent();
+        kernel::task::suspend(handle);
     }
 }
 
