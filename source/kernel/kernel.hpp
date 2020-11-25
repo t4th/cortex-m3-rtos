@@ -63,15 +63,16 @@ namespace kernel::task
     void suspend(kernel::Handle & a_handle);
 
     void resume(kernel::Handle & a_handle);
+
+    void Sleep(Time_ms a_time);
 }
 
 namespace kernel::timer
 {
-    // a_signal can point to task which will be woken up or event that will be set.
     bool create(
         kernel::Handle &    a_handle,
         Time_ms             a_interval,
-        kernel::Handle *    a_signal = nullptr
+        kernel::Handle *    a_signal = nullptr // Can point to Event object.
     );
     void destroy( kernel::Handle & a_handle);
     void start( kernel::Handle & a_handle);
@@ -88,7 +89,13 @@ namespace kernel::event
 
 namespace kernel::sync
 {
-    void waitForSingleObject( kernel::Handle & a_handle, Time_ms a_timeout);
+    // Can wait for:
+    // Event, timer
+    bool waitForSingleObject(
+        kernel::Handle &    a_handle,
+        bool                a_wait_forver = true,
+        Time_ms             a_timeout = 0U
+    );
 }
 
 // System API used by kernel::hardware layer.

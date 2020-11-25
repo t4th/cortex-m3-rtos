@@ -73,9 +73,6 @@ namespace kernel::internal::timer
                             case handle::ObjectType::Event:
                                 // todo: set event
                                 break;
-                            case handle::ObjectType::Task:
-                                // todo: resume task
-                                break;
                             default:
                                 break;
                             }

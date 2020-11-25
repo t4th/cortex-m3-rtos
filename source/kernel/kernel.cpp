@@ -99,6 +99,10 @@ namespace kernel::internal
                 {
                     hardware::syscall(hardware::SyscallId::LoadNextTask);
                 }
+                else
+                {
+                    internal::unlockScheduler();
+                }
             }
             else
             {
@@ -397,6 +401,13 @@ namespace kernel::task
             }
         }
     }
+
+    void Sleep(Time_ms a_time)
+    {
+        // get current task ID
+        // create timer
+        // set task to waiting
+    }
 }
 
 namespace kernel::timer
@@ -409,11 +420,11 @@ namespace kernel::timer
     {
         kernel::internal::lockScheduler();
         {
-            kernel::internal::timer::Id id;
+            kernel::internal::timer::Id new_timer_id;
 
             bool timer_created = internal::timer::create(
                 internal::m_context.m_timers,
-                id,
+                new_timer_id,
                 a_interval,
                 a_signal
             );
@@ -426,7 +437,7 @@ namespace kernel::timer
 
             a_handle = internal::handle::create(
                 internal::handle::ObjectType::Timer,
-                id.m_id
+                new_timer_id.m_id
             );
         }
         kernel::internal::unlockScheduler();
@@ -443,8 +454,8 @@ namespace kernel::timer
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::destroy(internal::m_context.m_timers, id);
+            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            internal::timer::destroy(internal::m_context.m_timers, timer_id);
         }
         kernel::internal::unlockScheduler();
     }
@@ -458,8 +469,8 @@ namespace kernel::timer
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::start(internal::m_context.m_timers, id);
+            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            internal::timer::start(internal::m_context.m_timers, timer_id);
         }
         kernel::internal::unlockScheduler();
     }
@@ -473,8 +484,8 @@ namespace kernel::timer
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::stop(internal::m_context.m_timers, id);
+            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            internal::timer::stop(internal::m_context.m_timers, timer_id);
         }
         kernel::internal::unlockScheduler();
     }
@@ -486,10 +497,10 @@ namespace kernel::event
     {
         kernel::internal::lockScheduler();
         {
-            kernel::internal::event::Id id;
+            kernel::internal::event::Id new_event_id;
             bool event_created = internal::event::create(
                 internal::m_context.m_events,
-                id,
+                new_event_id,
                 a_manual_reset
             );
 
@@ -501,7 +512,7 @@ namespace kernel::event
 
             a_handle = internal::handle::create(
                 internal::handle::ObjectType::Event,
-                id.m_id
+                new_event_id.m_id
             );
         }
         kernel::internal::unlockScheduler();
@@ -517,8 +528,8 @@ namespace kernel::event
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::destroy(internal::m_context.m_events, id);
+            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            internal::event::destroy(internal::m_context.m_events, event_id);
         }
         kernel::internal::unlockScheduler();
     }
@@ -532,8 +543,8 @@ namespace kernel::event
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::set(internal::m_context.m_events, id);
+            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            internal::event::set(internal::m_context.m_events, event_id);
         }
         kernel::internal::unlockScheduler();
     }
@@ -547,10 +558,24 @@ namespace kernel::event
 
         kernel::internal::lockScheduler();
         {
-            auto id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::reset(internal::m_context.m_events, id);
+            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            internal::event::reset(internal::m_context.m_events, event_id);
         }
         kernel::internal::unlockScheduler();
+    }
+}
+
+namespace kernel::sync
+{
+    bool waitForSingleObject(
+        kernel::Handle &    a_handle,
+        bool                a_wait_forver,
+        Time_ms             a_timeout
+    )
+    {
+        // Get current task ID
+        // set task to waiting
+        return false;
     }
 }
 
