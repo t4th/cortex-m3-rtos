@@ -11,7 +11,7 @@ namespace kernel::internal::scheduler
     bool isDataAdded(
         kernel::internal::common::CircularList<
         kernel::internal::task::Id,
-        kernel::internal::task::MAX_TASK_NUMBER
+        kernel::internal::task::MAX_NUMBER
     > & a_list, kernel::internal::task::Id a_id)
     {
         if (a_list.count() == 0U)

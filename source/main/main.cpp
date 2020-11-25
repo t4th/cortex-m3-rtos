@@ -26,7 +26,6 @@ void task2(void * a_parameter);
 void task3(void * a_parameter);
 void cleanupTask(void * a_parameter);
 
-
 int main()
 {
     Task_ids task_ids;

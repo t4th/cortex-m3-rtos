@@ -2,11 +2,14 @@
 #include <hardware.hpp>
 #include <scheduler.hpp>
 #include <handle.hpp>
+#include <timer.hpp>
+#include <event.hpp>
 
 namespace kernel::internal
 {
     constexpr Time_ms CONTEXT_SWITCH_INTERVAL_MS = 10U;
     
+    // TODO: kernel context needs to be volatile since most kernel function are accessed from handler mode.
     struct Context
     {
         Time_ms old_time = 0U;      // Used to calculate round-robin context switch intervals.
@@ -25,8 +28,10 @@ namespace kernel::internal
         volatile uint32_t schedule_lock = 0U;
 
         // Data
-        internal::task::Context      m_tasks;
-        internal::scheduler::Context m_scheduler;
+        internal::task::Context         m_tasks;
+        internal::scheduler::Context    m_scheduler;
+        internal::timer::Context        m_timers;
+        internal::event::Context        m_events;
     } m_context;
 
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
@@ -65,6 +70,7 @@ namespace kernel::internal
 
     void unlockScheduler()
     {
+        // TODO: analyze DSB and DMB here
         // TODO: thinker about removing it.
         --internal::m_context.schedule_lock;
     }
@@ -325,6 +331,10 @@ namespace kernel::task
                 {
                     hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
                 }
+                else
+                {
+                    internal::unlockScheduler();
+                }
             }
             else
             {
@@ -385,6 +395,167 @@ namespace kernel::task
                 internal::unlockScheduler();
             }
         }
+    }
+}
+
+namespace kernel::timer
+{
+    bool create(
+        kernel::Handle &    a_id,
+        Time_ms             a_interval,
+        kernel::Handle *    a_signal
+    )
+    {
+        kernel::internal::lockScheduler();
+        {
+            kernel::internal::timer::Id id;
+
+            bool timer_created = internal::timer::create(
+                internal::m_context.m_timers,
+                id,
+                a_interval,
+                a_signal
+            );
+
+            if (false == timer_created)
+            {
+                kernel::internal::unlockScheduler();
+                return false;
+            }
+
+            a_id = internal::handle::create(
+                internal::handle::ObjectType::Timer,
+                id.m_id
+            );
+        }
+        kernel::internal::unlockScheduler();
+
+        return true;
+    }
+
+    void destroy( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::timer::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::timer::destroy(internal::m_context.m_timers, id);
+        }
+        kernel::internal::unlockScheduler();
+    }
+
+    void start( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::timer::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::timer::start(internal::m_context.m_timers, id);
+        }
+        kernel::internal::unlockScheduler();
+    }
+
+    void stop( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::timer::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::timer::stop(internal::m_context.m_timers, id);
+        }
+        kernel::internal::unlockScheduler();
+    }
+}
+
+namespace kernel::event
+{
+    bool create( kernel::Handle & a_id, bool a_manual_reset)
+    {
+        kernel::internal::lockScheduler();
+        {
+            kernel::internal::event::Id id;
+            bool event_created = internal::event::create(
+                internal::m_context.m_events,
+                id,
+                a_manual_reset
+            );
+
+            if (false == event_created)
+            {
+                kernel::internal::unlockScheduler();
+                return false;
+            }
+
+            a_id = internal::handle::create(
+                internal::handle::ObjectType::Event,
+                id.m_id
+            );
+        }
+        kernel::internal::unlockScheduler();
+
+        return true;
+    }
+    void destroy( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::event::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::event::destroy(internal::m_context.m_events, id);
+        }
+        kernel::internal::unlockScheduler();
+    }
+
+    void set( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::event::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::event::set(internal::m_context.m_events, id);
+        }
+        kernel::internal::unlockScheduler();
+    }
+
+    void reset( kernel::Handle & a_id)
+    {
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        {
+            return;
+        }
+
+        internal::event::Id id{internal::handle::getIndex(a_id)};
+
+        kernel::internal::lockScheduler();
+        {
+            internal::event::reset(internal::m_context.m_events, id);
+        }
+        kernel::internal::unlockScheduler();
     }
 }
 

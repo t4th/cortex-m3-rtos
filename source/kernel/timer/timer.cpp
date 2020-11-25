@@ -49,7 +49,7 @@ namespace kernel::internal::timer
 
     void runTimers( Context & a_context)
     {
-        for (uint32_t i = 0U; i < MAX_TIMER_NUMBER; ++i)
+        for (uint32_t i = 0U; i < MAX_NUMBER; ++i)
         {
             if (a_context.m_data.isAllocated(i))
             {

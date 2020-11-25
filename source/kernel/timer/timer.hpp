@@ -5,7 +5,7 @@
 
 namespace kernel::internal::timer
 {
-    constexpr uint32_t MAX_TIMER_NUMBER = 16U;
+    constexpr uint32_t MAX_NUMBER = 16U;
 
     typedef struct
     {
@@ -29,7 +29,7 @@ namespace kernel::internal::timer
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<Timer, MAX_TIMER_NUMBER> m_data;
+        kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data;
     };
 
     bool create(

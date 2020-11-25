@@ -6,7 +6,7 @@
 
 namespace kernel::internal::task
 {
-    constexpr uint32_t MAX_TASK_NUMBER = 16U;
+    constexpr uint32_t MAX_NUMBER = 16U;
     constexpr uint32_t PRIORITIES_COUNT = static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
 
     typedef struct // This is struct for typesafety
@@ -27,7 +27,7 @@ namespace kernel::internal::task
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<Task, MAX_TASK_NUMBER> m_data;
+        kernel::internal::common::MemoryBuffer<Task, MAX_NUMBER> m_data;
     };
 
     typedef void(*TaskRoutine)(void);
