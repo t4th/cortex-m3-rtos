@@ -58,37 +58,37 @@ namespace kernel::task
     kernel::Handle getCurrent();
 
     // Brute force terminate task.
-    void terminate(kernel::Handle & a_id);
+    void terminate(kernel::Handle & a_handle);
 
-    void suspend(kernel::Handle & a_id);
+    void suspend(kernel::Handle & a_handle);
 
-    void resume(kernel::Handle & a_id);
+    void resume(kernel::Handle & a_handle);
 }
 
 namespace kernel::timer
 {
     // a_signal can point to task which will be woken up or event that will be set.
     bool create(
-        kernel::Handle &    a_id,
+        kernel::Handle &    a_handle,
         Time_ms             a_interval,
         kernel::Handle *    a_signal = nullptr
     );
-    void destroy( kernel::Handle & a_id);
-    void start( kernel::Handle & a_id);
-    void stop( kernel::Handle & a_id);
+    void destroy( kernel::Handle & a_handle);
+    void start( kernel::Handle & a_handle);
+    void stop( kernel::Handle & a_handle);
 }
 
 namespace kernel::event
 {
-    bool create( kernel::Handle & a_id, bool a_manual_reset = false);
-    void destroy( kernel::Handle & a_id);
-    void set( kernel::Handle & a_id);
-    void reset( kernel::Handle & a_id);
+    bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
+    void destroy( kernel::Handle & a_handle);
+    void set( kernel::Handle & a_handle);
+    void reset( kernel::Handle & a_handle);
 }
 
 namespace kernel::sync
 {
-    void waitForSingleObject( kernel::Handle & a_id, Time_ms a_timeout);
+    void waitForSingleObject( kernel::Handle & a_handle, Time_ms a_timeout);
 }
 
 // System API used by kernel::hardware layer.

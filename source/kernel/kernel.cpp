@@ -280,13 +280,13 @@ namespace kernel::task
         return new_handle;
     }
 
-    void terminate(kernel::Handle & a_id)
+    void terminate(kernel::Handle & a_handle)
     {
-        switch(internal::handle::getObjectType(a_id))
+        switch(internal::handle::getObjectType(a_handle))
         {
         case internal::handle::ObjectType::Task:
         {
-            internal::terminateTask({internal::handle::getIndex(a_id)});
+            internal::terminateTask({internal::handle::getIndex(a_handle)});
             break;
         }
         default:
@@ -294,14 +294,14 @@ namespace kernel::task
         }
     }
 
-    void suspend(kernel::Handle & a_id)
+    void suspend(kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        const internal::task::Id id{internal::handle::getIndex(a_id)};
+        const internal::task::Id id{internal::handle::getIndex(a_handle)};
 
         internal::lockScheduler();
         {
@@ -343,16 +343,16 @@ namespace kernel::task
         }
     }
 
-    void resume(kernel::Handle & a_id)
+    void resume(kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
         internal::lockScheduler();
         {
-            internal::task::Id resumedTaskId{internal::handle::getIndex(a_id)};
+            internal::task::Id resumedTaskId{internal::handle::getIndex(a_handle)};
 
             const kernel::task::Priority resumedTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,
@@ -401,7 +401,7 @@ namespace kernel::task
 namespace kernel::timer
 {
     bool create(
-        kernel::Handle &    a_id,
+        kernel::Handle &    a_handle,
         Time_ms             a_interval,
         kernel::Handle *    a_signal
     )
@@ -423,7 +423,7 @@ namespace kernel::timer
                 return false;
             }
 
-            a_id = internal::handle::create(
+            a_handle = internal::handle::create(
                 internal::handle::ObjectType::Timer,
                 id.m_id
             );
@@ -433,14 +433,14 @@ namespace kernel::timer
         return true;
     }
 
-    void destroy( kernel::Handle & a_id)
+    void destroy( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Timer == internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_id)};
+        internal::timer::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {
@@ -449,14 +449,14 @@ namespace kernel::timer
         kernel::internal::unlockScheduler();
     }
 
-    void start( kernel::Handle & a_id)
+    void start( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_id)};
+        internal::timer::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {
@@ -465,14 +465,14 @@ namespace kernel::timer
         kernel::internal::unlockScheduler();
     }
 
-    void stop( kernel::Handle & a_id)
+    void stop( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_id)};
+        internal::timer::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {
@@ -484,7 +484,7 @@ namespace kernel::timer
 
 namespace kernel::event
 {
-    bool create( kernel::Handle & a_id, bool a_manual_reset)
+    bool create( kernel::Handle & a_handle, bool a_manual_reset)
     {
         kernel::internal::lockScheduler();
         {
@@ -501,7 +501,7 @@ namespace kernel::event
                 return false;
             }
 
-            a_id = internal::handle::create(
+            a_handle = internal::handle::create(
                 internal::handle::ObjectType::Event,
                 id.m_id
             );
@@ -510,14 +510,14 @@ namespace kernel::event
 
         return true;
     }
-    void destroy( kernel::Handle & a_id)
+    void destroy( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_id)};
+        internal::event::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {
@@ -526,14 +526,14 @@ namespace kernel::event
         kernel::internal::unlockScheduler();
     }
 
-    void set( kernel::Handle & a_id)
+    void set( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_id)};
+        internal::event::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {
@@ -542,14 +542,14 @@ namespace kernel::event
         kernel::internal::unlockScheduler();
     }
 
-    void reset( kernel::Handle & a_id)
+    void reset( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_id))
+        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
         {
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_id)};
+        internal::event::Id id{internal::handle::getIndex(a_handle)};
 
         kernel::internal::lockScheduler();
         {

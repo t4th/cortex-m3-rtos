@@ -83,6 +83,12 @@ namespace kernel::internal::timer
                     }
                 }
             }
+            else
+            {
+                // Premature optimization:
+                // iterate until status != false, since memory buffer guarantee data is in order.
+                break;
+            }
         }
     }
 }
