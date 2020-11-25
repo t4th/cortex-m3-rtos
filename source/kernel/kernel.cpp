@@ -202,13 +202,13 @@ namespace kernel::task
                 internal::m_context.m_current
             );
 
-            kernel::internal::task::Id id;
+            kernel::internal::task::Id created_task_id;
 
             bool task_created = kernel::internal::task::create(
                 internal::m_context.m_tasks,
                 internal::task_routine,
                 a_routine, a_priority,
-                &id,
+                &created_task_id,
                 a_parameter,
                 a_create_suspended
             );
@@ -224,12 +224,12 @@ namespace kernel::task
                 bool task_added = kernel::internal::scheduler::addTask(
                     kernel::internal::m_context.m_scheduler,
                     a_priority,
-                    id
+                    created_task_id
                 );
 
                 if (false == task_added)
                 {
-                    kernel::internal::task::destroy( internal::m_context.m_tasks, id);
+                    kernel::internal::task::destroy( internal::m_context.m_tasks, created_task_id);
                     internal::unlockScheduler();
                     return false;
                 }
@@ -237,7 +237,7 @@ namespace kernel::task
 
             if (a_handle)
             {
-                *a_handle = internal::handle::create( internal::handle::ObjectType::Task, id.m_id);
+                *a_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id.m_id);
             }
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
@@ -286,7 +286,8 @@ namespace kernel::task
         {
         case internal::handle::ObjectType::Task:
         {
-            internal::terminateTask({internal::handle::getIndex(a_handle)});
+            auto terminated_task_id = internal::handle::getId<internal::task::Id>(a_handle);
+            internal::terminateTask(terminated_task_id);
             break;
         }
         default:
@@ -301,26 +302,26 @@ namespace kernel::task
             return;
         }
 
-        const internal::task::Id id{internal::handle::getIndex(a_handle)};
+        const auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
 
         internal::lockScheduler();
         {
             kernel::task::Priority prio = internal::task::priority::get(
                 internal::m_context.m_tasks,
-                id
+                suspended_task_id
             );
 
             // Remove suspended task from scheduler.
-            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, id);
+            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, suspended_task_id);
 
             kernel::internal::task::state::set(
                 internal::m_context.m_tasks,
-                id,
+                suspended_task_id,
                 kernel::task::State::Suspended
             );
 
             // Reschedule in case task is suspending itself.
-            if (kernel::internal::m_context.m_current.m_id == id.m_id)
+            if (kernel::internal::m_context.m_current.m_id == suspended_task_id.m_id)
             {
                 kernel::internal::scheduler::findHighestPrioTask(
                     kernel::internal::m_context.m_scheduler,
@@ -352,7 +353,7 @@ namespace kernel::task
 
         internal::lockScheduler();
         {
-            internal::task::Id resumedTaskId{internal::handle::getIndex(a_handle)};
+            const auto resumedTaskId = internal::handle::getId<internal::task::Id>(a_handle);
 
             const kernel::task::Priority resumedTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,
@@ -440,10 +441,9 @@ namespace kernel::timer
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
             internal::timer::destroy(internal::m_context.m_timers, id);
         }
         kernel::internal::unlockScheduler();
@@ -456,10 +456,9 @@ namespace kernel::timer
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
             internal::timer::start(internal::m_context.m_timers, id);
         }
         kernel::internal::unlockScheduler();
@@ -472,10 +471,9 @@ namespace kernel::timer
             return;
         }
 
-        internal::timer::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::timer::Id>(a_handle);
             internal::timer::stop(internal::m_context.m_timers, id);
         }
         kernel::internal::unlockScheduler();
@@ -517,10 +515,9 @@ namespace kernel::event
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::event::Id>(a_handle);
             internal::event::destroy(internal::m_context.m_events, id);
         }
         kernel::internal::unlockScheduler();
@@ -533,10 +530,9 @@ namespace kernel::event
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::event::Id>(a_handle);
             internal::event::set(internal::m_context.m_events, id);
         }
         kernel::internal::unlockScheduler();
@@ -549,10 +545,9 @@ namespace kernel::event
             return;
         }
 
-        internal::event::Id id{internal::handle::getIndex(a_handle)};
-
         kernel::internal::lockScheduler();
         {
+            auto id = internal::handle::getId<internal::event::Id>(a_handle);
             internal::event::reset(internal::m_context.m_events, id);
         }
         kernel::internal::unlockScheduler();
