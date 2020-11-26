@@ -43,7 +43,7 @@ TEST_CASE("Task")
         uint32_t parameter;
 
         // create maximum number of tasks
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_TASK_NUMBER; ++i)
+        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
         {
             bool result = kernel::internal::task::create(
                 context,

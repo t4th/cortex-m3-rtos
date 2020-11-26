@@ -68,7 +68,7 @@ TEST_CASE("Scheduler")
     {
         kernel::internal::task::Id next_task_id;
 
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_TASK_NUMBER; i++)
+        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; i++)
         {
             next_task_id.m_id = i;
             REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
