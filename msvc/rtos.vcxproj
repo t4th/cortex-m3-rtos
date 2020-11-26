@@ -101,7 +101,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;STM32F10X_HD;__ARMCC_VERSION=6010050;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\internal;..\source\kernel\hardware</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -159,6 +159,7 @@
     <ClCompile Include="..\source\kernel\event\event.cpp" />
     <ClCompile Include="..\source\kernel\handle\handle.cpp" />
     <ClCompile Include="..\source\kernel\hardware\armv7m\hardware.cpp" />
+    <ClCompile Include="..\source\kernel\internal\internal.cpp" />
     <ClCompile Include="..\source\kernel\kernel.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp" />
     <ClCompile Include="..\source\kernel\task\task.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="..\source\kernel\event\event.hpp" />
     <ClInclude Include="..\source\kernel\handle\handle.hpp" />
     <ClInclude Include="..\source\kernel\hardware\hardware.hpp" />
+    <ClInclude Include="..\source\kernel\internal\internal.hpp" />
     <ClInclude Include="..\source\kernel\kernel.hpp" />
     <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp" />
     <ClInclude Include="..\source\kernel\task\task.hpp" />
