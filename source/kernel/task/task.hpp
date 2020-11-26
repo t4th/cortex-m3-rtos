@@ -14,6 +14,26 @@ namespace kernel::internal::task
         uint32_t m_id;
     } Id;
 
+    struct WaitConditions
+    {
+        enum class Type
+        {
+            Sleep,
+            WaitForObj
+        } m_type;
+
+        enum class Result
+        {
+            ObjSignaled,
+            Timedout
+        } m_result;
+
+        Handle  m_source;
+        bool    m_waitForver;
+        Time_ms m_interval;
+        Time_ms m_start;
+    };
+
     struct Task
     {
         uint32_t                        m_sp;
@@ -23,6 +43,7 @@ namespace kernel::internal::task
         kernel::task::State             m_state;
         void *                          m_parameter;
         kernel::task::Routine           m_routine;
+        WaitConditions                  m_waitConditios;
     };
 
     struct Context
@@ -76,5 +97,10 @@ namespace kernel::internal::task
     namespace parameter
     {
         void * get( Context & a_context, Id a_id);
+    }
+
+    namespace waitConditions
+    {
+        WaitConditions & getRef( Context & a_context, Id a_id);
     }
 }

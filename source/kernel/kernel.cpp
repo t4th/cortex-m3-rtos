@@ -416,7 +416,7 @@ namespace kernel::event
 
 namespace kernel::sync
 {
-    bool waitForSingleObject(
+    WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver,
         Time_ms             a_timeout
@@ -424,6 +424,6 @@ namespace kernel::sync
     {
         // Get current task ID
         // set task to waiting
-        return false;
+        return WaitResult::Abandon;
     }
 }

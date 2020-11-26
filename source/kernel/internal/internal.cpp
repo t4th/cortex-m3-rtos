@@ -1,5 +1,103 @@
 #include <internal.hpp>
 
+namespace kernel::internal::wait_queue
+{
+    // TODO:
+    // let this struct keep ID and Conditions type to reduce searching.
+    // maybe move some condition from internal::task
+    // - move wait_queue to scheduler
+
+    kernel::internal::common::CircularList<
+        kernel::internal::task::Id,
+        kernel::internal::wait_queue::MAX_NUMBER
+    > m_wait_queue;
+
+    bool addTask(
+        task::Id  a_sourceTask,
+        task::WaitConditions::Type a_condition,
+        Handle    a_sourceCondition,
+        Time_ms   a_interval,
+        bool      a_waitForver
+    )
+    {
+        // set wait condition in task
+        // add task to wait queue
+
+        return false;
+    }
+
+    // When task or source condition source is Destroyed
+    // conditions should be too with Abandon code.
+    void removeTask()
+    {
+        // remove task from wait queue
+    }
+
+    void task_terminated_callback()
+    {
+        /*
+            case task::WaitConditions::Type::WaitForObj:
+            {
+                internal::handle::ObjectType objType = internal::handle::getObjectType(conditions.m_source);
+                switch(objType)
+                {
+                case internal::handle::ObjectType::Task:
+                    // is event set
+                    break;
+                default:
+                    break;
+                }
+            }
+        */
+    }
+
+    void timer_finished_callback()
+    {
+
+    }
+
+    void event_set_callback()
+    {
+
+    }
+
+    // must be run when:
+    // - any system object used as condition cease to exsist
+    // - every tick, before round-robin scheduling
+    void checkTimeConditions()
+    {
+        // iterate all waiting tasks and check their wait conditions
+        auto count = m_wait_queue.count();
+
+        uint32_t index = m_wait_queue.firstIndex();
+
+        for (auto i = 0U; i < count; ++i)
+        {
+            task::Id current = m_wait_queue.at(index); // get task ID from wait queue
+            internal::task::WaitConditions & conditions = internal::task::waitConditions::getRef(m_context.m_tasks, current);
+
+            switch(conditions.m_type)
+            {
+            case task::WaitConditions::Type::Sleep:
+                {
+                Time_ms current = kernel::getTime();
+                if (conditions.m_start + current > conditions.m_interval)
+                {
+                    conditions.m_result = task::WaitConditions::Result::Timedout;
+                    // remove task from wait list
+                    // add task to ready list
+                }
+                }
+                break;
+            default:
+                break;
+            }
+
+            index = m_wait_queue.nextIndex(index);
+        }
+    }
+}
+
 namespace kernel::internal
 {
     Context m_context;

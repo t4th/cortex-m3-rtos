@@ -89,9 +89,17 @@ namespace kernel::event
 
 namespace kernel::sync
 {
+    enum class WaitResult
+    {
+        ObjectSet,
+        TimeoutOccurred,
+        Abandon,
+    };
+
     // Can wait for:
-    // Event, timer
-    bool waitForSingleObject(
+    // Event, timer, task
+    // NOTE: destorying items used by this function will result in undefined behaviour
+    WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver = true,
         Time_ms             a_timeout = 0U

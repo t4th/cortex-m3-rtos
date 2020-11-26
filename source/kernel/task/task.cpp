@@ -81,10 +81,8 @@ namespace kernel::internal::task
 
     namespace context
     {
-        kernel::hardware::task::Context *  get( Context & a_context, Id a_id)
+        kernel::hardware::task::Context * get( Context & a_context, Id a_id)
         {
-            // NOTE: now that context moved out of anonymous namespace this
-            //       construct is just a bad practice...
             return &a_context.m_data.at(a_id.m_id).m_context;
         }
     }
@@ -115,6 +113,14 @@ namespace kernel::internal::task
         void * get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_parameter;
+        }
+    }
+
+    namespace waitConditions
+    {
+        WaitConditions & getRef( Context & a_context, Id a_id)
+        {
+            return a_context.m_data.at(a_id.m_id).m_waitConditios;
         }
     }
 }

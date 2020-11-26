@@ -5,6 +5,50 @@
 #include <timer.hpp>
 #include <event.hpp>
 
+// task can wait for:
+// - sleep - timer elapsed then resume
+// - wait for object - object set, object abandon or timeout elapsed, then resume
+//
+
+// TODO: add wait queue to scheduler
+namespace kernel::internal::wait_queue
+{
+    // TODO: calculate this from number of tasks and MAX_CONDITIONS.
+    constexpr uint32_t MAX_NUMBER = 32;
+
+    enum class Condition
+    {
+        Timer,
+        Event,
+        Task
+    };
+
+    struct WaitState
+    {
+        task::Id    m_sourceTask;
+    };
+
+    bool addTask(
+        task::Id  a_sourceTask,
+        task::WaitConditions::Type a_condition,
+        Handle    a_sourceCondition,
+        Time_ms   a_interval,
+        bool      a_waitForver
+    );
+
+    // When task or source condition source is Destroyed
+    // conditions should be too with Abandon code.
+    void removeTask();
+    
+        // remove task from wait queue
+    
+
+    // must be run when:
+    // - any system object used as condition cease to exsist
+    // - every tick, before round-robin scheduling
+    void checkTimeConditions();
+}
+
 // System API used by kernel::hardware layer.
 namespace kernel::internal
 {
