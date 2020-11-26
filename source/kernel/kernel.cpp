@@ -1,5 +1,6 @@
 #include <kernel.hpp>
 
+#include <hardware.hpp>
 #include <internal.hpp>
 
 namespace kernel
@@ -12,27 +13,7 @@ namespace kernel
         }
 
         hardware::init();
-        
-        internal::m_context.old_time = 0U;
-        internal::m_context.time = 0U;
-        internal::m_context.schedule_lock = 0U;
-
-        internal::task::Id idle_task_handle;
-
-        // Idle task is always available as system task.
-        // todo: check if kernel::task::create can be used instead of internal::task::create
-        internal::task::create(
-            internal::m_context.m_tasks,
-            internal::task_routine,
-            internal::idle_routine,
-            task::Priority::Idle,
-            &idle_task_handle
-        );
-        
-        internal::scheduler::addTask(internal::m_context.m_scheduler, task::Priority::Idle, idle_task_handle);
-        
-        internal::m_context.m_current = idle_task_handle;
-        internal::m_context.m_next = idle_task_handle;
+        internal::init();
     }
     
     void start()

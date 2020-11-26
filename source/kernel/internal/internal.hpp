@@ -38,6 +38,7 @@ namespace kernel::internal
     extern Context m_context;
 
     // Kernel Mode interfaces
+    void init();
     void lockScheduler();
     void unlockScheduler();
     void terminateTask(kernel::internal::task::Id a_id);
