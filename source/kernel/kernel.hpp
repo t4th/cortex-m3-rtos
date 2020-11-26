@@ -97,11 +97,3 @@ namespace kernel::sync
         Time_ms             a_timeout = 0U
     );
 }
-
-// System API used by kernel::hardware layer.
-namespace kernel::internal
-{
-    void loadNextTask(); // __attribute__((always_inline));
-    void switchContext(); // __attribute__((always_inline));
-    bool tick();// __attribute__((always_inline));
-}

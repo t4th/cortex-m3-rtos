@@ -1,5 +1,5 @@
 #include <hardware.hpp>
-#include <kernel.hpp>
+#include <internal.hpp>
 
 #include <stm32f10x.h>
 

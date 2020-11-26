@@ -85,7 +85,7 @@ namespace kernel::internal::scheduler
             {
                 if (a_context.m_task_list[prio].m_current == node_index) // If removed task i current task.
                 {
-                    if (count > 1) // Update current task.
+                    if (count > 1) // Update m_current task ID.
                     {
                         a_context.m_task_list[prio].m_current = a_context.m_task_list[prio].m_list.nextIndex(node_index);
                     }
