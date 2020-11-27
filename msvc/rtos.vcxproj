@@ -103,7 +103,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\internal;..\source\kernel\hardware</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()=" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()="  /D " __BKPT(a)=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,6 +162,7 @@
     <ClCompile Include="..\source\kernel\internal\internal.cpp" />
     <ClCompile Include="..\source\kernel\kernel.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp" />
+    <ClCompile Include="..\source\kernel\scheduler\wait_list.cpp" />
     <ClCompile Include="..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\source\kernel\timer\timer.cpp" />
     <ClCompile Include="..\source\main\main.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="..\source\kernel\internal\internal.hpp" />
     <ClInclude Include="..\source\kernel\kernel.hpp" />
     <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp" />
+    <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp" />
     <ClInclude Include="..\source\kernel\task\task.hpp" />
     <ClInclude Include="..\source\kernel\timer\timer.hpp" />
     <ClInclude Include="arm_compat.h" />

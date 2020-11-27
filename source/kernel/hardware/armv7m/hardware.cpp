@@ -36,6 +36,11 @@ namespace kernel::hardware
                 ++s;
             }
         }
+
+        void setBreakpoint()
+        {
+            __ASM("BKPT 0\n");
+        }
     }
 
     void syscall(SyscallId a_id)
@@ -54,7 +59,7 @@ namespace kernel::hardware
     void init()
     {
         SysTick_Config(SYSTICK_PRESCALER - 1);
-        
+
         debug::init();
 
         // Setup interrupts.

@@ -4,7 +4,7 @@
 
 namespace kernel::hardware
 {
-    constexpr uint32_t TASK_STACK_SIZE = 128U;
+    constexpr uint32_t TASK_STACK_SIZE = 192U;
     
     namespace task
     {
@@ -63,5 +63,6 @@ namespace kernel::hardware
     {
         void putChar(char c);
         void print(const char * s);
+        void setBreakpoint();
     }
 }

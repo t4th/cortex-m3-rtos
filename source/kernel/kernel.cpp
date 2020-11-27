@@ -25,10 +25,9 @@ namespace kernel
 
         internal::lockScheduler();
         internal::m_context.started = true;
-
-        internal::scheduler::findHighestPrioTask(internal::m_context.m_scheduler, internal::m_context.m_next);
         
         hardware::start();
+
         hardware::syscall(hardware::SyscallId::LoadNextTask);
     }
 
@@ -50,9 +49,12 @@ namespace kernel::task
     {
         internal::lockScheduler();
         {
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,
-                internal::m_context.m_current
+                currentTask
             );
 
             kernel::internal::task::Id created_task_id;
@@ -72,13 +74,26 @@ namespace kernel::task
                 return false;
             }
 
-            if (false == a_create_suspended)
+            bool task_added = false;
+
+            if (a_create_suspended)
             {
-                bool task_added = kernel::internal::scheduler::addTask(
-                    kernel::internal::m_context.m_scheduler,
+                task_added = internal::scheduler::addSuspendedTask(
+                    internal::m_context.m_scheduler,
+                    internal::m_context.m_tasks,
                     a_priority,
                     created_task_id
                 );
+            }
+            else
+            {
+                task_added = internal::scheduler::addReadyTask(
+                    internal::m_context.m_scheduler,
+                    internal::m_context.m_tasks,
+                    a_priority,
+                    created_task_id
+                );
+            }
 
                 if (false == task_added)
                 {
@@ -86,7 +101,7 @@ namespace kernel::task
                     internal::unlockScheduler();
                     return false;
                 }
-            }
+            
 
             if (a_handle)
             {
@@ -95,17 +110,6 @@ namespace kernel::task
 
             if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
             {
-                kernel::internal::task::state::set(
-                    internal::m_context.m_tasks,
-                    internal::m_context.m_current,
-                    kernel::task::State::Ready
-                );
-
-                kernel::internal::scheduler::findHighestPrioTask(
-                    kernel::internal::m_context.m_scheduler,
-                    kernel::internal::m_context.m_next
-                );
-
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
@@ -123,9 +127,12 @@ namespace kernel::task
 
         internal::lockScheduler();
         {
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+
             new_handle = internal::handle::create(
                 internal::handle::ObjectType::Task,
-                internal::m_context.m_current.m_id
+                currentTask.m_id
             );
         }
         internal::unlockScheduler();
@@ -155,40 +162,29 @@ namespace kernel::task
             return;
         }
 
+        if (!internal::m_context.started)
+        {
+            return;
+        }
+
         const auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
 
         internal::lockScheduler();
         {
-            kernel::task::Priority prio = internal::task::priority::get(
+            // Remove suspended task from scheduler.
+            internal::scheduler::setTaskToSuspended(
+                internal::m_context.m_scheduler,
                 internal::m_context.m_tasks,
                 suspended_task_id
             );
 
-            // Remove suspended task from scheduler.
-            internal::scheduler::removeTask(internal::m_context.m_scheduler, prio, suspended_task_id);
-
-            kernel::internal::task::state::set(
-                internal::m_context.m_tasks,
-                suspended_task_id,
-                kernel::task::State::Suspended
-            );
-
             // Reschedule in case task is suspending itself.
-            if (kernel::internal::m_context.m_current.m_id == suspended_task_id.m_id)
-            {
-                kernel::internal::scheduler::findHighestPrioTask(
-                    kernel::internal::m_context.m_scheduler,
-                    kernel::internal::m_context.m_next
-                );
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
 
-                if (kernel::internal::m_context.started)
-                {
-                    hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
-                }
-                else
-                {
-                    internal::unlockScheduler();
-                }
+            if (currentTask.m_id == suspended_task_id.m_id)
+            {
+                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -204,6 +200,11 @@ namespace kernel::task
             return;
         }
 
+        if (!internal::m_context.started)
+        {
+            return;
+        }
+
         internal::lockScheduler();
         {
             const auto resumedTaskId = internal::handle::getId<internal::task::Id>(a_handle);
@@ -213,35 +214,31 @@ namespace kernel::task
                 resumedTaskId
             );
 
-            // Add resumed task back to scheduler.
-            if (false == internal::scheduler::addTask(
-                internal::m_context.m_scheduler, resumedTaskPrio, resumedTaskId))
+            // Resume task in scheduler
+            bool task_resumed = internal::scheduler::setTaskToReady(
+                internal::m_context.m_scheduler,
+                internal::m_context.m_tasks,
+                resumedTaskPrio,
+                resumedTaskId
+            );
+
+            if (false == task_resumed)
             {
                 internal::unlockScheduler();
                 return;
             }
 
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,
-                internal::m_context.m_current
+                currentTask
             );
 
             // If resumed task is higher priority than current, issue context switch
-            if (kernel::internal::m_context.started && (resumedTaskPrio < currentTaskPrio))
+            if (resumedTaskPrio < currentTaskPrio)
             {
-                kernel::internal::task::state::set(
-                    internal::m_context.m_tasks,
-                    internal::m_context.m_current,
-                    kernel::task::State::Ready
-                );
-
-                // todo: this might be changed since resumed task ID is known and stored in
-                //       resumedTaskId by this point
-                kernel::internal::scheduler::findHighestPrioTask(
-                    kernel::internal::m_context.m_scheduler,
-                    kernel::internal::m_context.m_next
-                );
-
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else

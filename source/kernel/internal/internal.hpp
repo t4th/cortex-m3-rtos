@@ -5,50 +5,6 @@
 #include <timer.hpp>
 #include <event.hpp>
 
-// task can wait for:
-// - sleep - timer elapsed then resume
-// - wait for object - object set, object abandon or timeout elapsed, then resume
-//
-
-// TODO: add wait queue to scheduler
-namespace kernel::internal::wait_queue
-{
-    // TODO: calculate this from number of tasks and MAX_CONDITIONS.
-    constexpr uint32_t MAX_NUMBER = 32;
-
-    enum class Condition
-    {
-        Timer,
-        Event,
-        Task
-    };
-
-    struct WaitState
-    {
-        task::Id    m_sourceTask;
-    };
-
-    bool addTask(
-        task::Id  a_sourceTask,
-        task::WaitConditions::Type a_condition,
-        Handle    a_sourceCondition,
-        Time_ms   a_interval,
-        bool      a_waitForver
-    );
-
-    // When task or source condition source is Destroyed
-    // conditions should be too with Abandon code.
-    void removeTask();
-    
-        // remove task from wait queue
-    
-
-    // must be run when:
-    // - any system object used as condition cease to exsist
-    // - every tick, before round-robin scheduling
-    void checkTimeConditions();
-}
-
 // System API used by kernel::hardware layer.
 namespace kernel::internal
 {
@@ -60,9 +16,6 @@ namespace kernel::internal
         Time_ms old_time = 0U;      // Used to calculate round-robin context switch intervals.
         volatile Time_ms time = 0U; // Time in miliseconds elapsed since kernel started.
         Time_ms interval = CONTEXT_SWITCH_INTERVAL_MS; // Round-robin context switch intervals in miliseconds.
-
-        kernel::internal::task::Id m_current; // Indicate currently running task ID.
-        kernel::internal::task::Id m_next;    // Indicate next task ID.
 
                                               // TODO: make status register
         bool started = false;   // Indicate if kernel is started. It is mostly used to detected
