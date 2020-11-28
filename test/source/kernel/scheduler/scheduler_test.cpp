@@ -68,7 +68,7 @@ TEST_CASE("Scheduler")
     {
         kernel::internal::task::Id next_task_id;
 
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_TASK_NUMBER; i++)
+        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; i++)
         {
             next_task_id.m_id = i;
             REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
@@ -76,6 +76,24 @@ TEST_CASE("Scheduler")
 
         // Adding MAX_TASK_NUMBER + 1 task should fail
         next_task_id.m_id = 0x123U;
+        REQUIRE(false == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
+    }
+
+    SECTION( "try to add dublicate with same id")
+    {
+        kernel::internal::task::Id next_task_id;
+
+        next_task_id.m_id = 0x123U;
+        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
+
+
+        next_task_id.m_id = 0x124U;
+        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
+
+
+        next_task_id.m_id = 0x123U;
+
+        // addTask should return false
         REQUIRE(false == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
     }
 

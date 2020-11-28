@@ -44,6 +44,11 @@ namespace kernel::internal::common
             return m_data[a_item_id];
         }
 
+        bool isAllocated(uint32_t a_item_id)
+        {
+            return m_status[a_item_id];
+        }
+
     private:
         std::array<TDataType, MaxSize>  m_data;
         std::array<bool, MaxSize>       m_status; // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.

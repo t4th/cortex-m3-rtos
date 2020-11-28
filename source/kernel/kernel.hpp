@@ -5,6 +5,8 @@
 // User API
 namespace kernel
 {
+    typedef uint32_t Time_ms;
+
     // Abstract pointing to system object. Should only be used with kernel API.
     typedef struct
     {
@@ -17,14 +19,17 @@ namespace kernel
     // Start kernel.
     // Pre-condition: run kernel::init() before.
     void start();
+
+    // Get time elapsed since kernel started in miliseconds.
+    Time_ms getTime();
 }
 
 // User API for controling tasks.
 namespace kernel::task
 {
-    typedef void(*Routine)(void * a_parameter);  // TODO: Add argument.
+    typedef void(*Routine)(void * a_parameter);
 
-    enum Priority
+    enum class Priority
     {
         High = 0U,
         Medium,
@@ -32,7 +37,7 @@ namespace kernel::task
         Idle
     };
 
-    enum State
+    enum class State
     {
         Suspended,
         Waiting,
@@ -53,13 +58,50 @@ namespace kernel::task
     kernel::Handle getCurrent();
 
     // Brute force terminate task.
-    void terminate(kernel::Handle a_id);
+    void terminate(kernel::Handle & a_handle);
+
+    void suspend(kernel::Handle & a_handle);
+
+    void resume(kernel::Handle & a_handle);
+
+    void Sleep(Time_ms a_time);
 }
 
-// System API used by kernel::hardware layer.
-namespace kernel::internal
+namespace kernel::timer
 {
-    void loadNextTask(); // __attribute__((always_inline));
-    void switchContext(); // __attribute__((always_inline));
-    bool tick();// __attribute__((always_inline));
+    bool create(
+        kernel::Handle &    a_handle,
+        Time_ms             a_interval,
+        kernel::Handle *    a_signal = nullptr // Can point to Event object.
+    );
+    void destroy( kernel::Handle & a_handle);
+    void start( kernel::Handle & a_handle);
+    void stop( kernel::Handle & a_handle);
+}
+
+namespace kernel::event
+{
+    bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
+    void destroy( kernel::Handle & a_handle);
+    void set( kernel::Handle & a_handle);
+    void reset( kernel::Handle & a_handle);
+}
+
+namespace kernel::sync
+{
+    enum class WaitResult
+    {
+        ObjectSet,
+        TimeoutOccurred,
+        Abandon,
+    };
+
+    // Can wait for:
+    // Event, timer, task
+    // NOTE: destorying items used by this function will result in undefined behaviour
+    WaitResult waitForSingleObject(
+        kernel::Handle &    a_handle,
+        bool                a_wait_forver = true,
+        Time_ms             a_timeout = 0U
+    );
 }

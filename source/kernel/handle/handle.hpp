@@ -16,4 +16,13 @@ namespace kernel::internal::handle
     uint32_t getIndex(kernel::Handle & a_handle);
 
     ObjectType getObjectType(kernel::Handle & a_handle);
+
+    template<typename TId>
+    TId getId(Handle & a_handle)
+    {
+        TId id;
+        id.m_id = internal::handle::getIndex(a_handle);
+
+        return id;
+    }
 }

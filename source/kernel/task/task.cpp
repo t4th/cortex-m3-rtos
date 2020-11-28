@@ -7,7 +7,7 @@ namespace kernel::internal::task
         TaskRoutine             a_task_routine,
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
-        Id *                    a_handle,
+        Id *                    a_id,
         void *                  a_parameter,
         bool                    a_create_suspended
         )
@@ -19,35 +19,35 @@ namespace kernel::internal::task
         }
         
         // Create new Task object.
-        uint32_t item_id;
+        uint32_t new_item_id;
         
-        if (false == a_context.m_data.allocate(item_id))
+        if (false == a_context.m_data.allocate(new_item_id))
         {
             return false;
         }
         
         // Initialize new Task object.
-        Task & task = a_context.m_data.at(item_id);
+        Task & new_task = a_context.m_data.at(new_item_id);
         
-        task.m_priority = a_priority;
-        task.m_routine = a_routine;
-        task.m_stack.init(reinterpret_cast<uint32_t>(a_task_routine));
-        task.m_sp = task.m_stack.getStackPointer();
-        task.m_parameter = a_parameter;
+        new_task.m_priority = a_priority;
+        new_task.m_routine = a_routine;
+        new_task.m_stack.init(reinterpret_cast<uint32_t>(a_task_routine));
+        new_task.m_sp = new_task.m_stack.getStackPointer();
+        new_task.m_parameter = a_parameter;
         
         if (a_create_suspended)
         {
-            task.m_state = kernel::task::State::Suspended;
+            new_task.m_state = kernel::task::State::Suspended;
         }
         else
         {
-            task.m_state = kernel::task::State::Ready;
+            new_task.m_state = kernel::task::State::Ready;
         }
         
-        if (a_handle)
+        if (a_id)
         {
             // Task ID, is task index in memory buffer by design.
-            a_handle->m_id = item_id;
+            a_id->m_id = new_item_id;
         }
         
         return true;
@@ -66,12 +66,23 @@ namespace kernel::internal::task
         }
     }
 
+    namespace state
+    {
+        kernel::task::State get( Context & a_context, Id a_id)
+        {
+            return a_context.m_data.at(a_id.m_id).m_state;
+        }
+
+        void set( Context & a_context, Id a_id, kernel::task::State a_state )
+        {
+            a_context.m_data.at(a_id.m_id).m_state = a_state;
+        }
+    }
+
     namespace context
     {
-        kernel::hardware::task::Context *  get( Context & a_context, Id a_id)
+        kernel::hardware::task::Context * get( Context & a_context, Id a_id)
         {
-            // NOTE: now that context moved out of anonymous namespace this
-            //       construct is just a bad practice...
             return &a_context.m_data.at(a_id.m_id).m_context;
         }
     }
@@ -102,6 +113,14 @@ namespace kernel::internal::task
         void * get( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_parameter;
+        }
+    }
+
+    namespace waitConditions
+    {
+        WaitConditions & getRef( Context & a_context, Id a_id)
+        {
+            return a_context.m_data.at(a_id.m_id).m_waitConditios;
         }
     }
 }
