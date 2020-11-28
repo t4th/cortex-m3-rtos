@@ -50,7 +50,7 @@ namespace kernel::task
         internal::lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
 
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,
@@ -95,12 +95,12 @@ namespace kernel::task
                 );
             }
 
-                if (false == task_added)
-                {
-                    kernel::internal::task::destroy( internal::m_context.m_tasks, created_task_id);
-                    internal::unlockScheduler();
-                    return false;
-                }
+            if (false == task_added)
+            {
+                kernel::internal::task::destroy( internal::m_context.m_tasks, created_task_id);
+                internal::unlockScheduler();
+                return false;
+            }
             
 
             if (a_handle)
@@ -128,7 +128,7 @@ namespace kernel::task
         internal::lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
 
             new_handle = internal::handle::create(
                 internal::handle::ObjectType::Task,
@@ -180,7 +180,7 @@ namespace kernel::task
 
             // Reschedule in case task is suspending itself.
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
 
             if (currentTask.m_id == suspended_task_id.m_id)
             {
@@ -229,7 +229,7 @@ namespace kernel::task
             }
 
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTask(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
 
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
                 internal::m_context.m_tasks,

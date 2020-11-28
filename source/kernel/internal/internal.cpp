@@ -91,7 +91,7 @@ namespace kernel::internal
 
             // Reschedule in case task is killing itself.
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTask(m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(m_context.m_scheduler, currentTask);
 
             if (currentTask.m_id == a_id.m_id)
             {
@@ -120,7 +120,7 @@ namespace kernel::internal
 
         internal::lockScheduler();
         {
-            internal::scheduler::getCurrentTask(m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(m_context.m_scheduler, currentTask);
             routine = internal::task::routine::get(m_context.m_tasks, currentTask);
             parameter = internal::task::parameter::get(m_context.m_tasks, currentTask);
         }
@@ -148,11 +148,17 @@ namespace kernel::internal
     void loadNextTask()
     {
         internal::task::Id nextTask;
-        scheduler::getNextTask(
+
+        bool task_available = scheduler::getCurrentTask(
             m_context.m_scheduler,
             m_context.m_tasks,
             nextTask
         );
+
+        if (false == task_available)
+        {
+            hardware::debug::setBreakpoint();
+        }
 
         loadContext(nextTask);
 
@@ -164,18 +170,19 @@ namespace kernel::internal
         internal::task::Id currentTask;
         internal::task::Id nextTask;
 
-        scheduler::getCurrentTask(
+        scheduler::getCurrentTaskId(
             m_context.m_scheduler,
             currentTask
         );
 
-        if (false == scheduler::getNextTask(
+        bool task_available = scheduler::getCurrentTask(
             m_context.m_scheduler,
             m_context.m_tasks,
             nextTask
-        ))
+        );
+
+        if (false == task_available)
         {
-            // Some unexpected shit
             hardware::debug::setBreakpoint();
         }
 
@@ -198,7 +205,7 @@ namespace kernel::internal
                 m_context.old_time = m_context.time;
 
                 internal::task::Id currentTask;
-                scheduler::getCurrentTask(
+                scheduler::getCurrentTaskId(
                     m_context.m_scheduler,
                     currentTask
                 );

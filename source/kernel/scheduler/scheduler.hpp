@@ -28,22 +28,28 @@ namespace kernel::internal::scheduler::ready_list
 
     // declarations
     bool addTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id              a_id
+        ready_list::Context &       a_context,
+        kernel::task::Priority      a_priority,
+        kernel::internal::task::Id  a_id
     );
 
     void removeTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id              a_id
+        ready_list::Context &       a_context,
+        kernel::task::Priority      a_priority,
+        kernel::internal::task::Id  a_id
     );
 
     // Find next task in selected priority group and UPDATE current task.
     bool findNextTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id &            a_id
+        ready_list::Context &           a_context,
+        kernel::task::Priority          a_priority,
+        kernel::internal::task::Id &    a_id
+    );
+
+    bool findCurrentTask(
+        ready_list::Context &           a_context,
+        kernel::task::Priority          a_priority,
+        kernel::internal::task::Id &    a_id
     );
 }
 
@@ -51,9 +57,8 @@ namespace kernel::internal::scheduler
 {
     struct Context
     {
-        // Each priority has its own Ready list.
-        kernel::internal::task::Id m_current; // Indicate currently running task ID.
-        kernel::internal::task::Id m_next;    // Indicate next task ID.
+        kernel::internal::task::Id m_current{}; // Indicate currently running task ID.
+        kernel::internal::task::Id m_next{};    // Indicate next task ID.
 
         // ready list
         ready_list::Context m_ready_list;
@@ -104,10 +109,17 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     );
 
-    void getCurrentTask(Context & a_context, task::Id & a_current_task_id);
+    void getCurrentTaskId(Context & a_context, task::Id & a_current_task_id);
 
-    // find next task and set current = next
+    // find next task and update current = next
+    // function assume that there is at least one task available
     bool getNextTask(
+        Context &                   a_context,
+        internal::task::Context &   a_task_context,
+        task::Id &                  a_next_task_id
+    );
+
+    bool getCurrentTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_next_task_id

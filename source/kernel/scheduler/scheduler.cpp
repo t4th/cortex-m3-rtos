@@ -36,9 +36,9 @@ namespace kernel::internal::scheduler::ready_list
 
     // public
     bool addTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id              a_id
+        ready_list::Context &       a_context,
+        kernel::task::Priority      a_priority,
+        kernel::internal::task::Id  a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -68,9 +68,9 @@ namespace kernel::internal::scheduler::ready_list
     }
 
     void removeTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id              a_id
+        ready_list::Context &       a_context,
+        kernel::task::Priority      a_priority,
+        kernel::internal::task::Id  a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -85,7 +85,7 @@ namespace kernel::internal::scheduler::ready_list
             {
                 if (a_context.m_ready_list[prio].m_current == node_index) // If removed task is current task.
                 {
-                    if (count > 1) // Update m_current task ID.
+                    if (count > 1U) // Update m_current task ID.
                     {
                         a_context.m_ready_list[prio].m_current = a_context.m_ready_list[prio].m_list.nextIndex(node_index);
                     }
@@ -102,9 +102,9 @@ namespace kernel::internal::scheduler::ready_list
     }
 
     bool findNextTask(
-        kernel::internal::scheduler::ready_list::Context &  a_context,
-        kernel::task::Priority                  a_priority,
-        kernel::internal::task::Id &            a_id
+        ready_list::Context &           a_context,
+        kernel::task::Priority          a_priority,
+        kernel::internal::task::Id &    a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -112,7 +112,7 @@ namespace kernel::internal::scheduler::ready_list
 
         const uint32_t current = a_context.m_ready_list[prio].m_current;
 
-        if (count > 1)
+        if (count > 1U)
         {
             const uint32_t next_index = a_context.m_ready_list[prio].m_list.nextIndex(current);
 
@@ -121,7 +121,28 @@ namespace kernel::internal::scheduler::ready_list
             a_id.m_id = a_context.m_ready_list[prio].m_list.at(next_index).m_id;
             return true;
         }
-        else if (count == 1)
+        else if (count == 1U)
+        {
+            a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool findCurrentTask(
+        ready_list::Context &           a_context,
+        kernel::task::Priority          a_priority,
+        kernel::internal::task::Id &    a_id
+    )
+    {
+        const uint32_t prio = static_cast<uint32_t>(a_priority);
+        const uint32_t count = a_context.m_ready_list[prio].m_list.count();
+        const uint32_t current = a_context.m_ready_list[prio].m_current;
+
+        if (count > 0U)
         {
             a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
             return true;
@@ -233,13 +254,14 @@ namespace kernel::internal::scheduler
         );
     }
 
-    void getCurrentTask(Context & a_context, task::Id & a_current_task_id)
+    void getCurrentTaskId(
+        Context & a_context,
+        task::Id & a_current_task_id
+    )
     {
         a_current_task_id = a_context.m_current;
     }
 
-    // find next task and set current = next
-    // function assume that there is at least one task available
     bool getNextTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -253,6 +275,51 @@ namespace kernel::internal::scheduler
             ++prio)
         {
             next_task_found = ready_list::findNextTask(
+                a_context.m_ready_list,
+                static_cast<kernel::task::Priority>(prio),
+                a_next_task_id
+            );
+
+            if (next_task_found)
+            {
+                a_context.m_next = a_next_task_id;
+                break;
+            }
+        }
+
+        if (next_task_found)
+        {
+            kernel::internal::task::state::set(
+                a_task_context,
+                a_context.m_current,
+                kernel::task::State::Ready
+            );
+
+            kernel::internal::task::state::set(
+                a_task_context,
+                a_context.m_next,
+                kernel::task::State::Running
+            );
+
+            a_context.m_current = a_context.m_next;
+        }
+
+        return next_task_found;
+    }
+
+    bool getCurrentTask(
+        Context &                   a_context,
+        internal::task::Context &   a_task_context,
+        task::Id &                  a_next_task_id
+    )
+    {
+        bool next_task_found = false;
+
+        for (uint32_t prio = static_cast<uint32_t>(kernel::task::Priority::High);
+            prio < kernel::internal::task::PRIORITIES_COUNT;
+            ++prio)
+        {
+            next_task_found = ready_list::findCurrentTask(
                 a_context.m_ready_list,
                 static_cast<kernel::task::Priority>(prio),
                 a_next_task_id
