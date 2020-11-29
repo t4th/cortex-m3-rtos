@@ -1,4 +1,5 @@
 #include <timer.hpp>
+
 #include <handle.hpp>
 
 namespace kernel::internal::timer
@@ -47,10 +48,16 @@ namespace kernel::internal::timer
         a_context.m_data.at(a_id.m_id).m_state = State::Stopped;
     }
 
-    void runTimers( Context & a_context)
+    State getState( Context & a_context, Id a_id)
+    {
+        return a_context.m_data.at(a_id.m_id).m_state;
+    }
+
+    void tick( Context & a_context)
     {
         for (uint32_t i = 0U; i < MAX_NUMBER; ++i)
         {
+            // TODO: performance wise its propably cheaper to increment all
             if (a_context.m_data.isAllocated(i))
             {
                 Timer & timer = a_context.m_data.at(i);
@@ -62,29 +69,8 @@ namespace kernel::internal::timer
                     if ((current - timer.m_start) > timer.m_interval)
                     {
                         timer.m_state = State::Finished;
-
-                        if (timer.m_signal)
-                        {
-                            handle::ObjectType objType;
-                            objType = handle::getObjectType(*timer.m_signal);
-
-                            switch(objType)
-                            {
-                            case handle::ObjectType::Event:
-                                // todo: set event
-                                break;
-                            default:
-                                break;
-                            }
-                        }
                     }
                 }
-            }
-            else
-            {
-                // Premature optimization:
-                // iterate until status != false, since memory buffer guarantee data is in order.
-                break;
             }
         }
     }

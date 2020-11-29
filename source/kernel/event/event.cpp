@@ -41,4 +41,14 @@ namespace kernel::internal::event
     {
         a_context.m_data.at(a_id.m_id).m_state = State::Reset;
     }
+
+    State getState( Context & a_context, Id & a_id)
+    {
+        return a_context.m_data.at(a_id.m_id).m_state;
+    }
+
+    bool isManualReset( Context & a_context, Id & a_id)
+    {
+        return a_context.m_data.at(a_id.m_id).m_manual_reset;
+    }
 }

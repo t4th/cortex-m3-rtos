@@ -45,5 +45,7 @@ namespace kernel::internal::timer
 
     void stop( Context & a_context, Id a_id);
 
-    void runTimers( Context & a_context);
+    State getState( Context & a_context, Id a_id);
+
+    void tick( Context & a_context);
 }

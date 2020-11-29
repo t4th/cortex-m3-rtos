@@ -190,6 +190,14 @@ namespace kernel::internal
     {
         bool execute_context_switch = false;
 
+        timer::tick( m_context.m_timers);
+        scheduler::checkWaitConditions(
+            m_context.m_scheduler,
+            m_context.m_tasks,
+            m_context.m_timers,
+            m_context.m_events
+        );
+
         // If lock is enabled, increment time, but delay scheduler.
         if (0U == m_context.schedule_lock)
         {
@@ -222,7 +230,7 @@ namespace kernel::internal
             }
         }
 
-        m_context.time++;
+        ++m_context.time;
 
         return execute_context_switch;
     }

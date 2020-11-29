@@ -36,6 +36,14 @@ namespace kernel::internal::common
             }
         }
 
+        void freeAll()
+        {
+            for (uint32_t i = 0U; i < MaxSize; ++i)
+            {
+                m_status[i] = false;
+            }
+        }
+
         TDataType & at(uint32_t a_item_id)
         {
             // TODO: Make it safe. For now, implementation assumes input data is

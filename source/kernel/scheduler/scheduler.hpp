@@ -5,6 +5,8 @@
 
 #include <circular_list.hpp>
 #include <task.hpp>
+#include <timer.hpp>
+#include <event.hpp>
 
 namespace kernel::internal::scheduler::ready_list
 {
@@ -53,6 +55,32 @@ namespace kernel::internal::scheduler::ready_list
     );
 }
 
+namespace kernel::internal::scheduler::wait_list
+{
+    struct Context
+    {
+        kernel::internal::common::CircularList<
+            kernel::internal::task::Id,
+            kernel::internal::task::MAX_NUMBER
+        > m_wait_list{};
+    };
+
+    bool addTask( Context & a_context, task::Id a_task_id);
+    void removeTask( Context & a_context, task::Id a_task_id);
+    void iterate(
+        wait_list::Context &        a_wait_list,
+        ready_list::Context &       a_ready_list,
+        internal::task::Context &   a_task_context,
+        void        found(
+            wait_list::Context &,
+            ready_list::Context &,
+            internal::task::Context &,
+            internal::event::Context &,
+            task::Id &
+        )
+    );
+}
+
 namespace kernel::internal::scheduler
 {
     struct Context
@@ -64,10 +92,7 @@ namespace kernel::internal::scheduler
         ready_list::Context m_ready_list;
 
         // m_wait_list
-        kernel::internal::common::CircularList<
-            kernel::internal::task::Id,
-            kernel::internal::task::MAX_NUMBER
-        > m_wait_list{};
+        wait_list::Context m_wait_list;
 
         // m_suspended_list
     };
@@ -100,7 +125,7 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     );
 
-    void setTaskToWait(
+    bool setTaskToWait(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id                    a_task_id
@@ -113,7 +138,10 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     );
 
-    void getCurrentTaskId(Context & a_context, task::Id & a_current_task_id);
+    void getCurrentTaskId(
+        Context &   a_context,
+        task::Id &  a_current_task_id
+    );
 
     // find next task and update current = next
     // function assume that there is at least one task available
@@ -127,5 +155,12 @@ namespace kernel::internal::scheduler
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_next_task_id
+    );
+
+    void checkWaitConditions(
+        Context &                   a_context,
+        internal::task::Context &   a_task_context,
+        internal::timer::Context &  a_timer_context,
+        internal::event::Context &  a_event_context
     );
 }

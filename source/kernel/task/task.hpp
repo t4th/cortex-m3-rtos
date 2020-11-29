@@ -17,27 +17,25 @@ namespace kernel::internal::task
         uint32_t m_id;
     } Id;
 
-    struct WaitConditions
+    namespace wait
     {
-        enum class Type
+        struct Conditions
         {
-            Sleep,
-            WaitForObj
-        } m_type;
+            enum class Type
+            {
+                Sleep,
+                WaitForObj
+            } m_type{};
 
-        enum class Result
-        {
-            ObjSignaled,
-            Timedout
-        } m_result;
-
-        // TODO: make these as lists
-        internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_inputSignals;
-        internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals;
-        bool    m_waitForver;
-        Time_ms m_interval;
-        Time_ms m_start;
-    };
+            // TODO: make these as lists
+            internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_inputSignals{};
+            // internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals{};
+            bool    m_waitForver{};
+            Time_ms m_interval{};
+            Time_ms m_start{};
+            kernel::sync::WaitResult m_result{};
+        };
+    }
 
     struct Task
     {
@@ -48,7 +46,7 @@ namespace kernel::internal::task
         kernel::task::State             m_state;
         void *                          m_parameter;
         kernel::task::Routine           m_routine;
-        WaitConditions                  m_waitConditios;
+        wait::Conditions                m_waitConditios;
     };
 
     struct Context
@@ -104,8 +102,8 @@ namespace kernel::internal::task
         void * get( Context & a_context, Id a_id);
     }
 
-    namespace waitConditions
+    namespace wait
     {
-        WaitConditions & getRef( Context & a_context, Id a_id);
+        Conditions & getRef( Context & a_context, Id a_id);
     }
 }

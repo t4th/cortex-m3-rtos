@@ -40,4 +40,8 @@ namespace kernel::internal::event
     void set( Context & a_context, Id & a_id);
 
     void reset( Context & a_context, Id & a_id);
+
+    State getState( Context & a_context, Id & a_id);
+
+    bool isManualReset( Context & a_context, Id & a_id);
 }

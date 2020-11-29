@@ -116,9 +116,9 @@ namespace kernel::internal::task
         }
     }
 
-    namespace waitConditions
+    namespace wait
     {
-        WaitConditions & getRef( Context & a_context, Id a_id)
+        Conditions & getRef( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_waitConditios;
         }
