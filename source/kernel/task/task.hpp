@@ -9,7 +9,10 @@ namespace kernel::internal::task
     constexpr uint32_t MAX_NUMBER = 16U;
     constexpr uint32_t PRIORITIES_COUNT = static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
 
-    typedef struct // This is struct for typesafety
+    constexpr uint32_t MAX_INPUT_SIGNALS = 16U;
+    constexpr uint32_t MAX_OUTPUT_SIGNALS = 16U;
+
+    typedef struct Id // This is struct for typesafety
     {
         uint32_t m_id;
     } Id;
@@ -28,7 +31,9 @@ namespace kernel::internal::task
             Timedout
         } m_result;
 
-        Handle  m_source;
+        // TODO: make these as lists
+        internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_inputSignals;
+        internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals;
         bool    m_waitForver;
         Time_ms m_interval;
         Time_ms m_start;

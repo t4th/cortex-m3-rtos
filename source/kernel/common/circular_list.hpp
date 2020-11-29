@@ -4,7 +4,6 @@
 
 namespace kernel::internal::common
 {
-    // Each task priority group has individual circular linked list with static data buffer.
     // TDataType must be of primitive type.
     template <typename TDataType, std::size_t MaxSize>
     class CircularList
@@ -67,7 +66,7 @@ namespace kernel::internal::common
                 }
                 
                 m_last = new_node_index; // Close the circle.
-                new_node.m_data = a_new_data;
+                new_node.m_data = a_new_data; // TODO: make this usable by complex types
                 ++m_count;
                 
                 return true;
@@ -92,6 +91,29 @@ namespace kernel::internal::common
                     m_buffer.free(a_node_index);
                     --m_count;
                 }
+            }
+
+            bool find(
+                TDataType   a_key,
+                uint32_t &  a_found_index,
+                bool        a_compare(TDataType &, TDataType &))
+            {
+                uint32_t node_index = m_first;
+
+                for (uint32_t i = 0U; i < m_count; ++i)
+                {
+                    if (a_compare(a_key, m_buffer.at(node_index).m_data))
+                    {
+                        a_found_index = node_index;
+                        return true;
+                    }
+                    else
+                    {
+                        node_index = m_buffer.at(node_index).m_next;
+                    }
+                }
+
+                return false;
             }
 
             TDataType & at(uint32_t a_node_index)

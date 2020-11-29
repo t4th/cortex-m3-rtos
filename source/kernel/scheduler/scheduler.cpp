@@ -7,33 +7,6 @@
 
 namespace kernel::internal::scheduler::ready_list
 {
-    // private
-    bool isDataAdded(
-        kernel::internal::common::CircularList<
-        kernel::internal::task::Id,
-        kernel::internal::task::MAX_NUMBER
-        > & a_list, kernel::internal::task::Id a_id)
-    {
-        if (a_list.count() == 0U)
-        {
-            return false;
-        }
-
-        uint32_t index = a_list.firstIndex();
-
-        for (uint32_t i = 0U; i < a_list.count(); ++i)
-        {
-            if (a_list.at(index).m_id == a_id.m_id)
-            {
-                return true;
-            }
-
-            index = a_list.nextIndex(index);
-        }
-
-        return false;
-    }
-
     // public
     bool addTask(
         ready_list::Context &       a_context,
@@ -45,7 +18,14 @@ namespace kernel::internal::scheduler::ready_list
         const uint32_t count = a_context.m_ready_list[prio].m_list.count();
 
         // Look for dublicate.
-        if (true == isDataAdded(a_context.m_ready_list[prio].m_list, a_id))
+        uint32_t found_index;
+        bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
+            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            {
+                return a_left.m_id == a_right.m_id;
+            });
+
+        if (item_found)
         {
             return false;
         }
@@ -76,28 +56,27 @@ namespace kernel::internal::scheduler::ready_list
         const uint32_t prio = static_cast<uint32_t>(a_priority);
         const uint32_t count = a_context.m_ready_list[prio].m_list.count();
 
-        uint32_t node_index = a_context.m_ready_list[prio].m_list.firstIndex();
+        uint32_t found_index;
+        bool item_found = a_context.m_ready_list[prio].m_list.find(
+            a_id,
+            found_index,
+            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            {
+                return a_left.m_id == a_right.m_id;
+            });
 
-        // Search task list for provided a_id.
-        for (uint32_t i = 0U; i < count; ++i)
+        if (item_found)
         {
-            if (a_id.m_id == a_context.m_ready_list[prio].m_list.at(node_index).m_id)
+            if (a_context.m_ready_list[prio].m_current == found_index) // If removed task is current task.
             {
-                if (a_context.m_ready_list[prio].m_current == node_index) // If removed task is current task.
+                if (count > 1U) // Update m_current task ID.
                 {
-                    if (count > 1U) // Update m_current task ID.
-                    {
-                        a_context.m_ready_list[prio].m_current = a_context.m_ready_list[prio].m_list.nextIndex(node_index);
-                    }
+                    a_context.m_ready_list[prio].m_current = a_context.m_ready_list[prio].m_list.nextIndex(found_index);
                 }
+            }
 
-                a_context.m_ready_list[prio].m_list.remove(node_index);
-                break;
-            }
-            else
-            {
-                node_index = a_context.m_ready_list[prio].m_list.nextIndex(node_index);
-            }
+            a_context.m_ready_list[prio].m_list.remove(found_index);
+
         }
     }
 
@@ -232,7 +211,14 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     )
     {
-        // TODO: implement waiting list
+        uint32_t new_node_idx;
+        a_context.m_wait_list.add(a_task_id, new_node_idx);
+
+        kernel::internal::task::state::set(
+            a_task_context,
+            a_context.m_current,
+            kernel::task::State::Waiting
+        );
     }
 
     // removing task, update current with next
@@ -252,6 +238,8 @@ namespace kernel::internal::scheduler
             prio,
             a_task_id
         );
+
+        // todo: remove task from wait and suspended list too
     }
 
     void getCurrentTaskId(

@@ -64,6 +64,10 @@ namespace kernel::internal::scheduler
         ready_list::Context m_ready_list;
 
         // m_wait_list
+        kernel::internal::common::CircularList<
+            kernel::internal::task::Id,
+            kernel::internal::task::MAX_NUMBER
+        > m_wait_list{};
 
         // m_suspended_list
     };
