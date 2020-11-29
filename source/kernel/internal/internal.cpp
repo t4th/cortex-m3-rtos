@@ -75,6 +75,10 @@ namespace kernel::internal
     {
         internal::lockScheduler();
         {
+            // Reschedule in case task is killing itself.
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTaskId(m_context.m_scheduler, currentTask);
+
             internal::scheduler::removeTask(
                 m_context.m_scheduler,
                 m_context.m_tasks,
@@ -82,10 +86,6 @@ namespace kernel::internal
             );
 
             internal::task::destroy(m_context.m_tasks, a_id);
-
-            // Reschedule in case task is killing itself.
-            internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(m_context.m_scheduler, currentTask);
 
             if (currentTask.m_id == a_id.m_id)
             {
