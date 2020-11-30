@@ -232,6 +232,11 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     )
     {
+        wait_list::removeTask(
+            a_context.m_wait_list,
+            a_task_id
+        );
+
         bool task_added = addReadyTask(a_context, a_task_context, a_priority, a_task_id);
 
         if (task_added)
@@ -483,10 +488,6 @@ namespace kernel::internal::scheduler
                                 event::State evState = event::getState(a_event_context, event_id);
                                 if (event::State::Set == evState)
                                 {
-                                    if (false == event::isManualReset(a_event_context, event_id))
-                                    {
-                                        event::reset(a_event_context, event_id);
-                                    }
                                     conditions.m_result = kernel::sync::WaitResult::ObjectSet;
                                     task_ready = true;
                                 }

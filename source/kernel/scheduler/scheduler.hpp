@@ -25,7 +25,7 @@ namespace kernel::internal::scheduler::ready_list
     struct Context
     {
         // Each priority has its own Ready list.
-        std::array <TaskList, kernel::internal::task::PRIORITIES_COUNT> m_ready_list;
+        std::array <TaskList, internal::task::PRIORITIES_COUNT> m_ready_list;
     };
 
     // declarations
@@ -71,10 +71,13 @@ namespace kernel::internal::scheduler::wait_list
         wait_list::Context &        a_wait_list,
         ready_list::Context &       a_ready_list,
         internal::task::Context &   a_task_context,
+        internal::timer::Context &  a_timer_context,
+        internal::event::Context &  a_event_context,
         void        found(
             wait_list::Context &,
             ready_list::Context &,
             internal::task::Context &,
+            internal::timer::Context &,
             internal::event::Context &,
             task::Id &
         )

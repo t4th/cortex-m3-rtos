@@ -68,6 +68,7 @@ namespace kernel::internal::timer
 
                     if ((current - timer.m_start) > timer.m_interval)
                     {
+                        // TODO: call the signal
                         timer.m_state = State::Finished;
                     }
                 }

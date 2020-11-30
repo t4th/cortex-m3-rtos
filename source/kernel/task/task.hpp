@@ -66,7 +66,7 @@ namespace kernel::internal::task
         bool                    a_create_suspended = false
         );
 
-    void destroy( Context &   a_context, Id a_id);
+    void destroy( Context & a_context, Id a_id);
         
     namespace priority
     {

@@ -41,7 +41,6 @@ namespace kernel::internal::event
 
     void reset( Context & a_context, Id & a_id);
 
+    // if m_manual_reset this will Reset timer state.
     State getState( Context & a_context, Id & a_id);
-
-    bool isManualReset( Context & a_context, Id & a_id);
 }
