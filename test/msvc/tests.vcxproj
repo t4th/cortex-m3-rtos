@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\kernel\handle\handle.cpp" />
     <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
     <ClCompile Include="..\..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\source\catch.cpp" />
@@ -102,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\..\source\kernel\timer;..\..\source\kernel\event;..\..\source\kernel\handle;..\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>

@@ -37,6 +37,12 @@
     <Filter Include="tested files\kernel\task">
       <UniqueIdentifier>{db6939e3-e882-4e5d-abf1-3fca3972ddd4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests\kernel\handle">
+      <UniqueIdentifier>{ead14376-2b93-49e7-8ca9-ba9ccd0fa10e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\handle">
+      <UniqueIdentifier>{92499bcc-0233-444b-ad28-3d2742f24179}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\catch.cpp">
@@ -59,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="..\..\source\kernel\task\task.cpp">
       <Filter>tested files\kernel\task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\kernel\handle\handle.cpp">
+      <Filter>tested files\kernel\handle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

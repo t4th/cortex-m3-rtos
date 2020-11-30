@@ -39,14 +39,14 @@ namespace kernel::internal::task
 
     struct Task
     {
-        uint32_t                        m_sp;
-        kernel::hardware::task::Context m_context;
-        kernel::hardware::task::Stack   m_stack;
-        kernel::task::Priority          m_priority;
-        kernel::task::State             m_state;
-        void *                          m_parameter;
-        kernel::task::Routine           m_routine;
-        wait::Conditions                m_waitConditios;
+        uint32_t                        m_sp{};
+        kernel::hardware::task::Context m_context{};
+        kernel::hardware::task::Stack   m_stack{};
+        kernel::task::Priority          m_priority{};
+        kernel::task::State             m_state{};
+        void *                          m_parameter{};
+        kernel::task::Routine           m_routine{};
+        wait::Conditions                m_waitConditios{};
     };
 
     struct Context

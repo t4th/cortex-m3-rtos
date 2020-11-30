@@ -2,140 +2,146 @@
 
 #include "scheduler.hpp"
 
+// stubs
+namespace
+{
+    void task_routine(void * param)
+    {
+        // empty task routine
+    }
+
+    void kernel_task_routine()
+    {
+    }
+}
+
+namespace kernel
+    {
+    Time_ms getTime()
+    {
+        return 0U;
+    }
+}
+
+namespace kernel::internal::timer
+{
+    State getState( Context & a_context, Id a_id)
+    {
+        return State::Finished;
+    }
+}
+
+namespace kernel::internal::event
+{
+    void reset( Context & a_context, Id & a_id)
+    {
+
+    }
+
+    State getState( Context & a_context, Id & a_id)
+    {
+        return State::Reset;
+    }
+
+    bool isManualReset( Context & a_context, Id & a_id)
+    {
+        return false;
+    }
+}
+
+using namespace kernel::internal;
+
+namespace
+{
+    struct local_context
+    {
+        kernel::internal::task::Context m_int_task_context;
+        scheduler::Context      m_Scheduler;
+        task::Context           m_Task;
+        timer::Context          m_Timer;
+        event::Context          m_Event;
+
+        std::vector<task::Id> tasks;
+    };
+}
+
+// tests
 TEST_CASE("Scheduler")
 {
-    kernel::internal::scheduler::Context context;
-
-    SECTION( "Add task 'a', 'b', 'c' and see if findNextTask is working")
+    SECTION( " add tasks of same priority and find highest priority")
     {
-        kernel::internal::task::Id next_task_id;
+        std::unique_ptr<local_context> context(new local_context);
 
-        // add task 'a'
-        next_task_id.m_id = 'a';
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-
-        REQUIRE(false == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('a' == next_task_id.m_id);
-
-        // add task 'b'
-        next_task_id.m_id = 'b';
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id.m_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('a' == next_task_id.m_id);
-
-        // add task 'c'
-        next_task_id.m_id = 'c';
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id.m_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id.m_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('a' == next_task_id.m_id);
-        
-        // remove task 'a'
-        next_task_id.m_id = 'a';
-        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, next_task_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id.m_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('b' == next_task_id.m_id);
-
-        REQUIRE(true == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        REQUIRE('c' == next_task_id.m_id);
-
-        // remove task 'b'
-        next_task_id.m_id = 'b';
-        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, next_task_id);
-
-        // only one task is remaining - task 'c'
-        // if one task is left, expected return value is 'false'
-        REQUIRE(false == kernel::internal::scheduler::findNextTask(context, kernel::task::Priority::High, next_task_id));
-        // next_task_id remain unchanged
-        REQUIRE('b' == next_task_id.m_id);
-    }
-
-    SECTION( "try to add too many task")
-    {
-        kernel::internal::task::Id next_task_id;
-
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; i++)
+        auto test_case_routine = []
+        (
+            local_context &         context,
+            uint32_t                current,
+            uint32_t                expected_curr,
+            uint32_t                expected_next
+        )
         {
-            next_task_id.m_id = i;
-            REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
+            bool result = false;
+            
+            // new task Id
+            context.tasks.push_back({});
+
+            // create task structure
+            kernel::internal::task::create(
+                context.m_int_task_context,
+                kernel_task_routine,
+                task_routine,
+                kernel::task::Priority::Low,
+                &context.tasks.at(current),
+                nullptr,
+                false
+            );
+
+            // add new task to scheduler
+            result = scheduler::addReadyTask(
+                context.m_Scheduler,
+                context.m_Task,
+                kernel::task::Priority::Low,
+                context.tasks.at(current)
+            );
+
+            REQUIRE(true == result);
+
+            // get current task
+            {
+                task::Id found_id;
+                scheduler::getCurrentTaskId(
+                    context.m_Scheduler,
+                    found_id
+                );
+                REQUIRE(expected_curr == found_id.m_id);
+            }
+
+            // get next task
+            {
+                task::Id found_id;
+
+                result = scheduler::getNextTask(
+                    context.m_Scheduler,
+                    context.m_Task,
+                    found_id
+                );
+
+                REQUIRE(true == result);
+                REQUIRE(expected_next == found_id.m_id);
+            }
+        };
+
+        // test case
+        {
+            constexpr uint32_t count = 5U;
+
+            std::array<uint32_t, count> expected_curr = {0U, 0U, 1U, 2U, 3U};
+            std::array<uint32_t, count> expected_next = {0U, 1U, 2U, 3U, 4U};
+
+            for (uint32_t i = 0U; i < count; ++i)
+            {
+                test_case_routine(*context, i, expected_curr[i], expected_next[i]);
+            }
         }
-
-        // Adding MAX_TASK_NUMBER + 1 task should fail
-        next_task_id.m_id = 0x123U;
-        REQUIRE(false == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-    }
-
-    SECTION( "try to add dublicate with same id")
-    {
-        kernel::internal::task::Id next_task_id;
-
-        next_task_id.m_id = 0x123U;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-
-
-        next_task_id.m_id = 0x124U;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-
-
-        next_task_id.m_id = 0x123U;
-
-        // addTask should return false
-        REQUIRE(false == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-    }
-
-    SECTION( "test finding highest priority task")
-    {
-        kernel::internal::task::Id next_task_id;
-        // Add 2 task to each priority group
-
-        // High: 
-        next_task_id.m_id = 1;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-        next_task_id.m_id = 2;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::High, next_task_id));
-        
-        // Medium:
-        next_task_id.m_id = 3;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Medium, next_task_id));
-        next_task_id.m_id = 4;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Medium, next_task_id));
-
-        // Low:
-        next_task_id.m_id = 5;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Low, next_task_id));
-        next_task_id.m_id = 6;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Low, next_task_id));
-
-        // Idle:
-        next_task_id.m_id = 7;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Idle, next_task_id));
-        next_task_id.m_id = 8;
-        REQUIRE(true == kernel::internal::scheduler::addTask(context, kernel::task::Priority::Idle, next_task_id));
-
-        // find highest priority task
-        kernel::internal::scheduler::findHighestPrioTask(context, next_task_id);
-        REQUIRE(1 == next_task_id.m_id);
-
-        // remove 2 high priority tasks
-        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, {1});
-        kernel::internal::scheduler::removeTask(context, kernel::task::Priority::High, {2});
-
-        // find highest priority task
-        kernel::internal::scheduler::findHighestPrioTask(context, next_task_id);
-        REQUIRE(3 == next_task_id.m_id);
     }
 }

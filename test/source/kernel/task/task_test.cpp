@@ -2,7 +2,7 @@
 
 #include "task.hpp"
 
-namespace stubs
+namespace
 {
     void task_routine(void * param)
     {
@@ -47,8 +47,8 @@ TEST_CASE("Task")
         {
             bool result = kernel::internal::task::create(
                 context,
-                stubs::kernel_task_routine,
-                stubs::task_routine,
+                kernel_task_routine,
+                task_routine,
                 kernel::task::Priority::Medium,
                 &task_id,
                 &parameter,
@@ -74,7 +74,7 @@ TEST_CASE("Task")
             REQUIRE(0xdeadbeef == kernel::internal::task::sp::get(context, task_id));
 
             // routine
-            REQUIRE(stubs::task_routine == kernel::internal::task::routine::get(context, task_id));
+            REQUIRE(task_routine == kernel::internal::task::routine::get(context, task_id));
 
             // parameter
             REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
@@ -83,8 +83,8 @@ TEST_CASE("Task")
         // try overflow task buffer
         bool result = kernel::internal::task::create(
             context,
-            stubs::kernel_task_routine,
-            stubs::task_routine,
+            kernel_task_routine,
+            task_routine,
             kernel::task::Priority::Medium,
             &task_id,
             &parameter,
@@ -102,8 +102,8 @@ TEST_CASE("Task")
         // try overflow task buffer
         result = kernel::internal::task::create(
             context,
-            stubs::kernel_task_routine,
-            stubs::task_routine,
+            kernel_task_routine,
+            task_routine,
             kernel::task::Priority::Medium,
             &task_id,
             &parameter,
@@ -126,7 +126,7 @@ TEST_CASE("Task")
         REQUIRE(0x123 == kernel::internal::task::sp::get(context, task_id));
 
         // routine
-        REQUIRE(stubs::task_routine == kernel::internal::task::routine::get(context, task_id));
+        REQUIRE(task_routine == kernel::internal::task::routine::get(context, task_id));
 
         // parameter
         REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
@@ -140,8 +140,8 @@ TEST_CASE("Task")
 
         bool result = kernel::internal::task::create(
             context,
-            stubs::kernel_task_routine,
-            stubs::task_routine,
+            kernel_task_routine,
+            task_routine,
             kernel::task::Priority::Medium,
             &task_id,
             &parameter,
