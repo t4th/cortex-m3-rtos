@@ -82,7 +82,7 @@ namespace kernel::internal::task
 
     namespace context
     {
-        kernel::hardware::task::Context *  get( Context & a_context, Id a_id);
+        kernel::hardware::task::Context * get( Context & a_context, Id a_id);
     }
     
     namespace sp

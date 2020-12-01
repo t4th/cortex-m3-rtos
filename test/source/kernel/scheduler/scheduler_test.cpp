@@ -55,7 +55,6 @@ namespace
 {
     struct local_context
     {
-        kernel::internal::task::Context m_int_task_context;
         scheduler::Context      m_Scheduler;
         task::Context           m_Task;
         timer::Context          m_Timer;
@@ -68,11 +67,12 @@ namespace
 // tests
 TEST_CASE("Scheduler")
 {
-    SECTION( " add tasks of same priority and find highest priority")
+    SECTION( " add tasks of same priority and test round-robin scheduling")
     {
         std::unique_ptr<local_context> context(new local_context);
 
-        auto test_case_routine = []
+        // add task and test Current and Next
+        auto add_and_test_task = []
         (
             local_context &         context,
             uint32_t                current,
@@ -87,7 +87,7 @@ TEST_CASE("Scheduler")
 
             // create task structure
             kernel::internal::task::create(
-                context.m_int_task_context,
+                context.m_Task,
                 kernel_task_routine,
                 task_routine,
                 kernel::task::Priority::Low,
@@ -132,6 +132,7 @@ TEST_CASE("Scheduler")
         };
 
         // test case
+        // See if adding new task to scheduler will update Current and Next correctly.
         {
             constexpr uint32_t count = 5U;
 
@@ -140,8 +141,38 @@ TEST_CASE("Scheduler")
 
             for (uint32_t i = 0U; i < count; ++i)
             {
-                test_case_routine(*context, i, expected_curr[i], expected_next[i]);
+                add_and_test_task(*context, i, expected_curr[i], expected_next[i]);
             }
         }
+
+        // Check cirurality
+        {
+            bool result = false;
+            task::Id found_id;
+
+            constexpr uint32_t count = 10U;
+            std::array<uint32_t, count> expected_next = 
+            {0U, 1U, 2U, 3U, 4U, 0U, 1U, 2U, 3U, 4U};
+
+            for (uint32_t i = 0U; i < count; ++i)
+            {
+                result = scheduler::getNextTask(
+                    context->m_Scheduler,
+                    context->m_Task,
+                    found_id
+                );
+
+                REQUIRE(true == result);
+                REQUIRE(expected_next[i] == found_id.m_id);
+            }
+        }
+    }
+
+
+    SECTION( " add tasks of different priorites and find highest prio")
+    {
+        // todo
+        // remove highest prio task
+        // remove current task
     }
 }

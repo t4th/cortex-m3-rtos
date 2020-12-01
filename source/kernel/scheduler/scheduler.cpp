@@ -406,11 +406,11 @@ namespace kernel::internal::scheduler
 
         if (next_task_found)
         {
-            kernel::internal::task::state::set(
-                a_task_context,
-                a_context.m_current,
-                kernel::task::State::Ready
-            );
+            // kernel::internal::task::state::set(
+            //     a_task_context,
+            //     a_context.m_current,
+            //     kernel::task::State::Ready
+            // );
 
             kernel::internal::task::state::set(
                 a_task_context,
@@ -476,6 +476,11 @@ namespace kernel::internal::scheduler
                     {
                         for (uint32_t i = 0; i < task::MAX_INPUT_SIGNALS; ++i)
                         {
+                            if (false == conditions.m_inputSignals.isAllocated(i))
+                            {
+                                break;
+                            }
+
                             kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
                             internal::handle::ObjectType objType =
                                 internal::handle::getObjectType(objHandle);

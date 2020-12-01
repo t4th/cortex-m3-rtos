@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 
 namespace kernel::internal::common
 {
@@ -46,14 +47,16 @@ namespace kernel::internal::common
 
         TDataType & at(uint32_t a_item_id)
         {
-            // TODO: Make it safe. For now, implementation assumes input data is
-            // always valid since this is used only by kernel modules.
+            assert(a_item_id < MaxSize);
+            assert(m_status[a_item_id]);
 
             return m_data[a_item_id];
         }
 
         bool isAllocated(uint32_t a_item_id)
         {
+            assert(a_item_id < MaxSize);
+
             return m_status[a_item_id];
         }
 

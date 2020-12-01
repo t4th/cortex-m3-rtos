@@ -47,6 +47,9 @@
     <ClCompile Include="..\source\kernel\internal\internal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\kernel\common\assert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_compat.h">

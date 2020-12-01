@@ -460,6 +460,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>common</GroupName>
+          <Files>
+            <File>
+              <FileName>assert.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\common\assert.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>doc</GroupName>
           <Files>
             <File>

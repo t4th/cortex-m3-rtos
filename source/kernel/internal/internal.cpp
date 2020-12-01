@@ -149,10 +149,7 @@ namespace kernel::internal
             nextTask
         );
 
-        if (false == task_available)
-        {
-            hardware::debug::setBreakpoint();
-        }
+        assert(true == task_available);
 
         loadContext(nextTask);
 
@@ -175,10 +172,7 @@ namespace kernel::internal
             nextTask
         );
 
-        if (false == task_available)
-        {
-            hardware::debug::setBreakpoint();
-        }
+        assert(true == task_available);
 
         storeContext(currentTask);
         loadContext(nextTask);

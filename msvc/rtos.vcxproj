@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\kernel\common\assert.cpp" />
     <ClCompile Include="..\source\kernel\critical_section\critical_section.cpp" />
     <ClCompile Include="..\source\kernel\event\event.cpp" />
     <ClCompile Include="..\source\kernel\handle\handle.cpp" />
