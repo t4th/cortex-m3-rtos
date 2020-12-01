@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\source\kernel\handle\handle.cpp">
       <Filter>tested files\kernel\handle</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
+      <Filter>tests\kernel\handle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\catch.hpp">

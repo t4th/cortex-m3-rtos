@@ -25,6 +25,7 @@
     <ClCompile Include="..\source\catch.cpp" />
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />
     <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp" />
+    <ClCompile Include="..\source\kernel\handle\handle_test.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp" />
     <ClCompile Include="..\source\kernel\task\task_test.cpp" />
   </ItemGroup>
