@@ -38,7 +38,9 @@ TEST_CASE("Task")
 {
     SECTION ("create new task and verify context data")
     {
-        kernel::internal::task::Context context{};
+        std::unique_ptr<kernel::internal::task::Context> m_heap_context(new kernel::internal::task::Context);
+        kernel::internal::task::Context & context = *m_heap_context;
+
         kernel::internal::task::Id task_id{};
         uint32_t parameter;
 
@@ -74,7 +76,7 @@ TEST_CASE("Task")
             REQUIRE(0xdeadbeef == kernel::internal::task::sp::get(context, task_id));
 
             // routine
-            REQUIRE(task_routine == kernel::internal::task::routine::get(context, task_id));
+            REQUIRE(&task_routine == kernel::internal::task::routine::get(context, task_id));
 
             // parameter
             REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
@@ -126,7 +128,7 @@ TEST_CASE("Task")
         REQUIRE(0x123 == kernel::internal::task::sp::get(context, task_id));
 
         // routine
-        REQUIRE(task_routine == kernel::internal::task::routine::get(context, task_id));
+        REQUIRE(&task_routine == kernel::internal::task::routine::get(context, task_id));
 
         // parameter
         REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
@@ -134,7 +136,8 @@ TEST_CASE("Task")
 
     SECTION ("create new task and modify context data with API")
     {
-        kernel::internal::task::Context context{};
+        std::unique_ptr<kernel::internal::task::Context> m_heap_context(new kernel::internal::task::Context);
+        kernel::internal::task::Context & context = *m_heap_context;
         kernel::internal::task::Id task_id{};
         uint32_t parameter;
 
@@ -158,7 +161,5 @@ TEST_CASE("Task")
 
             // verify if state has changed
             REQUIRE(kernel::task::State::Running == kernel::internal::task::state::get(context, task_id));
-
-
     }
 }
