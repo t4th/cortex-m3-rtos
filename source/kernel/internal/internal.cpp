@@ -12,10 +12,6 @@ namespace kernel::internal
 {
     void init()
     {
-        m_context.old_time = 0U;
-        m_context.time = 0U;
-        m_context.schedule_lock = 0U;
-
         internal::task::Id idle_task_handle;
 
         // Idle task is always available as system task.
@@ -196,10 +192,12 @@ namespace kernel::internal
         if (0U == m_context.schedule_lock)
         {
             // Calculate Round-Robin time stamp
-            if (m_context.time - m_context.old_time > m_context.interval)
-            {
-                m_context.old_time = m_context.time;
+            bool interval_elapsed = system_timer::isIntervalElapsed(
+                m_context.m_systemTimer
+            );
 
+            if (interval_elapsed)
+            {
                 internal::task::Id currentTask;
                 scheduler::getCurrentTaskId(
                     m_context.m_scheduler,
@@ -224,7 +222,7 @@ namespace kernel::internal
             }
         }
 
-        ++m_context.time;
+        system_timer::increment( m_context.m_systemTimer);
 
         return execute_context_switch;
     }

@@ -87,6 +87,23 @@ namespace kernel::event
     void reset( kernel::Handle & a_handle);
 }
 
+namespace kernel::critical_section
+{
+    struct Context
+    {
+        volatile uint32_t m_lockCount; // todo: interlocked
+        volatile uint32_t m_spinLock;
+        kernel::Handle m_event;
+        kernel::Handle m_ownerTask; // debug information
+    };
+
+    bool init(Context & a_context, uint32_t a_spinLock = 100U);
+    void deinit(Context & a_context);
+
+    void enter(Context & a_context);
+    void leave(Context & a_context);
+}
+
 namespace kernel::sync
 {
     enum class WaitResult

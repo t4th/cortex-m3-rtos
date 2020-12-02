@@ -33,7 +33,7 @@ namespace kernel
 
     Time_ms getTime()
     {
-        return internal::m_context.time;
+        return internal::system_timer::get( internal::m_context.m_systemTimer);
     }
 }
 
@@ -493,5 +493,65 @@ namespace kernel::sync
         internal::unlockScheduler();
 
         return result;
+    }
+}
+
+namespace kernel::critical_section
+{
+    // todo: consider memory barrier
+
+    bool init(Context & a_context, uint32_t a_spinLock)
+    {
+        internal::lockScheduler();
+        {
+            bool initialized = event::create(a_context.m_event);
+            if (false == initialized)
+            {
+                internal::unlockScheduler();
+                return false;
+            }
+
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+
+            a_context.m_ownerTask = internal::handle::create(internal::handle::ObjectType::Task, currentTask.m_id);
+            a_context.m_lockCount = 0U;
+            a_context.m_spinLock = a_spinLock;
+        }
+        internal::unlockScheduler();
+
+        return true;
+    }
+
+    void deinit(Context & a_context)
+    {
+        internal::lockScheduler();
+        {
+            event::destroy(a_context.m_event);
+        }
+        internal::unlockScheduler();
+    }
+
+    void enter(Context & a_context)
+    {
+        for (uint32_t i = 0U; i < a_context.m_spinLock; ++i)
+        {
+            if (0U == a_context.m_lockCount)
+            {
+                ++a_context.m_lockCount;
+                break;
+            }
+        }
+
+        sync::waitForSingleObject(a_context.m_event);
+    }
+
+    void leave(Context & a_context)
+    {
+        internal::lockScheduler();
+        {
+            --a_context.m_lockCount;
+        }
+        internal::unlockScheduler();
     }
 }
