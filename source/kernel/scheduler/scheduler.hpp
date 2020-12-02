@@ -118,7 +118,6 @@ namespace kernel::internal::scheduler
     bool setTaskToReady(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        kernel::task::Priority      a_priority,
         task::Id                    a_task_id
     );
 

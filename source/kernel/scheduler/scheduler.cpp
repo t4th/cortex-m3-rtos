@@ -228,7 +228,6 @@ namespace kernel::internal::scheduler
     bool setTaskToReady(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        kernel::task::Priority      a_priority,
         task::Id                    a_task_id
     )
     {
@@ -237,7 +236,12 @@ namespace kernel::internal::scheduler
             a_task_id
         );
 
-        bool task_added = addReadyTask(a_context, a_task_context, a_priority, a_task_id);
+        kernel::task::Priority prio = internal::task::priority::get(
+            a_task_context,
+            a_task_id
+        );
+
+        bool task_added = addReadyTask(a_context, a_task_context, prio, a_task_id);
 
         if (task_added)
         {

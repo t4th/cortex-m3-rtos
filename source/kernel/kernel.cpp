@@ -218,7 +218,6 @@ namespace kernel::task
             bool task_resumed = internal::scheduler::setTaskToReady(
                 internal::m_context.m_scheduler,
                 internal::m_context.m_tasks,
-                resumedTaskPrio,
                 resumedTaskId
             );
 
