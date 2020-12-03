@@ -115,8 +115,9 @@ namespace kernel::sync
     };
 
     // Can wait for:
-    // Event, timer, task
+    // Event, timer
     // NOTE: destorying items used by this function will result in undefined behaviour
+    // todo: consider add task to possible signal types
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver = true,

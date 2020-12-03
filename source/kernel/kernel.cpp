@@ -447,7 +447,9 @@ namespace kernel::event
     }
     void destroy( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
+        const internal::handle::ObjectType objectType = internal::handle::getObjectType(a_handle);
+
+        if (internal::handle::ObjectType::Event != objectType)
         {
             return;
         }
@@ -462,7 +464,9 @@ namespace kernel::event
 
     void set( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
+        const internal::handle::ObjectType objectType = internal::handle::getObjectType(a_handle);
+
+        if (internal::handle::ObjectType::Event != objectType)
         {
             return;
         }
@@ -477,7 +481,9 @@ namespace kernel::event
 
     void reset( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Event != internal::handle::getObjectType(a_handle))
+        const internal::handle::ObjectType objectType = internal::handle::getObjectType(a_handle);
+
+        if (internal::handle::ObjectType::Event != objectType)
         {
             return;
         }
@@ -500,9 +506,19 @@ namespace kernel::sync
     )
     {
         WaitResult result = WaitResult::Abandon;
+        
+        const internal::handle::ObjectType objectType = internal::handle::getObjectType(a_handle);
+
+        if (internal::handle::ObjectType::Task == objectType)
+        {
+            return result;
+
+        }
 
         lockScheduler();
         {
+            // TODO: check signal condition before creating any system objects
+
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 

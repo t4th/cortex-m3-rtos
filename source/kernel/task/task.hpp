@@ -19,6 +19,7 @@ namespace kernel::internal::task
 
     namespace wait
     {
+        // todo: move it separate header and add functions
         struct Conditions
         {
             enum class Type
