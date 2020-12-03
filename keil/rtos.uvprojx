@@ -338,7 +338,7 @@
               <MiscControls>-fno-exceptions</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware;..\source\kernel\internal</IncludePath>
+              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware;..\source\kernel\system_timer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -426,11 +426,6 @@
               <FileName>critical_section.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\source\kernel\critical_section\critical_section.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>internal.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\kernel\internal\internal.cpp</FilePath>
             </File>
           </Files>
         </Group>

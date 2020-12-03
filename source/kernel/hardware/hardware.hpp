@@ -2,6 +2,14 @@
 
 #include <cstdint>
 
+namespace kernel::internal
+{
+    // Kernel Handler Mode interfaces
+    void loadNextTask(); // __attribute__((always_inline));
+    void switchContext(); // __attribute__((always_inline));
+    bool tick();// __attribute__((always_inline));
+}
+
 namespace kernel::hardware
 {
     constexpr uint32_t TASK_STACK_SIZE = 192U;

@@ -16,7 +16,7 @@ namespace
 }
 
 namespace kernel
-    {
+{
     Time_ms getTime()
     {
         return 0U;

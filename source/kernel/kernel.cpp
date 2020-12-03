@@ -1,30 +1,85 @@
 #include <kernel.hpp>
 
 #include <hardware.hpp>
-#include <internal.hpp>
+
+#include <scheduler.hpp>
+#include <handle.hpp>
+#include <timer.hpp>
+#include <event.hpp>
+#include <system_timer.hpp>
+
+namespace kernel::context
+{
+        internal::system_timer::Context m_systemTimer;
+        internal::task::Context         m_tasks;
+        internal::scheduler::Context    m_scheduler;
+        internal::timer::Context        m_timers;
+        internal::event::Context        m_events;
+
+        // Indicate if kernel is started. It is mostly used to detected
+        // if system object was created before or after kernel::start.
+        bool started = false;
+
+        // Lock used to stop kernel from round-robin context switches.
+        // 0 - context switch unlocked; !0 - context switch locked
+        volatile uint32_t schedule_lock = 0U;
+}
+
+namespace kernel
+{
+    void storeContext(kernel::internal::task::Id a_task);
+    void loadContext(kernel::internal::task::Id a_task);
+
+    void lockScheduler();
+    void unlockScheduler();
+    void terminateTask(kernel::internal::task::Id a_id);
+    void task_routine();
+    void idle_routine(void * a_parameter);
+}
 
 namespace kernel
 {
     void init()
     {
-        if (kernel::internal::m_context.started)
+        if (kernel::context::started)
         {
             return;
         }
 
         hardware::init();
-        internal::init();
+        
+        {
+            internal::task::Id idle_task_handle;
+
+            // Idle task is always available as system task.
+            // todo: check if kernel::task::create can be
+            // used instead of internal::task::create
+            internal::task::create(
+                context::m_tasks,
+                task_routine,
+                idle_routine,
+                task::Priority::Idle,
+                &idle_task_handle
+            );
+
+            internal::scheduler::addReadyTask(
+                context::m_scheduler,
+                context::m_tasks,
+                kernel::task::Priority::Idle,
+                idle_task_handle
+            );
+        }
     }
     
     void start()
     {
-        if (kernel::internal::m_context.started)
+        if (kernel::context::started)
         {
             return;
         }
 
-        internal::lockScheduler();
-        internal::m_context.started = true;
+        lockScheduler();
+        context::started = true;
         
         hardware::start();
 
@@ -33,7 +88,7 @@ namespace kernel
 
     Time_ms getTime()
     {
-        return internal::system_timer::get( internal::m_context.m_systemTimer);
+        return internal::system_timer::get( context::m_systemTimer);
     }
 }
 
@@ -47,21 +102,21 @@ namespace kernel::task
         bool                    a_create_suspended
     )
     {
-        internal::lockScheduler();
+        lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 currentTask
             );
 
             kernel::internal::task::Id created_task_id;
 
             bool task_created = kernel::internal::task::create(
-                internal::m_context.m_tasks,
-                internal::task_routine,
+                context::m_tasks,
+                task_routine,
                 a_routine, a_priority,
                 &created_task_id,
                 a_parameter,
@@ -70,7 +125,7 @@ namespace kernel::task
         
             if (false == task_created)
             {
-                internal::unlockScheduler();
+                unlockScheduler();
                 return false;
             }
 
@@ -79,8 +134,8 @@ namespace kernel::task
             if (a_create_suspended)
             {
                 task_added = internal::scheduler::addSuspendedTask(
-                    internal::m_context.m_scheduler,
-                    internal::m_context.m_tasks,
+                    context::m_scheduler,
+                    context::m_tasks,
                     a_priority,
                     created_task_id
                 );
@@ -88,8 +143,8 @@ namespace kernel::task
             else
             {
                 task_added = internal::scheduler::addReadyTask(
-                    internal::m_context.m_scheduler,
-                    internal::m_context.m_tasks,
+                    context::m_scheduler,
+                    context::m_tasks,
                     a_priority,
                     created_task_id
                 );
@@ -97,8 +152,8 @@ namespace kernel::task
 
             if (false == task_added)
             {
-                kernel::internal::task::destroy( internal::m_context.m_tasks, created_task_id);
-                internal::unlockScheduler();
+                kernel::internal::task::destroy( context::m_tasks, created_task_id);
+                unlockScheduler();
                 return false;
             }
             
@@ -108,13 +163,13 @@ namespace kernel::task
                 *a_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id.m_id);
             }
 
-            if (kernel::internal::m_context.started && (a_priority < currentTaskPrio))
+            if (kernel::context::started && (a_priority < currentTaskPrio))
             {
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
-                internal::unlockScheduler();
+                unlockScheduler();
             }
         }
 
@@ -125,17 +180,17 @@ namespace kernel::task
     {
         kernel::Handle new_handle{};
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             new_handle = internal::handle::create(
                 internal::handle::ObjectType::Task,
                 currentTask.m_id
             );
         }
-        internal::unlockScheduler();
+        unlockScheduler();
 
         return new_handle;
     }
@@ -147,7 +202,7 @@ namespace kernel::task
         case internal::handle::ObjectType::Task:
         {
             auto terminated_task_id = internal::handle::getId<internal::task::Id>(a_handle);
-            internal::terminateTask(terminated_task_id);
+            terminateTask(terminated_task_id);
             break;
         }
         default:
@@ -162,25 +217,25 @@ namespace kernel::task
             return;
         }
 
-        if (!internal::m_context.started)
+        if (!context::started)
         {
             return;
         }
 
         const auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             // Remove suspended task from scheduler.
             internal::scheduler::setTaskToSuspended(
-                internal::m_context.m_scheduler,
-                internal::m_context.m_tasks,
+                context::m_scheduler,
+                context::m_tasks,
                 suspended_task_id
             );
 
             // Reschedule in case task is suspending itself.
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             if (currentTask.m_id == suspended_task_id.m_id)
             {
@@ -188,7 +243,7 @@ namespace kernel::task
             }
             else
             {
-                internal::unlockScheduler();
+                unlockScheduler();
             }
         }
     }
@@ -200,38 +255,38 @@ namespace kernel::task
             return;
         }
 
-        if (!internal::m_context.started)
+        if (!context::started)
         {
             return;
         }
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             const auto resumedTaskId = internal::handle::getId<internal::task::Id>(a_handle);
 
             const kernel::task::Priority resumedTaskPrio = internal::task::priority::get(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 resumedTaskId
             );
 
             // Resume task in scheduler
             bool task_resumed = internal::scheduler::setTaskToReady(
-                internal::m_context.m_scheduler,
-                internal::m_context.m_tasks,
+                context::m_scheduler,
+                context::m_tasks,
                 resumedTaskId
             );
 
             if (false == task_resumed)
             {
-                internal::unlockScheduler();
+                unlockScheduler();
                 return;
             }
 
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 currentTask
             );
 
@@ -242,7 +297,7 @@ namespace kernel::task
             }
             else
             {
-                internal::unlockScheduler();
+                unlockScheduler();
             }
         }
     }
@@ -256,13 +311,13 @@ namespace kernel::task
             return;
         }
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 currentTask
             );
 
@@ -271,8 +326,8 @@ namespace kernel::task
             wait_condtitions.m_start = kernel::getTime();
 
             internal::scheduler::setTaskToWait(
-                internal::m_context.m_scheduler,
-                internal::m_context.m_tasks,
+                context::m_scheduler,
+                context::m_tasks,
                 currentTask
             );
         }
@@ -288,12 +343,12 @@ namespace kernel::timer
         kernel::Handle *    a_signal
     )
     {
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             kernel::internal::timer::Id new_timer_id;
 
             bool timer_created = internal::timer::create(
-                internal::m_context.m_timers,
+                context::m_timers,
                 new_timer_id,
                 a_interval,
                 a_signal
@@ -301,7 +356,7 @@ namespace kernel::timer
 
             if (false == timer_created)
             {
-                kernel::internal::unlockScheduler();
+                kernel::unlockScheduler();
                 return false;
             }
 
@@ -310,7 +365,7 @@ namespace kernel::timer
                 new_timer_id.m_id
             );
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
 
         return true;
     }
@@ -322,12 +377,12 @@ namespace kernel::timer
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::destroy(internal::m_context.m_timers, timer_id);
+            internal::timer::destroy(context::m_timers, timer_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 
     void start( kernel::Handle & a_handle)
@@ -337,12 +392,12 @@ namespace kernel::timer
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::start(internal::m_context.m_timers, timer_id);
+            internal::timer::start(context::m_timers, timer_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 
     void stop( kernel::Handle & a_handle)
@@ -352,12 +407,12 @@ namespace kernel::timer
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-            internal::timer::stop(internal::m_context.m_timers, timer_id);
+            internal::timer::stop(context::m_timers, timer_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 }
 
@@ -365,18 +420,18 @@ namespace kernel::event
 {
     bool create( kernel::Handle & a_handle, bool a_manual_reset)
     {
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             kernel::internal::event::Id new_event_id;
             bool event_created = internal::event::create(
-                internal::m_context.m_events,
+                context::m_events,
                 new_event_id,
                 a_manual_reset
             );
 
             if (false == event_created)
             {
-                kernel::internal::unlockScheduler();
+                kernel::unlockScheduler();
                 return false;
             }
 
@@ -385,7 +440,7 @@ namespace kernel::event
                 new_event_id.m_id
             );
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
 
         return true;
     }
@@ -396,12 +451,12 @@ namespace kernel::event
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::destroy(internal::m_context.m_events, event_id);
+            internal::event::destroy(context::m_events, event_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 
     void set( kernel::Handle & a_handle)
@@ -411,12 +466,12 @@ namespace kernel::event
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::set(internal::m_context.m_events, event_id);
+            internal::event::set(context::m_events, event_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 
     void reset( kernel::Handle & a_handle)
@@ -426,12 +481,12 @@ namespace kernel::event
             return;
         }
 
-        kernel::internal::lockScheduler();
+        kernel::lockScheduler();
         {
             auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::reset(internal::m_context.m_events, event_id);
+            internal::event::reset(context::m_events, event_id);
         }
-        kernel::internal::unlockScheduler();
+        kernel::unlockScheduler();
     }
 }
 
@@ -445,13 +500,13 @@ namespace kernel::sync
     {
         WaitResult result = WaitResult::Abandon;
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 currentTask
             );
 
@@ -471,26 +526,26 @@ namespace kernel::sync
             wait_condtitions.m_inputSignals.at(new_item).m_data = a_handle.m_data;
 
             internal::scheduler::setTaskToWait(
-                internal::m_context.m_scheduler,
-                internal::m_context.m_tasks,
+                context::m_scheduler,
+                context::m_tasks,
                 currentTask
             );
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
 
-        internal::lockScheduler();
+        lockScheduler();
         {
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
-                internal::m_context.m_tasks,
+                context::m_tasks,
                 currentTask
             );
 
             result = wait_condtitions.m_result;
         }
-        internal::unlockScheduler();
+        unlockScheduler();
 
         return result;
     }
@@ -502,34 +557,34 @@ namespace kernel::critical_section
 
     bool init(Context & a_context, uint32_t a_spinLock)
     {
-        internal::lockScheduler();
+        lockScheduler();
         {
             bool initialized = event::create(a_context.m_event);
             if (false == initialized)
             {
-                internal::unlockScheduler();
+                unlockScheduler();
                 return false;
             }
 
             internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(internal::m_context.m_scheduler, currentTask);
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
             a_context.m_ownerTask = internal::handle::create(internal::handle::ObjectType::Task, currentTask.m_id);
             a_context.m_lockCount = 0U;
             a_context.m_spinLock = a_spinLock;
         }
-        internal::unlockScheduler();
+        unlockScheduler();
 
         return true;
     }
 
     void deinit(Context & a_context)
     {
-        internal::lockScheduler();
+        lockScheduler();
         {
             event::destroy(a_context.m_event);
         }
-        internal::unlockScheduler();
+        unlockScheduler();
     }
 
     void enter(Context & a_context)
@@ -548,10 +603,208 @@ namespace kernel::critical_section
 
     void leave(Context & a_context)
     {
-        internal::lockScheduler();
+        lockScheduler();
         {
             --a_context.m_lockCount;
         }
-        internal::unlockScheduler();
+        unlockScheduler();
+    }
+}
+
+namespace kernel
+{
+    // Must only be called from handler mode (MSP stack) since it is modifying psp.
+    void storeContext(kernel::internal::task::Id a_task)
+    {
+        const uint32_t sp = hardware::sp::get();
+        internal::task::sp::set( context::m_tasks, a_task, sp);
+
+        kernel::hardware::task::Context * current_task = internal::task::context::get(context::m_tasks, a_task);
+        kernel::hardware::context::current::set(current_task);
+    }
+
+    // Must only be called from handler mode (MSP stack) since it is modifying psp.
+    void loadContext(kernel::internal::task::Id a_task)
+    {
+        kernel::hardware::task::Context * next_task = internal::task::context::get(context::m_tasks, a_task);
+        kernel::hardware::context::next::set(next_task);
+
+        const uint32_t next_sp = kernel::internal::task::sp::get(context::m_tasks, a_task);
+        kernel::hardware::sp::set(next_sp);
+    }
+
+    // TODO: Lock/unlock need more elegant implementation.
+    //       Most likely each kernel task ended with some kind of
+    //       context switch would have its own SVC call.
+    void lockScheduler()
+    {
+        ++context::schedule_lock;
+    }
+
+    void unlockScheduler()
+    {
+        // TODO: analyze DSB and DMB here
+        // TODO: thinker about removing it.
+        --context::schedule_lock;
+    }
+
+    void terminateTask(kernel::internal::task::Id a_id)
+    {
+        lockScheduler();
+        {
+            // Reschedule in case task is killing itself.
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTaskId( context::m_scheduler, currentTask);
+
+            internal::scheduler::removeTask(
+                context::m_scheduler,
+                context::m_tasks,
+                a_id
+            );
+
+            internal::task::destroy( context::m_tasks, a_id);
+
+            if (currentTask.m_id == a_id.m_id)
+            {
+                if (true == context::started)
+                {
+                    hardware::syscall(hardware::SyscallId::LoadNextTask);
+                }
+                else
+                {
+                    unlockScheduler();
+                }
+            }
+            else
+            {
+                unlockScheduler();
+            }
+        }
+    }
+
+    // User task routine wrapper used by kernel.
+    void task_routine()
+    {
+        kernel::task::Routine routine{};
+        void * parameter{};
+        internal::task::Id currentTask;
+
+        lockScheduler();
+        {
+            internal::scheduler::getCurrentTaskId( context::m_scheduler, currentTask);
+            routine = internal::task::routine::get( context::m_tasks, currentTask);
+            parameter = internal::task::parameter::get( context::m_tasks, currentTask);
+        }
+        unlockScheduler();
+
+        routine(parameter); // Call the actual task routine.
+
+        terminateTask(currentTask); // Cleanup task data.
+    }
+
+    void idle_routine(void * a_parameter)
+    {
+        volatile int i = 0;
+        while(1)
+        {
+            kernel::hardware::debug::print("idle\r\n");
+            for (i = 0; i < 100000; i++);
+            // TODO: calculate CPU load
+        }
+    }
+}
+
+namespace kernel::internal
+{
+    void loadNextTask()
+    {
+        internal::task::Id nextTask;
+
+        bool task_available = scheduler::getCurrentTask(
+            context::m_scheduler,
+            context::m_tasks,
+            nextTask
+        );
+
+        assert(true == task_available);
+
+        loadContext(nextTask);
+
+        unlockScheduler();
+    }
+
+    void switchContext()
+    {
+        internal::task::Id currentTask;
+        internal::task::Id nextTask;
+
+        scheduler::getCurrentTaskId(
+            context::m_scheduler,
+            currentTask
+        );
+
+        bool task_available = scheduler::getCurrentTask(
+            context::m_scheduler,
+            context::m_tasks,
+            nextTask
+        );
+
+        assert(true == task_available);
+
+        storeContext(currentTask);
+        loadContext(nextTask);
+
+        unlockScheduler();
+    }
+
+    bool tick()
+    {
+        bool execute_context_switch = false;
+
+        timer::tick( context::m_timers);
+        scheduler::checkWaitConditions(
+            context::m_scheduler,
+            context::m_tasks,
+            context::m_timers,
+            context::m_events
+        );
+
+        // If lock is enabled, increment time, but delay scheduler.
+        if (0U == context::schedule_lock)
+        {
+            // Calculate Round-Robin time stamp
+            bool interval_elapsed = system_timer::isIntervalElapsed(
+                context::m_systemTimer
+            );
+
+            if (interval_elapsed)
+            {
+                internal::task::Id currentTask;
+                scheduler::getCurrentTaskId(
+                    context::m_scheduler,
+                    currentTask
+                );
+
+                // Find next task in priority group.
+                internal::task::Id nextTask;
+                bool task_found = scheduler::getNextTask(
+                    context::m_scheduler,
+                    context::m_tasks,
+                    nextTask
+                );
+
+                if(task_found)
+                {
+                    storeContext(currentTask);
+                    loadContext(nextTask);
+
+                    execute_context_switch = true;
+                }
+            }
+        }
+
+        system_timer::increment( context::m_systemTimer);
+
+        return execute_context_switch;
     }
 }
