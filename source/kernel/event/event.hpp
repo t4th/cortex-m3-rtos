@@ -5,7 +5,7 @@
 
 namespace kernel::internal::event
 {
-    constexpr uint32_t MAX_NUMBER = 16U;
+    constexpr uint32_t MAX_NUMBER = 32U;
 
     typedef struct
     {
@@ -20,6 +20,7 @@ namespace kernel::internal::event
 
     struct Event
     {
+        // todo: this needs to be interlocked
         State m_state;
         bool  m_manual_reset;
     };

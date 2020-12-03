@@ -8,6 +8,8 @@
 #include <event.hpp>
 #include <system_timer.hpp>
 
+#include <atomic>
+
 namespace kernel::context
 {
         internal::system_timer::Context m_systemTimer;
@@ -18,30 +20,30 @@ namespace kernel::context
 
         // Indicate if kernel is started. It is mostly used to detected
         // if system object was created before or after kernel::start.
-        bool started = false;
+        bool m_started = false;
 
         // Lock used to stop kernel from round-robin context switches.
         // 0 - context switch unlocked; !0 - context switch locked
-        volatile uint32_t schedule_lock = 0U;
+        volatile std::atomic<uint32_t> m_schedule_lock = 0U;
 }
 
 namespace kernel
 {
-    void storeContext(kernel::internal::task::Id a_task);
-    void loadContext(kernel::internal::task::Id a_task);
+    inline void storeContext(kernel::internal::task::Id a_task);
+    inline void loadContext(kernel::internal::task::Id a_task);
 
-    void lockScheduler();
-    void unlockScheduler();
-    void terminateTask(kernel::internal::task::Id a_id);
-    void task_routine();
-    void idle_routine(void * a_parameter);
+    inline void lockScheduler();
+    inline void unlockScheduler();
+    inline void terminateTask(kernel::internal::task::Id a_id);
+    inline void task_routine();
+    inline void idle_routine(void * a_parameter);
 }
 
 namespace kernel
 {
     void init()
     {
-        if (kernel::context::started)
+        if (kernel::context::m_started)
         {
             return;
         }
@@ -73,13 +75,13 @@ namespace kernel
     
     void start()
     {
-        if (kernel::context::started)
+        if (kernel::context::m_started)
         {
             return;
         }
 
         lockScheduler();
-        context::started = true;
+        context::m_started = true;
         
         hardware::start();
 
@@ -104,14 +106,6 @@ namespace kernel::task
     {
         lockScheduler();
         {
-            internal::task::Id currentTask;
-            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
-
-            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
-                context::m_tasks,
-                currentTask
-            );
-
             kernel::internal::task::Id created_task_id;
 
             bool task_created = kernel::internal::task::create(
@@ -156,14 +150,22 @@ namespace kernel::task
                 unlockScheduler();
                 return false;
             }
-            
+
+            internal::task::Id currentTask;
+            internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
+
+            const kernel::task::Priority currentTaskPrio = internal::task::priority::get(
+                context::m_tasks,
+                currentTask
+            );
 
             if (a_handle)
             {
                 *a_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id.m_id);
             }
 
-            if (kernel::context::started && (a_priority < currentTaskPrio))
+            // If priority of task just created is higher than current task, issue context switch.
+            if (kernel::context::m_started && (a_priority < currentTaskPrio))
             {
                 hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
@@ -217,16 +219,15 @@ namespace kernel::task
             return;
         }
 
-        if (!context::started)
+        if (!context::m_started)
         {
             return;
         }
 
-        const auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
-
         lockScheduler();
         {
-            // Remove suspended task from scheduler.
+            const auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
+
             internal::scheduler::setTaskToSuspended(
                 context::m_scheduler,
                 context::m_tasks,
@@ -255,7 +256,7 @@ namespace kernel::task
             return;
         }
 
-        if (!context::started)
+        if (!context::m_started)
         {
             return;
         }
@@ -638,14 +639,14 @@ namespace kernel
     //       context switch would have its own SVC call.
     void lockScheduler()
     {
-        ++context::schedule_lock;
+        ++context::m_schedule_lock;
     }
 
     void unlockScheduler()
     {
         // TODO: analyze DSB and DMB here
         // TODO: thinker about removing it.
-        --context::schedule_lock;
+        --context::m_schedule_lock;
     }
 
     void terminateTask(kernel::internal::task::Id a_id)
@@ -666,7 +667,7 @@ namespace kernel
 
             if (currentTask.m_id == a_id.m_id)
             {
-                if (true == context::started)
+                if (true == context::m_started)
                 {
                     hardware::syscall(hardware::SyscallId::LoadNextTask);
                 }
@@ -770,7 +771,7 @@ namespace kernel::internal
         );
 
         // If lock is enabled, increment time, but delay scheduler.
-        if (0U == context::schedule_lock)
+        if (0U == context::m_schedule_lock)
         {
             // Calculate Round-Robin time stamp
             bool interval_elapsed = system_timer::isIntervalElapsed(

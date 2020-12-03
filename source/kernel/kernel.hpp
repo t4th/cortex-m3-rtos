@@ -8,6 +8,7 @@ namespace kernel
     typedef uint32_t Time_ms;
 
     // Abstract pointing to system object. Should only be used with kernel API.
+    // todo: consider changing this to pointer to void for strong typing
     typedef struct
     {
         uint32_t m_data;
