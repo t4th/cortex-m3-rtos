@@ -13,15 +13,17 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 ## Notes
 11/13/2020 - after doing this project in spare time it finally reached version 0.1! It is possible to create and remove tasks statically and in runtime. Stability is good, but I am still experimenting with optimal stack size and until stack overflow detection is done one must be careful with number of function entries in task routine!
 
+12/03/2020 - initial version of timers, events, sleep, critical section and waitForSingleObject are now pushed and working
+
 ## Goals
 
 ### 1.0 Features
 - [x] task: create, delete
-- [ ] software timers: create, remove
-- [ ] sleep function
-- [ ] events: create, remove
-- [ ] function WaitForEvent or WaitForObject
-- [ ] Critical section: enter, leave
+- [x] software timers: create, remove
+- [x] sleep function
+- [x] events: create, remove
+- [x] function WaitForSingleObject
+- [x] Critical section: enter, leave
 - [ ] way to map HW interrupts to events
 
 ### Other
