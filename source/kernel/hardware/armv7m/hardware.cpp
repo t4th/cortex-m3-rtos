@@ -44,7 +44,8 @@ namespace kernel::hardware
 
     void syscall(SyscallId a_id)
     {
-        // TODO: memory barrier before entering interrupt.
+        __ASM("DMB"); // Complete all explicit memory transfers
+        
         switch(a_id)
         {
         case SyscallId::LoadNextTask:
@@ -97,6 +98,7 @@ namespace kernel::hardware
         void set(kernel::hardware::task::Context * a_context)
         {
             current_task_context = a_context;
+            __ASM("DSB"); // Complete all explicit memory transfers
         }
     }
 
@@ -105,6 +107,7 @@ namespace kernel::hardware
         void set(kernel::hardware::task::Context * a_context)
         {
             next_task_context = a_context;
+            __ASM("DSB"); // Complete all explicit memory transfers
         }
     }
 
@@ -144,7 +147,7 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-    __attribute__ (( naked )) void LoadTask(void)
+    inline __attribute__ (( naked )) void LoadTask(void)
     {
         __ASM("CPSID I\n");
 
@@ -157,6 +160,12 @@ extern "C"
         // TODO: first task should be initialized to Thread Mode
         __ASM("ldr r0, =0xFFFFFFFD \n");
         __ASM("CPSIE I \n");
+        
+        // This is not needed in this case, due to write buffer being cleared on interrupt exit,
+        // but it is nice to have explicit information that memory write delay is taken into account.
+        __ASM("DSB"); // Complete all explicit memory transfers
+        __ASM("ISB"); // flush instruction pipeline
+        
         __ASM("bx r0");
     }
 
@@ -201,6 +210,8 @@ extern "C"
 
     void SysTick_Handler(void)
     {
+        __DSB();
+        
         // TODO: Make this function explicitly inline.
         bool execute_context_switch = kernel::internal::tick();
         
@@ -232,6 +243,12 @@ extern "C"
         // losing current thread state along the way.
         __ASM("ldr r0, =0xFFFFFFFD \n");
         __ASM("CPSIE I \n");
+        
+        // This is not needed in this case, due to write buffer being cleared on interrupt exit,
+        // but it is nice to have explicit information that memory write delay is taken into account.
+        __ASM("DSB"); // Complete all explicit memory transfers
+        __ASM("ISB"); // flush instruction pipeline
+        
         __ASM("bx r0");
     }
 }

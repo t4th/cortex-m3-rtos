@@ -65,7 +65,7 @@ namespace kernel::task
 
     void resume(kernel::Handle & a_handle);
 
-    void Sleep(Time_ms a_time);
+    void sleep(Time_ms a_time);
 }
 
 namespace kernel::timer

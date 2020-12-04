@@ -53,23 +53,15 @@ namespace kernel
         {
             internal::task::Id idle_task_handle;
 
-            // Idle task is always available as system task.
-            // todo: check if kernel::task::create can be
-            // used instead of internal::task::create
-            internal::task::create(
-                context::m_tasks,
-                task_routine,
+            bool idle_task_created = kernel::task::create(
                 idle_routine,
-                task::Priority::Idle,
-                &idle_task_handle
+                task::Priority::Idle
             );
 
-            internal::scheduler::addReadyTask(
-                context::m_scheduler,
-                context::m_tasks,
-                kernel::task::Priority::Idle,
-                idle_task_handle
-            );
+            if (false == idle_task_created)
+            {
+                hardware::debug::setBreakpoint();
+            }
         }
     }
     
@@ -305,7 +297,7 @@ namespace kernel::task
 
     // TODO: current round-robin timestamp is 1ms. In case a_time = 1ms,
     //       scheduling might make no sense.
-    void Sleep(Time_ms a_time)
+    void sleep(Time_ms a_time)
     {
         if (0U == a_time)
         {
