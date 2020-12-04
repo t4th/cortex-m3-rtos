@@ -15,7 +15,8 @@ struct Task_ids
 
 void delay(uint32_t a_ticks)
 {
-    for (uint32_t i = 0U; i < a_ticks; i++);
+    volatile uint32_t i;
+    for (i = 0U; i < a_ticks; i++);
 }
 
 void printTask(const char * a_text)

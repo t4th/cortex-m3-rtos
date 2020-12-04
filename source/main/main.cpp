@@ -65,7 +65,7 @@ void task0(void * a_parameter)
 
     while (true)
     {
-        kernel::task::Sleep(500);
+        kernel::task::sleep(500);
         printTask("task 0 - set event 0\r\n");
         kernel::event::set(events->event0);
     }
@@ -92,6 +92,6 @@ void task1(void * a_parameter)
             printTask("task 1 - wake up failed\r\n");
         }
 
-        kernel::task::Sleep(100);
+        kernel::task::sleep(100);
     }
 }

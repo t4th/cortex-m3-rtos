@@ -338,6 +338,8 @@ namespace kernel::internal::scheduler
         a_current_task_id = a_context.m_current;
     }
 
+    // Search for highest priority task in all priority queues.
+    // return true when task is found.
     bool getNextTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,

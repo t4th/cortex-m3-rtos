@@ -45,7 +45,7 @@ void task0(void * a_parameter)
 
     while (true)
     {
-        kernel::task::Sleep(*timer);
+        kernel::task::sleep(*timer);
         switch(*timer)
         {
         case 100:

@@ -804,10 +804,16 @@ namespace kernel::internal
 
                 if(task_found)
                 {
-                    storeContext(currentTask);
-                    loadContext(nextTask);
+                    // Note: move this check to scheduler
+                    //       and integrate result to getNextTask
+                    //       return value.
+                    if (currentTask.m_id != nextTask.m_id)
+                    {
+                        storeContext(currentTask);
+                        loadContext(nextTask);
 
-                    execute_context_switch = true;
+                        execute_context_switch = true;
+                    }
                 }
             }
         }
