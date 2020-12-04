@@ -98,7 +98,6 @@ namespace kernel::hardware
         void set(kernel::hardware::task::Context * a_context)
         {
             current_task_context = a_context;
-            __ASM("DSB"); // Complete all explicit memory transfers
         }
     }
 
@@ -107,7 +106,6 @@ namespace kernel::hardware
         void set(kernel::hardware::task::Context * a_context)
         {
             next_task_context = a_context;
-            __ASM("DSB"); // Complete all explicit memory transfers
         }
     }
 
@@ -220,7 +218,7 @@ extern "C"
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV interrupt to pending state.
         }
         
-        __DMB(); // This is not needed in this case, due to write buffer being cleared on interrupt exit,
+        __DSB(); // This is not needed in this case, due to write buffer being cleared on interrupt exit,
                  // but it is nice to have explicit information that memory write delay is taken into account.
     }
     
