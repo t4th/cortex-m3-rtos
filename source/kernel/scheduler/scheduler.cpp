@@ -143,8 +143,10 @@ namespace kernel::internal::scheduler::wait_list
     void removeTask( Context & a_context, task::Id a_task_id)
     {
         uint32_t found_index;
-        bool item_found = a_context.m_wait_list.find( a_task_id, found_index,
-            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
+        bool item_found = a_context.m_wait_list.find(
+            a_task_id,
+            found_index,
+            [] (volatile internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
                 return a_left == a_right;
             });

@@ -60,7 +60,7 @@ namespace kernel::internal::scheduler::wait_list
     struct Context
     {
         kernel::internal::common::CircularList<
-            kernel::internal::task::Id,
+            volatile kernel::internal::task::Id,
             kernel::internal::task::MAX_NUMBER
         > m_wait_list{};
     };
@@ -88,14 +88,15 @@ namespace kernel::internal::scheduler
 {
     struct Context
     {
-        kernel::internal::task::Id m_current; // Indicate currently running task ID.
-        kernel::internal::task::Id m_next;    // Indicate next task ID.
+        // Note: by design, Idle task always must be available and has Id = 0.
+        kernel::internal::task::Id m_current{0U}; // Indicate currently running task ID.
+        kernel::internal::task::Id m_next{0U};    // Indicate next task ID.
 
         // ready list
-        ready_list::Context m_ready_list;
+        ready_list::Context m_ready_list{};
 
         // m_wait_list
-        wait_list::Context m_wait_list;
+        wait_list::Context m_wait_list{};
 
         // m_suspended_list
     };

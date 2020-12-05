@@ -25,7 +25,7 @@ namespace kernel
 
 namespace kernel::internal::timer
 {
-    State getState( Context & a_context, Id a_id)
+    State getState( Context & a_context, Id & a_id)
     {
         return State::Finished;
     }
@@ -134,7 +134,7 @@ TEST_CASE("Scheduler")
                     context.m_Scheduler,
                     found_id
                 );
-                REQUIRE(expected_curr == found_id.m_id);
+                REQUIRE(expected_curr == found_id);
             }
 
             // get next task
@@ -148,7 +148,7 @@ TEST_CASE("Scheduler")
                 );
 
                 REQUIRE(true == result);
-                REQUIRE(expected_next == found_id.m_id);
+                REQUIRE(expected_next == found_id);
             }
         };
 
@@ -184,7 +184,7 @@ TEST_CASE("Scheduler")
                 );
 
                 REQUIRE(true == result);
-                REQUIRE(expected_next[i] == found_id.m_id);
+                REQUIRE(expected_next[i] == found_id);
             }
         }
     }
@@ -247,7 +247,7 @@ TEST_CASE("Scheduler")
             );
             REQUIRE(true == result);
             // task no. 6 is first High priority task
-            REQUIRE(6U == found_id.m_id);
+            REQUIRE(6U == found_id);
         }
 
         // get next task
@@ -262,7 +262,7 @@ TEST_CASE("Scheduler")
 
             REQUIRE(true == result);
             // task no. 7 is second High priority task
-            REQUIRE(7U == found_id.m_id);
+            REQUIRE(7U == found_id);
         }
 
         // remove all 3 high priority tasks
@@ -287,7 +287,7 @@ TEST_CASE("Scheduler")
             );
             REQUIRE(true == result);
             // task no. 3 is first Medium priority task
-            REQUIRE(3U == found_id.m_id);
+            REQUIRE(3U == found_id);
         }
 
         // get next task
@@ -302,7 +302,7 @@ TEST_CASE("Scheduler")
 
             REQUIRE(true == result);
             // task no. 4 is second Medium priority task
-            REQUIRE(4U == found_id.m_id);
+            REQUIRE(4U == found_id);
         }
 
         // get current task Id and remove it
@@ -315,7 +315,7 @@ TEST_CASE("Scheduler")
             );
 
             // should find previous getNextTask result, which is 4
-            REQUIRE(4U == found_id.m_id);
+            REQUIRE(4U == found_id);
 
             scheduler::removeTask(
                 context->m_Scheduler,
@@ -337,7 +337,7 @@ TEST_CASE("Scheduler")
             REQUIRE(true == result);
             // task no. 5 is third (now second due to linked list)
             // Medium priority task
-            REQUIRE(5U == found_id.m_id);
+            REQUIRE(5U == found_id);
         }
 
         // get next task
@@ -352,14 +352,14 @@ TEST_CASE("Scheduler")
 
             REQUIRE(true == result);
             // task no. 3 is fist Medium priority task
-            REQUIRE(3U == found_id.m_id);
+            REQUIRE(3U == found_id);
         }
 
         // now suspend last to medium tasks, so Low tasks have something to do
         {
             task::Id task_to_suspend;
 
-            task_to_suspend.m_id = 3U;
+            task_to_suspend = 3U;
 
             scheduler::setTaskToSuspended(
                 context->m_Scheduler,
@@ -367,7 +367,7 @@ TEST_CASE("Scheduler")
                 task_to_suspend
                 );
 
-            task_to_suspend.m_id = 5U;
+            task_to_suspend = 5U;
 
             scheduler::setTaskToSuspended(
                 context->m_Scheduler,
@@ -388,7 +388,7 @@ TEST_CASE("Scheduler")
             );
 
             REQUIRE(true == result);
-            REQUIRE(0U == found_id.m_id);
+            REQUIRE(0U == found_id);
         }
 
         // get next task
@@ -402,7 +402,7 @@ TEST_CASE("Scheduler")
             );
 
             REQUIRE(true == result);
-            REQUIRE(1U == found_id.m_id);
+            REQUIRE(1U == found_id);
         }
 
         // resume one Medium task, so Low
@@ -410,7 +410,7 @@ TEST_CASE("Scheduler")
             // 4U is first Medium task that was suspended,
             // lets set it to Ready again
             task::Id task_to_resume;
-            task_to_resume.m_id = 4U;
+            task_to_resume = 4U;
 
             scheduler::setTaskToReady(
                 context->m_Scheduler,
@@ -430,7 +430,7 @@ TEST_CASE("Scheduler")
             );
 
             REQUIRE(true == result);
-            REQUIRE(4U == found_id.m_id);
+            REQUIRE(4U == found_id);
         }
 
         // get next task
@@ -446,7 +446,7 @@ TEST_CASE("Scheduler")
             REQUIRE(true == result);
             // since there is only one Medium task in Medium queue,
             // scheduler should return it (4U)
-            REQUIRE(4U == found_id.m_id);
+            REQUIRE(4U == found_id);
         }
     }
 

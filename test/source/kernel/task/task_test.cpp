@@ -59,7 +59,7 @@ TEST_CASE("Task")
                 );
 
             REQUIRE(true == result);
-            REQUIRE(i == task_id.m_id); // task ID, is task index in memory buffer
+            REQUIRE(i == task_id); // task ID, is task index in memory buffer
 
             // priority
             REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
@@ -97,7 +97,7 @@ TEST_CASE("Task")
         REQUIRE(false == result);
 
         // remove 3rd task
-        task_id.m_id = 3;
+        task_id = 3;
         kernel::internal::task::destroy(context, task_id);
         
         // allocate new task with id 3
@@ -114,7 +114,7 @@ TEST_CASE("Task")
         );
 
         REQUIRE(true == result);
-        REQUIRE(3 == task_id.m_id);
+        REQUIRE(3 == task_id);
 
         // priority
         REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
