@@ -21,9 +21,9 @@ namespace kernel::internal::scheduler::ready_list
         // Look for dublicate.
         uint32_t found_index;
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)
@@ -59,9 +59,9 @@ namespace kernel::internal::scheduler::ready_list
 
         uint32_t found_index;
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)
@@ -96,12 +96,12 @@ namespace kernel::internal::scheduler::ready_list
 
             a_context.m_ready_list[prio].m_current = next_index;
 
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(next_index).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(next_index);
             return true;
         }
         else if (count == 1U)
         {
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(current);
             return true;
         }
         else
@@ -122,7 +122,7 @@ namespace kernel::internal::scheduler::ready_list
 
         if (count > 0U)
         {
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(current);
             return true;
         }
         else
@@ -143,10 +143,12 @@ namespace kernel::internal::scheduler::wait_list
     void removeTask( Context & a_context, task::Id a_task_id)
     {
         uint32_t found_index;
-        bool item_found = a_context.m_wait_list.find( a_task_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+        bool item_found = a_context.m_wait_list.find(
+            a_task_id,
+            found_index,
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)
@@ -450,7 +452,7 @@ namespace kernel::internal::scheduler
             const kernel::Time_ms current = kernel::getTime();
             bool task_ready = false;
 
-            internal::task::wait::Conditions & conditions =
+            volatile internal::task::wait::Conditions & conditions =
                 internal::task::wait::getRef(
                     a_task_context,
                     a_task_id
@@ -487,7 +489,7 @@ namespace kernel::internal::scheduler
                                 break;
                             }
 
-                            kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
+                            volatile kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
                             internal::handle::ObjectType objType =
                                 internal::handle::getObjectType(objHandle);
 

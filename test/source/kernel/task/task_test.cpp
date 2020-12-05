@@ -16,21 +16,22 @@ namespace
 
 namespace kernel::hardware::task
 {
-    void Stack::init(uint32_t a_routine)
+    void Stack::init(uint32_t a_routine) volatile
     {
-        m_data[TASK_STACK_SIZE - 8] = 0xCD'CD'CD'CD; // R0
-        m_data[TASK_STACK_SIZE - 7] = 0xCD'CD'CD'CD; // R1
-        m_data[TASK_STACK_SIZE - 6] = 0xCD'CD'CD'CD; // R2
-        m_data[TASK_STACK_SIZE - 5] = 0xCD'CD'CD'CD; // R3
-        m_data[TASK_STACK_SIZE - 4] = 0; // R12
-        m_data[TASK_STACK_SIZE - 3] = 0; // LR R14
-        m_data[TASK_STACK_SIZE - 2] = a_routine;
-        m_data[TASK_STACK_SIZE - 1] = 0x01000000; // xPSR
+        // TODO: Do something with magic numbers.
+        m_data[TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
+        m_data[TASK_STACK_SIZE - 7U] = 0xCD'CD'CD'CDU; // R1
+        m_data[TASK_STACK_SIZE - 6U] = 0xCD'CD'CD'CDU; // R2
+        m_data[TASK_STACK_SIZE - 5U] = 0xCD'CD'CD'CDU; // R3
+        m_data[TASK_STACK_SIZE - 4U] = 0U; // R12
+        m_data[TASK_STACK_SIZE - 3U] = 0U; // LR R14
+        m_data[TASK_STACK_SIZE - 2U] = a_routine;
+        m_data[TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
     }
 
-    uint32_t Stack::getStackPointer()
+    uint32_t Stack::getStackPointer() volatile
     {
-        return (uint32_t)&m_data[TASK_STACK_SIZE - 8];
+        return reinterpret_cast<uint32_t>(&m_data[TASK_STACK_SIZE - 8]);
     }
 }
 
@@ -58,7 +59,7 @@ TEST_CASE("Task")
                 );
 
             REQUIRE(true == result);
-            REQUIRE(i == task_id.m_id); // task ID, is task index in memory buffer
+            REQUIRE(i == task_id); // task ID, is task index in memory buffer
 
             // priority
             REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
@@ -96,7 +97,7 @@ TEST_CASE("Task")
         REQUIRE(false == result);
 
         // remove 3rd task
-        task_id.m_id = 3;
+        task_id = 3;
         kernel::internal::task::destroy(context, task_id);
         
         // allocate new task with id 3
@@ -113,7 +114,7 @@ TEST_CASE("Task")
         );
 
         REQUIRE(true == result);
-        REQUIRE(3 == task_id.m_id);
+        REQUIRE(3 == task_id);
 
         // priority
         REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));

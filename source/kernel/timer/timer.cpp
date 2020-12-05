@@ -19,10 +19,10 @@ namespace kernel::internal::timer
             return false;
         }
 
-        a_id.m_id = new_item_id;
+        a_id = new_item_id;
 
         // Initialize new Timer object.
-        Timer & new_timer = a_context.m_data.at(new_item_id);
+        volatile Timer & new_timer = a_context.m_data.at(new_item_id);
 
         new_timer.m_start = kernel::getTime();
         new_timer.m_interval = a_interval;
@@ -33,34 +33,15 @@ namespace kernel::internal::timer
         return true;
     }
 
-    void destroy( Context & a_context, Id a_id)
-    {
-        a_context.m_data.free(a_id.m_id);
-    }
-
-    void start( Context & a_context, Id a_id)
-    {
-        a_context.m_data.at(a_id.m_id).m_state = State::Started;
-    }
-
-    void stop( Context & a_context, Id a_id)
-    {
-        a_context.m_data.at(a_id.m_id).m_state = State::Stopped;
-    }
-
-    State getState( Context & a_context, Id a_id)
-    {
-        return a_context.m_data.at(a_id.m_id).m_state;
-    }
-
     void tick( Context & a_context)
     {
+        // todo: consider memory barrier
         for (uint32_t i = 0U; i < MAX_NUMBER; ++i)
         {
             // TODO: performance wise its propably cheaper to increment all
             if (a_context.m_data.isAllocated(i))
             {
-                Timer & timer = a_context.m_data.at(i);
+                volatile Timer & timer = a_context.m_data.at(i);
 
                 if (State::Started == timer.m_state)
                 {

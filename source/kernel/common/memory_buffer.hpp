@@ -13,7 +13,7 @@ namespace kernel::internal::common
     public:
         MemoryBuffer() : m_data{}, m_status{} {}
             
-        bool allocate(uint32_t & a_item_id)
+        bool allocate(uint32_t & a_item_id) volatile
         {
             // Find first not used slot and return index as ID.
             for (uint32_t i = 0U; i < MaxSize; ++i)
@@ -29,7 +29,7 @@ namespace kernel::internal::common
             return false;
         }
 
-        void free(uint32_t a_item_id)
+        void free(uint32_t a_item_id) volatile
         {
             if (a_item_id < MaxSize)
             {
@@ -37,7 +37,7 @@ namespace kernel::internal::common
             }
         }
 
-        void freeAll()
+        void freeAll() volatile
         {
             for (uint32_t i = 0U; i < MaxSize; ++i)
             {
@@ -45,7 +45,7 @@ namespace kernel::internal::common
             }
         }
 
-        TDataType & at(uint32_t a_item_id)
+        volatile TDataType & at(uint32_t a_item_id) volatile
         {
             assert(a_item_id < MaxSize);
             assert(m_status[a_item_id]);
@@ -53,7 +53,7 @@ namespace kernel::internal::common
             return m_data[a_item_id];
         }
 
-        bool isAllocated(uint32_t a_item_id)
+        bool isAllocated(uint32_t a_item_id) volatile
         {
             assert(a_item_id < MaxSize);
 
@@ -61,8 +61,8 @@ namespace kernel::internal::common
         }
 
     private:
-        std::array<TDataType, MaxSize>  m_data;
-        std::array<bool, MaxSize>       m_status; // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
+        TDataType   m_data[MaxSize];
+        bool        m_status[MaxSize]; // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
 
     };
 }

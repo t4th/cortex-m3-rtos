@@ -11,17 +11,36 @@ namespace kernel::internal::handle
         Event
     };
     
-    kernel::Handle create(ObjectType a_type, uint32_t & a_index);
+    inline kernel::Handle create(ObjectType a_type, uint32_t a_index)
+    {
+        return reinterpret_cast<kernel::Handle>((static_cast<uint32_t>(a_type) << 16U) | (a_index & 0xFFFFU));
+    }
     
-    ObjectType getObjectType(kernel::Handle & a_handle);
+    inline ObjectType getObjectType(kernel::Handle & a_handle)
+    {
+        uint32_t object_type = (reinterpret_cast<uint32_t>(a_handle) >> 16U) & 0xFFFFU;
+
+        return static_cast<ObjectType>(object_type);
+    }
+
+    inline ObjectType getObjectType(volatile kernel::Handle & a_handle)
+    {
+        uint32_t object_type = (reinterpret_cast<uint32_t>(a_handle) >> 16U) & 0xFFFFU;
+
+        return static_cast<ObjectType>(object_type);
+    }
 
     // Strong typed version of getIndex.
     template<typename TId>
-    TId getId(Handle & a_handle)
+    inline TId getId(Handle & a_handle)
     {
-        TId id;
-        id.m_id = a_handle.m_data & 0xFFFFU;
+        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
+    }
 
-        return id;
+    // Strong typed version of getIndex.
+    template<typename TId>
+    inline TId getId(volatile Handle & a_handle)
+    {
+        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
     }
 }

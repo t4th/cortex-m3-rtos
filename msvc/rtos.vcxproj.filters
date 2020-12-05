@@ -35,9 +35,6 @@
     <ClCompile Include="..\source\kernel\timer\timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\handle\handle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\event\event.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

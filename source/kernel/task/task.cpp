@@ -27,7 +27,7 @@ namespace kernel::internal::task
         }
         
         // Initialize new Task object.
-        Task & new_task = a_context.m_data.at(new_item_id);
+        volatile Task & new_task = a_context.m_data.at(new_item_id);
         
         new_task.m_priority = a_priority;
         new_task.m_routine = a_routine;
@@ -47,80 +47,9 @@ namespace kernel::internal::task
         if (a_id)
         {
             // Task ID, is task index in memory buffer by design.
-            a_id->m_id = new_item_id;
+            *a_id = new_item_id;
         }
         
         return true;
-    }
-    
-    void destroy( Context &   a_context, Id a_id)
-    {
-        a_context.m_data.free(a_id.m_id);
-    }
-
-    namespace priority
-    {
-        kernel::task::Priority get( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_priority;
-        }
-    }
-
-    namespace state
-    {
-        kernel::task::State get( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_state;
-        }
-
-        void set( Context & a_context, Id a_id, kernel::task::State a_state )
-        {
-            a_context.m_data.at(a_id.m_id).m_state = a_state;
-        }
-    }
-
-    namespace context
-    {
-        kernel::hardware::task::Context * get( Context & a_context, Id a_id)
-        {
-            return &a_context.m_data.at(a_id.m_id).m_context;
-        }
-    }
-    
-    namespace sp
-    {
-        uint32_t get( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_sp;
-        }
-
-        void set( Context & a_context, Id a_id, uint32_t a_new_sp )
-        {
-            a_context.m_data.at(a_id.m_id).m_sp = a_new_sp;
-        }
-    }
-
-    namespace routine
-    {
-        kernel::task::Routine get( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_routine;
-        }
-    }
-
-    namespace parameter
-    {
-        void * get( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_parameter;
-        }
-    }
-
-    namespace wait
-    {
-        Conditions & getRef( Context & a_context, Id a_id)
-        {
-            return a_context.m_data.at(a_id.m_id).m_waitConditios;
-        }
     }
 }

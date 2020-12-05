@@ -40,8 +40,8 @@
     <Filter Include="tests\kernel\handle">
       <UniqueIdentifier>{ead14376-2b93-49e7-8ca9-ba9ccd0fa10e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="tested files\kernel\handle">
-      <UniqueIdentifier>{92499bcc-0233-444b-ad28-3d2742f24179}</UniqueIdentifier>
+    <Filter Include="stubs">
+      <UniqueIdentifier>{c99b0977-6086-463c-941b-1ed1a72dc73d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -66,9 +66,6 @@
     <ClCompile Include="..\..\source\kernel\task\task.cpp">
       <Filter>tested files\kernel\task</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\kernel\handle\handle.cpp">
-      <Filter>tested files\kernel\handle</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
       <Filter>tests\kernel\handle</Filter>
     </ClCompile>
@@ -82,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp">
       <Filter>tested files\kernel\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\stubs\stm32f10x.h">
+      <Filter>stubs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

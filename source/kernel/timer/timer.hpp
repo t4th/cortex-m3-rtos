@@ -7,10 +7,8 @@ namespace kernel::internal::timer
 {
     constexpr uint32_t MAX_NUMBER = 16U;
 
-    typedef struct
-    {
-        uint32_t m_id;
-    } Id; // Internal timer ID.
+    // todo: consider it type strong
+    typedef uint32_t Id;
 
     enum class State
     {
@@ -29,7 +27,7 @@ namespace kernel::internal::timer
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data;
+        volatile kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data;
     };
 
     bool create(
@@ -39,13 +37,25 @@ namespace kernel::internal::timer
         kernel::Handle *    a_signal = nullptr
     );
 
-    void destroy( Context & a_context, Id a_id);
+    inline void destroy( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.free(a_id);
+    }
 
-    void start( Context & a_context, Id a_id);
+    inline void start( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.at(a_id).m_state = State::Started;
+    }
 
-    void stop( Context & a_context, Id a_id);
+    inline void stop( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.at(a_id).m_state = State::Stopped;
+    }
 
-    State getState( Context & a_context, Id a_id);
+    inline State getState( Context & a_context, Id & a_id)
+    {
+        return a_context.m_data.at(a_id).m_state;
+    }
 
     void tick( Context & a_context);
 }
