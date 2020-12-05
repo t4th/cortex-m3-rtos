@@ -13,29 +13,7 @@ namespace kernel::internal::task
     constexpr uint32_t MAX_OUTPUT_SIGNALS = 16U;
 
     // todo: consider making this an pointer
-    typedef struct Id // This is struct for typesafety
-    {
-        volatile uint32_t m_id;
-        
-        inline volatile Id & operator= (volatile Id & a_other) volatile
-        {
-            m_id = a_other.m_id; 
-            return *this; 
-        }
-        
-        inline Id() : m_id{0U} {}
-        
-
-        inline Id(Id & a_other)
-        {
-            m_id = a_other.m_id; 
-        }
-
-        inline Id(volatile Id & a_other)
-        {
-            m_id = a_other.m_id; 
-        }
-    } Id;
+    typedef uint32_t Id; // Internal timer ID.
 
     namespace wait
     {
@@ -91,40 +69,40 @@ namespace kernel::internal::task
         
     namespace priority
     {
-        kernel::task::Priority get( Context & a_context, Id a_id);
+        kernel::task::Priority get( Context & a_context, Id & a_id);
     }
 
     namespace state
     {
-        kernel::task::State get( Context & a_context, Id a_id);
+        kernel::task::State get( Context & a_context, Id & a_id);
 
-        void set( Context & a_context, Id a_id, kernel::task::State a_state );
+        void set( Context & a_context, Id & a_id, kernel::task::State a_state );
     }
 
     namespace context
     {
-        volatile kernel::hardware::task::Context * get( Context & a_context, Id a_id);
+        volatile kernel::hardware::task::Context * get( Context & a_context, Id & a_id);
     }
     
     namespace sp
     {
-        uint32_t get( Context & a_context, Id a_id);
+        uint32_t get( Context & a_context, Id & a_id);
 
-        void set( Context & a_context, Id a_id, uint32_t a_new_sp );
+        void set( Context & a_context, Id & a_id, uint32_t a_new_sp );
     }
 
     namespace routine
     {
-        kernel::task::Routine get( Context & a_context, Id a_id);
+        kernel::task::Routine get( Context & a_context, Id & a_id);
     }
 
     namespace parameter
     {
-        void * get( Context & a_context, Id a_id);
+        void * get( Context & a_context, Id & a_id);
     }
 
     namespace wait
     {
-        volatile Conditions & getRef( Context & a_context, Id a_id);
+        volatile Conditions & getRef( Context & a_context, Id & a_id);
     }
 }

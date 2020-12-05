@@ -25,8 +25,8 @@ namespace kernel::hardware
         class Stack
         {
             public:
-                void                init(volatile uint32_t a_routine) volatile;
-                volatile uint32_t   getStackPointer() volatile;
+                void        init(uint32_t a_routine) volatile;
+                uint32_t    getStackPointer() volatile;
             private:
                 // TODO: Add sanity magic numbers.
                 volatile uint32_t    m_data[TASK_STACK_SIZE];

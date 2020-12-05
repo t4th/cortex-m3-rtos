@@ -158,7 +158,6 @@
     <ClCompile Include="..\source\kernel\common\assert.cpp" />
     <ClCompile Include="..\source\kernel\critical_section\critical_section.cpp" />
     <ClCompile Include="..\source\kernel\event\event.cpp" />
-    <ClCompile Include="..\source\kernel\handle\handle.cpp" />
     <ClCompile Include="..\source\kernel\hardware\armv7m\hardware.cpp" />
     <ClCompile Include="..\source\kernel\internal\internal.cpp" />
     <ClCompile Include="..\source\kernel\kernel.cpp" />
