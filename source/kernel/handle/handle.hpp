@@ -34,19 +34,13 @@ namespace kernel::internal::handle
     template<typename TId>
     inline TId getId(Handle & a_handle)
     {
-        TId id;
-        id.m_id = reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
-
-        return id;
+        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
     }
 
     // Strong typed version of getIndex.
     template<typename TId>
     inline TId getId(volatile Handle & a_handle)
     {
-        TId id;
-        id.m_id = reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
-
-        return id;
+        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
     }
 }

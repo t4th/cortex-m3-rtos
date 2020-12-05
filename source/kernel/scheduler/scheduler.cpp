@@ -23,7 +23,7 @@ namespace kernel::internal::scheduler::ready_list
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
             [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)
@@ -61,7 +61,7 @@ namespace kernel::internal::scheduler::ready_list
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
             [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)
@@ -96,12 +96,12 @@ namespace kernel::internal::scheduler::ready_list
 
             a_context.m_ready_list[prio].m_current = next_index;
 
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(next_index).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(next_index);
             return true;
         }
         else if (count == 1U)
         {
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(current);
             return true;
         }
         else
@@ -122,7 +122,7 @@ namespace kernel::internal::scheduler::ready_list
 
         if (count > 0U)
         {
-            a_id.m_id = a_context.m_ready_list[prio].m_list.at(current).m_id;
+            a_id = a_context.m_ready_list[prio].m_list.at(current);
             return true;
         }
         else
@@ -146,7 +146,7 @@ namespace kernel::internal::scheduler::wait_list
         bool item_found = a_context.m_wait_list.find( a_task_id, found_index,
             [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
-                return a_left.m_id == a_right.m_id;
+                return a_left == a_right;
             });
 
         if (item_found)

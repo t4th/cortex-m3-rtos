@@ -7,10 +7,8 @@ namespace kernel::internal::timer
 {
     constexpr uint32_t MAX_NUMBER = 16U;
 
-    typedef struct
-    {
-        uint32_t m_id;
-    } Id; // Internal timer ID.
+    // todo: consider it type strong
+    typedef uint32_t Id;
 
     enum class State
     {
@@ -39,13 +37,13 @@ namespace kernel::internal::timer
         kernel::Handle *    a_signal = nullptr
     );
 
-    void destroy( Context & a_context, Id a_id);
+    void destroy( Context & a_context, Id & a_id);
 
-    void start( Context & a_context, Id a_id);
+    void start( Context & a_context, Id & a_id);
 
-    void stop( Context & a_context, Id a_id);
+    void stop( Context & a_context, Id & a_id);
 
-    State getState( Context & a_context, Id a_id);
+    State getState( Context & a_context, Id & a_id);
 
     void tick( Context & a_context);
 }

@@ -7,10 +7,8 @@ namespace kernel::internal::event
 {
     constexpr uint32_t MAX_NUMBER = 32U;
 
-    typedef struct
-    {
-        uint32_t m_id;
-    } Id;
+    // todo: consider it type strong
+    typedef uint32_t Id;
 
     enum class State
     {

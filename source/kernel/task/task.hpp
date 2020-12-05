@@ -12,8 +12,8 @@ namespace kernel::internal::task
     constexpr uint32_t MAX_INPUT_SIGNALS = 16U;
     constexpr uint32_t MAX_OUTPUT_SIGNALS = 16U;
 
-    // todo: consider making this an pointer
-    typedef uint32_t Id; // Internal timer ID.
+    // todo: consider it type strong
+    typedef uint32_t Id;
 
     namespace wait
     {
@@ -65,7 +65,7 @@ namespace kernel::internal::task
         bool                    a_create_suspended = false
         );
 
-    void destroy( Context & a_context, Id a_id);
+    void destroy( Context & a_context, Id & a_id);
         
     namespace priority
     {

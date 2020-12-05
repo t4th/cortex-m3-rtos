@@ -409,7 +409,8 @@ TEST_CASE("Scheduler")
         {
             // 4U is first Medium task that was suspended,
             // lets set it to Ready again
-            task::Id task_to_resume{4U};
+            task::Id task_to_resume;
+            task_to_resume.m_id = 4U;
 
             scheduler::setTaskToReady(
                 context->m_Scheduler,

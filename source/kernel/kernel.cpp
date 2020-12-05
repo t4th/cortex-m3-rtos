@@ -158,7 +158,7 @@ namespace kernel::task
             {
                 *a_handle = internal::handle::create(
                     internal::handle::ObjectType::Task,
-                    created_task_id.m_id
+                    created_task_id
                 );
             }
 
@@ -187,7 +187,7 @@ namespace kernel::task
 
             new_handle = internal::handle::create(
                 internal::handle::ObjectType::Task,
-                currentTask.m_id
+                currentTask
             );
         }
         unlockScheduler();
@@ -236,7 +236,7 @@ namespace kernel::task
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
-            if (currentTask.m_id == suspended_task_id.m_id)
+            if (currentTask == suspended_task_id)
             {
                 hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
             }
@@ -361,7 +361,7 @@ namespace kernel::timer
 
             a_handle = internal::handle::create(
                 internal::handle::ObjectType::Timer,
-                new_timer_id.m_id
+                new_timer_id
             );
         }
         kernel::unlockScheduler();
@@ -436,7 +436,7 @@ namespace kernel::event
 
             a_handle = internal::handle::create(
                 internal::handle::ObjectType::Event,
-                new_event_id.m_id
+                new_event_id
             );
         }
         kernel::unlockScheduler();
@@ -584,7 +584,10 @@ namespace kernel::critical_section
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
-            a_context.m_ownerTask = internal::handle::create(internal::handle::ObjectType::Task, currentTask.m_id);
+            a_context.m_ownerTask = internal::handle::create(
+                internal::handle::ObjectType::Task,
+                currentTask
+            );
             a_context.m_lockCount = 0U;
             a_context.m_spinLock = a_spinLock;
         }
@@ -658,8 +661,6 @@ namespace kernel
 
     void unlockScheduler()
     {
-        // TODO: analyze DSB and DMB here
-        // TODO: thinker about removing it.
         --context::m_schedule_lock;
     }
 
@@ -679,7 +680,7 @@ namespace kernel
 
             internal::task::destroy( context::m_tasks, a_id);
 
-            if (currentTask.m_id == a_id.m_id)
+            if (currentTask == a_id)
             {
                 if (true == context::m_started)
                 {
@@ -697,7 +698,7 @@ namespace kernel
         }
     }
 
-    // User task routine wrapper used by kernel.
+    // Task routine wrapper used by kernel.
     void task_routine()
     {
         kernel::task::Routine routine{};
@@ -777,6 +778,9 @@ namespace kernel::internal
         bool execute_context_switch = false;
 
         timer::tick( context::m_timers);
+
+        // TODO: if task of priority higher than currently running
+        //       has woken up - reschedule everything.
         scheduler::checkWaitConditions(
             context::m_scheduler,
             context::m_tasks,
@@ -813,7 +817,7 @@ namespace kernel::internal
                     // TODO: move this check to scheduler
                     //       and integrate result to getNextTask
                     //       return value.
-                    if (currentTask.m_id != nextTask.m_id)
+                    if (currentTask != nextTask)
                     {
                         storeContext(currentTask);
                         loadContext(nextTask);
