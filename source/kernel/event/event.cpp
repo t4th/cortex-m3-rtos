@@ -27,21 +27,6 @@ namespace kernel::internal::event
         return true;
     }
 
-    void destroy( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.free(a_id);
-    }
-
-    void set( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.at(a_id).m_state = State::Set;
-    }
-
-    void reset( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.at(a_id).m_state = State::Reset;
-    }
-
     State getState( Context & a_context, Id & a_id)
     {
         volatile Event & event = a_context.m_data.at(a_id);

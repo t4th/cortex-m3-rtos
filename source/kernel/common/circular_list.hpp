@@ -20,7 +20,7 @@ namespace kernel::internal::common
 
             CircularList() : m_first{0U}, m_last{0U}, m_count{0U}, m_buffer() {}
             
-            bool add(volatile TDataType a_new_data, uint32_t & a_new_node_index) volatile
+            bool add(TDataType a_new_data, uint32_t & a_new_node_index) volatile
             {
                 uint32_t new_node_index;
                 if (false == m_buffer.allocate(new_node_index))
@@ -65,8 +65,8 @@ namespace kernel::internal::common
                     break;
                 }
                 
-                m_last = new_node_index; // Close the circle.
-                new_node.m_data = a_new_data; // TODO: make this usable by complex types
+                m_last = new_node_index; // Close the linked list.
+                new_node.m_data = a_new_data;
                 ++m_count;
                 
                 return true;

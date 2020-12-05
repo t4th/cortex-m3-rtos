@@ -146,7 +146,7 @@ namespace kernel::internal::scheduler::wait_list
         bool item_found = a_context.m_wait_list.find(
             a_task_id,
             found_index,
-            [] (volatile internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
                 return a_left == a_right;
             });

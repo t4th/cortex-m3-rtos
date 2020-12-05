@@ -33,28 +33,9 @@ namespace kernel::internal::timer
         return true;
     }
 
-    void destroy( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.free(a_id);
-    }
-
-    void start( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.at(a_id).m_state = State::Started;
-    }
-
-    void stop( Context & a_context, Id & a_id)
-    {
-        a_context.m_data.at(a_id).m_state = State::Stopped;
-    }
-
-    State getState( Context & a_context, Id & a_id)
-    {
-        return a_context.m_data.at(a_id).m_state;
-    }
-
     void tick( Context & a_context)
     {
+        // todo: consider memory barrier
         for (uint32_t i = 0U; i < MAX_NUMBER; ++i)
         {
             // TODO: performance wise its propably cheaper to increment all

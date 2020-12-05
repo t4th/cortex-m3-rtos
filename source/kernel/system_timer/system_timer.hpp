@@ -12,7 +12,7 @@ namespace kernel::internal::system_timer
     struct Context
     {
         // Used to calculate round-robin context switch intervals.
-        Time_ms m_oldTime = 0U;
+        volatile Time_ms m_oldTime = 0U;
 
         // Time in miliseconds elapsed since kernel started.
         volatile std::atomic<Time_ms> m_currentTime = 0U;

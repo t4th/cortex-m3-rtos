@@ -25,7 +25,7 @@ namespace kernel::internal::event
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<volatile Event, MAX_NUMBER> m_data;
+        volatile kernel::internal::common::MemoryBuffer<Event, MAX_NUMBER> m_data;
     };
 
     bool create(
@@ -34,11 +34,20 @@ namespace kernel::internal::event
         bool        a_manual_reset
     );
 
-    void destroy( Context & a_context, Id & a_id);
+    inline void destroy( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.free(a_id);
+    }
 
-    void set( Context & a_context, Id & a_id);
+    inline void set( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.at(a_id).m_state = State::Set;
+    }
 
-    void reset( Context & a_context, Id & a_id);
+    inline void reset( Context & a_context, Id & a_id)
+    {
+        a_context.m_data.at(a_id).m_state = State::Reset;
+    }
 
     // if m_manual_reset this will Reset timer state.
     State getState( Context & a_context, Id & a_id);

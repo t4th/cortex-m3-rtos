@@ -25,7 +25,7 @@ namespace kernel::internal::scheduler::ready_list
     struct Context
     {
         // Each priority has its own Ready list.
-        std::array <volatile TaskList, internal::task::PRIORITIES_COUNT> m_ready_list;
+        volatile TaskList m_ready_list[internal::task::PRIORITIES_COUNT];
     };
 
     // declarations
@@ -59,8 +59,8 @@ namespace kernel::internal::scheduler::wait_list
 {
     struct Context
     {
-        kernel::internal::common::CircularList<
-            volatile kernel::internal::task::Id,
+        volatile kernel::internal::common::CircularList<
+            kernel::internal::task::Id,
             kernel::internal::task::MAX_NUMBER
         > m_wait_list{};
     };
@@ -89,8 +89,8 @@ namespace kernel::internal::scheduler
     struct Context
     {
         // Note: by design, Idle task always must be available and has Id = 0.
-        kernel::internal::task::Id m_current{0U}; // Indicate currently running task ID.
-        kernel::internal::task::Id m_next{0U};    // Indicate next task ID.
+        volatile kernel::internal::task::Id m_current{0U}; // Indicate currently running task ID.
+        volatile kernel::internal::task::Id m_next{0U};    // Indicate next task ID.
 
         // ready list
         ready_list::Context m_ready_list{};
@@ -98,7 +98,7 @@ namespace kernel::internal::scheduler
         // m_wait_list
         wait_list::Context m_wait_list{};
 
-        // m_suspended_list
+        // todo: m_suspended_list
     };
 
     // public declarations
