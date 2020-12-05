@@ -25,7 +25,7 @@ namespace kernel::internal::scheduler::ready_list
     struct Context
     {
         // Each priority has its own Ready list.
-        std::array <TaskList, internal::task::PRIORITIES_COUNT> m_ready_list;
+        std::array <volatile TaskList, internal::task::PRIORITIES_COUNT> m_ready_list;
     };
 
     // declarations
@@ -88,8 +88,8 @@ namespace kernel::internal::scheduler
 {
     struct Context
     {
-        kernel::internal::task::Id m_current{}; // Indicate currently running task ID.
-        kernel::internal::task::Id m_next{};    // Indicate next task ID.
+        kernel::internal::task::Id m_current; // Indicate currently running task ID.
+        kernel::internal::task::Id m_next;    // Indicate next task ID.
 
         // ready list
         ready_list::Context m_ready_list;

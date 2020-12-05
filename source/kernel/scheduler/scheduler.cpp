@@ -21,7 +21,7 @@ namespace kernel::internal::scheduler::ready_list
         // Look for dublicate.
         uint32_t found_index;
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
                 return a_left.m_id == a_right.m_id;
             });
@@ -59,7 +59,7 @@ namespace kernel::internal::scheduler::ready_list
 
         uint32_t found_index;
         bool item_found = a_context.m_ready_list[prio].m_list.find( a_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
                 return a_left.m_id == a_right.m_id;
             });
@@ -144,7 +144,7 @@ namespace kernel::internal::scheduler::wait_list
     {
         uint32_t found_index;
         bool item_found = a_context.m_wait_list.find( a_task_id, found_index,
-            [] (internal::task::Id & a_left, internal::task::Id & a_right) -> bool
+            [] (internal::task::Id & a_left, volatile internal::task::Id & a_right) -> bool
             {
                 return a_left.m_id == a_right.m_id;
             });
@@ -450,7 +450,7 @@ namespace kernel::internal::scheduler
             const kernel::Time_ms current = kernel::getTime();
             bool task_ready = false;
 
-            internal::task::wait::Conditions & conditions =
+            volatile internal::task::wait::Conditions & conditions =
                 internal::task::wait::getRef(
                     a_task_context,
                     a_task_id
@@ -487,7 +487,7 @@ namespace kernel::internal::scheduler
                                 break;
                             }
 
-                            kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
+                            volatile kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
                             internal::handle::ObjectType objType =
                                 internal::handle::getObjectType(objHandle);
 

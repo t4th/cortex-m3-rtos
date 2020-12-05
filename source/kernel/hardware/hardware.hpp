@@ -18,18 +18,18 @@ namespace kernel::hardware
     {
         struct Context
         {
-            uint32_t    r4, r5, r6, r7,
-                        r8, r9, r10, r11;
+            volatile uint32_t   r4, r5, r6, r7,
+                                r8, r9, r10, r11;
         };
         
         class Stack
         {
             public:
-                void        init(uint32_t a_routine);
-                uint32_t    getStackPointer();
+                void                init(volatile uint32_t a_routine) volatile;
+                volatile uint32_t   getStackPointer() volatile;
             private:
                 // TODO: Add sanity magic numbers.
-                uint32_t    m_data[TASK_STACK_SIZE];
+                volatile uint32_t    m_data[TASK_STACK_SIZE];
         };
     }
     
@@ -53,12 +53,12 @@ namespace kernel::hardware
 
     namespace context::current
     {
-        void set(kernel::hardware::task::Context * a_context);
+        void set(volatile kernel::hardware::task::Context * a_context);
     }
 
     namespace context::next
     {
-        void set(kernel::hardware::task::Context * a_context);
+        void set(volatile kernel::hardware::task::Context * a_context);
     }
 
     namespace interrupt

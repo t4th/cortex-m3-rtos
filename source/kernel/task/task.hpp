@@ -12,9 +12,29 @@ namespace kernel::internal::task
     constexpr uint32_t MAX_INPUT_SIGNALS = 16U;
     constexpr uint32_t MAX_OUTPUT_SIGNALS = 16U;
 
+    // todo: consider making this an pointer
     typedef struct Id // This is struct for typesafety
     {
-        uint32_t m_id;
+        volatile uint32_t m_id;
+        
+        inline volatile Id & operator= (volatile Id & a_other) volatile
+        {
+            m_id = a_other.m_id; 
+            return *this; 
+        }
+        
+        inline Id() : m_id{0U} {}
+        
+
+        inline Id(Id & a_other)
+        {
+            m_id = a_other.m_id; 
+        }
+
+        inline Id(volatile Id & a_other)
+        {
+            m_id = a_other.m_id; 
+        }
     } Id;
 
     namespace wait
@@ -31,28 +51,28 @@ namespace kernel::internal::task
             // TODO: make these as lists
             internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_inputSignals{};
             // internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals{};
-            bool    m_waitForver{};
-            Time_ms m_interval{};
-            Time_ms m_start{};
-            kernel::sync::WaitResult m_result{};
+            bool    m_waitForver;
+            Time_ms m_interval;
+            Time_ms m_start;
+            kernel::sync::WaitResult m_result;
         };
     }
 
     struct Task
     {
-        uint32_t                        m_sp{};
-        kernel::hardware::task::Context m_context{};
-        kernel::hardware::task::Stack   m_stack{};
-        kernel::task::Priority          m_priority{};
-        kernel::task::State             m_state{};
-        void *                          m_parameter{};
-        kernel::task::Routine           m_routine{};
-        wait::Conditions                m_waitConditios{};
+        uint32_t                        m_sp;
+        kernel::hardware::task::Context m_context;
+        kernel::hardware::task::Stack   m_stack;
+        kernel::task::Priority          m_priority;
+        kernel::task::State             m_state;
+        void *                          m_parameter;
+        kernel::task::Routine           m_routine;
+        wait::Conditions                m_waitConditios;
     };
 
     struct Context
     {
-        kernel::internal::common::MemoryBuffer<Task, MAX_NUMBER> m_data;
+        kernel::internal::common::MemoryBuffer<volatile Task, MAX_NUMBER> m_data;
     };
 
     typedef void(*TaskRoutine)(void);
@@ -83,7 +103,7 @@ namespace kernel::internal::task
 
     namespace context
     {
-        kernel::hardware::task::Context * get( Context & a_context, Id a_id);
+        volatile kernel::hardware::task::Context * get( Context & a_context, Id a_id);
     }
     
     namespace sp
@@ -105,6 +125,6 @@ namespace kernel::internal::task
 
     namespace wait
     {
-        Conditions & getRef( Context & a_context, Id a_id);
+        volatile Conditions & getRef( Context & a_context, Id a_id);
     }
 }

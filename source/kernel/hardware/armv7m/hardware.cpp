@@ -95,7 +95,7 @@ namespace kernel::hardware
 
     namespace context::current
     {
-        void set(kernel::hardware::task::Context * a_context)
+        void set(volatile kernel::hardware::task::Context * a_context)
         {
             current_task_context = a_context;
         }
@@ -103,7 +103,7 @@ namespace kernel::hardware
 
     namespace context::next
     {
-        void set(kernel::hardware::task::Context * a_context)
+        void set(volatile kernel::hardware::task::Context * a_context)
         {
             next_task_context = a_context;
         }
@@ -124,7 +124,7 @@ namespace kernel::hardware
 
 namespace kernel::hardware::task
 {
-    void Stack::init(uint32_t a_routine)
+    void Stack::init(volatile uint32_t a_routine) volatile
     {
         // TODO: Do something with magic numbers.
         m_data[TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
@@ -137,9 +137,9 @@ namespace kernel::hardware::task
         m_data[TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
     }
     
-    uint32_t Stack::getStackPointer()
+    volatile uint32_t Stack::getStackPointer() volatile
     {
-        return (uint32_t)&m_data[TASK_STACK_SIZE - 8];
+        return (volatile uint32_t)&m_data[TASK_STACK_SIZE - 8];
     }
 }
 

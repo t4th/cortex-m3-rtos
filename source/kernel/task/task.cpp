@@ -27,7 +27,7 @@ namespace kernel::internal::task
         }
         
         // Initialize new Task object.
-        Task & new_task = a_context.m_data.at(new_item_id);
+        volatile Task & new_task = a_context.m_data.at(new_item_id);
         
         new_task.m_priority = a_priority;
         new_task.m_routine = a_routine;
@@ -81,7 +81,7 @@ namespace kernel::internal::task
 
     namespace context
     {
-        kernel::hardware::task::Context * get( Context & a_context, Id a_id)
+        volatile kernel::hardware::task::Context * get( Context & a_context, Id a_id)
         {
             return &a_context.m_data.at(a_id.m_id).m_context;
         }
@@ -118,7 +118,7 @@ namespace kernel::internal::task
 
     namespace wait
     {
-        Conditions & getRef( Context & a_context, Id a_id)
+        volatile Conditions & getRef( Context & a_context, Id a_id)
         {
             return a_context.m_data.at(a_id.m_id).m_waitConditios;
         }

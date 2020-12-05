@@ -20,7 +20,7 @@ namespace kernel::internal::common
 
             CircularList() : m_first{0U}, m_last{0U}, m_count{0U}, m_buffer() {}
             
-            bool add(TDataType a_new_data, uint32_t & a_new_node_index)
+            bool add(volatile TDataType a_new_data, uint32_t & a_new_node_index) volatile
             {
                 uint32_t new_node_index;
                 if (false == m_buffer.allocate(new_node_index))
@@ -30,7 +30,7 @@ namespace kernel::internal::common
 
                 a_new_node_index = new_node_index;
                 
-                Node & new_node = m_buffer.at(new_node_index);
+                volatile Node & new_node = m_buffer.at(new_node_index);
                 
                 switch(m_count)
                 {
@@ -44,7 +44,7 @@ namespace kernel::internal::common
                         break;
                     case 1U: // New Node points to first Node.
                         {
-                            Node & first_node = m_buffer.at(m_first);
+                            volatile Node & first_node = m_buffer.at(m_first);
                         
                             first_node.m_next = new_node_index;
                             first_node.m_prev = new_node_index;
@@ -54,8 +54,8 @@ namespace kernel::internal::common
                         break;
                     default: // New Node at last position.
                         {
-                            Node & first_node = m_buffer.at(m_first);
-                            Node & last_node = m_buffer.at(m_last);
+                            volatile Node & first_node = m_buffer.at(m_first);
+                            volatile Node & last_node = m_buffer.at(m_last);
                         
                             last_node.m_next = new_node_index;
                             first_node.m_prev = new_node_index;
@@ -72,7 +72,7 @@ namespace kernel::internal::common
                 return true;
             }
 
-            void remove(uint32_t a_node_index)
+            void remove(uint32_t a_node_index) volatile
             {
                 if (m_count > 0U)
                 {
@@ -96,7 +96,7 @@ namespace kernel::internal::common
             bool find(
                 TDataType   a_key,
                 uint32_t &  a_found_index,
-                bool        a_compare(TDataType &, TDataType &))
+                bool        a_compare(TDataType &, volatile TDataType &)) volatile
             {
                 uint32_t node_index = m_first;
 
@@ -116,22 +116,22 @@ namespace kernel::internal::common
                 return false;
             }
 
-            TDataType & at(uint32_t a_node_index)
+            volatile TDataType & at(volatile uint32_t a_node_index) volatile
             {
                 return m_buffer.at(a_node_index).m_data;
             }
 
-            uint32_t firstIndex()
+            uint32_t firstIndex() volatile
             {
                 return m_first;
             }
 
-            uint32_t nextIndex(uint32_t a_node_index)
+            uint32_t nextIndex(uint32_t a_node_index) volatile
             {
                 return m_buffer.at(a_node_index).m_next;
             }
             
-            uint32_t count()
+            uint32_t count() volatile
             {
                 return m_count;
             }

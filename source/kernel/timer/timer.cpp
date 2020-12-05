@@ -22,7 +22,7 @@ namespace kernel::internal::timer
         a_id.m_id = new_item_id;
 
         // Initialize new Timer object.
-        Timer & new_timer = a_context.m_data.at(new_item_id);
+        volatile Timer & new_timer = a_context.m_data.at(new_item_id);
 
         new_timer.m_start = kernel::getTime();
         new_timer.m_interval = a_interval;
@@ -60,7 +60,7 @@ namespace kernel::internal::timer
             // TODO: performance wise its propably cheaper to increment all
             if (a_context.m_data.isAllocated(i))
             {
-                Timer & timer = a_context.m_data.at(i);
+                volatile Timer & timer = a_context.m_data.at(i);
 
                 if (State::Started == timer.m_state)
                 {
