@@ -17,7 +17,7 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
 ## Goals
 
-### 1.0 Features
+### 1.0 Features (requirements)
 - [x] task: create, delete
 - [x] software timers: create, remove
 - [x] sleep function
@@ -25,6 +25,9 @@ Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 - [x] function WaitForSingleObject
 - [x] Critical section: enter, leave
 - [ ] way to map HW interrupts to events
+
+### Not implemented (for now)
+- tasks always run in Privileged Mode - code is prepared but it is not needed for now
 
 ### Other
 * build and simulated via keil uvision
@@ -77,7 +80,7 @@ https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 
 ## After POC branch decisions
 * HANDLE system like in windows (generlized handle to system objects for easier user API) - better than raw pointers
-* ~~API function will use win32 function names~~ - since c++ will be used this is no longer valid
+* ~~API function will use win32 function names - since c++ will be used this is no longer valid~~
 * task queue circular linked list ~~or b-tree~~ - make it work, not CS degree viable
 
 ## ToDo never

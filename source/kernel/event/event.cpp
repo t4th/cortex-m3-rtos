@@ -39,9 +39,4 @@ namespace kernel::internal::event
 
         return state;
     }
-
-    bool isManualReset( Context & a_context, Id & a_id)
-    {
-        return a_context.m_data.at(a_id).m_manual_reset;
-    }
 }
