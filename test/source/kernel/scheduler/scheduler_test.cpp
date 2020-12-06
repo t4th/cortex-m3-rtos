@@ -23,29 +23,11 @@ namespace kernel
     }
 }
 
-namespace kernel::internal::timer
-{
-    State getState( Context & a_context, Id & a_id)
-    {
-        return State::Finished;
-    }
-}
-
 namespace kernel::internal::event
 {
-    void reset( Context & a_context, Id & a_id)
-    {
-
-    }
-
     State getState( Context & a_context, Id & a_id)
     {
         return State::Reset;
-    }
-
-    bool isManualReset( Context & a_context, Id & a_id)
-    {
-        return false;
     }
 }
 
