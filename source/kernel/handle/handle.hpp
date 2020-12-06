@@ -15,26 +15,12 @@ namespace kernel::internal::handle
     {
         return reinterpret_cast<kernel::Handle>((static_cast<uint32_t>(a_type) << 16U) | (a_index & 0xFFFFU));
     }
-    
-    inline ObjectType getObjectType(kernel::Handle & a_handle)
-    {
-        uint32_t object_type = (reinterpret_cast<uint32_t>(a_handle) >> 16U) & 0xFFFFU;
-
-        return static_cast<ObjectType>(object_type);
-    }
 
     inline ObjectType getObjectType(volatile kernel::Handle & a_handle)
     {
         uint32_t object_type = (reinterpret_cast<uint32_t>(a_handle) >> 16U) & 0xFFFFU;
 
         return static_cast<ObjectType>(object_type);
-    }
-
-    // Strong typed version of getIndex.
-    template<typename TId>
-    inline TId getId(Handle & a_handle)
-    {
-        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
     }
 
     // Strong typed version of getIndex.
