@@ -1,89 +1,11 @@
 #pragma once
 
+#include <ready_list.hpp>
+#include <wait_list.hpp>
+
 // Scheduler is used to order wihch task is to be served next.
-// For each priority there is circular list holding task IDs.
-
-#include <circular_list.hpp>
-#include <task.hpp>
-#include <timer.hpp>
-#include <event.hpp>
-
-namespace kernel::internal::scheduler::ready_list
-{
-    struct TaskList
-    {
-        kernel::internal::common::CircularList<
-            kernel::internal::task::Id,
-            kernel::internal::task::MAX_NUMBER
-        > m_list;
-
-        uint32_t m_current;
-
-        TaskList() : m_list{}, m_current{0U} {}
-    };
-
-    struct Context
-    {
-        // Each priority has its own Ready list.
-        volatile TaskList m_ready_list[internal::task::PRIORITIES_COUNT];
-    };
-
-    // declarations
-    bool addTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
-    );
-
-    void removeTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
-    );
-
-    // Find next task in selected priority group and UPDATE current task.
-    bool findNextTask(
-        ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
-        kernel::internal::task::Id &    a_id
-    );
-
-    bool findCurrentTask(
-        ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
-        kernel::internal::task::Id &    a_id
-    );
-}
-
-namespace kernel::internal::scheduler::wait_list
-{
-    struct Context
-    {
-        volatile kernel::internal::common::CircularList<
-            kernel::internal::task::Id,
-            kernel::internal::task::MAX_NUMBER
-        > m_wait_list{};
-    };
-
-    bool addTask( Context & a_context, task::Id a_task_id);
-    void removeTask( Context & a_context, task::Id a_task_id);
-    void iterate(
-        wait_list::Context &        a_wait_list,
-        ready_list::Context &       a_ready_list,
-        internal::task::Context &   a_task_context,
-        internal::timer::Context &  a_timer_context,
-        internal::event::Context &  a_event_context,
-        void        found(
-            wait_list::Context &,
-            ready_list::Context &,
-            internal::task::Context &,
-            internal::timer::Context &,
-            internal::event::Context &,
-            task::Id &
-        )
-    );
-}
-
+// It is state machine using m_current and m_next to evaluate
+// arbitration queues.
 namespace kernel::internal::scheduler
 {
     struct Context

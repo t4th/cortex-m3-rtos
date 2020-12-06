@@ -69,6 +69,12 @@
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
       <Filter>tests\kernel\handle</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\kernel\scheduler\ready_list.cpp">
+      <Filter>tested files\kernel\scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\kernel\scheduler\wait_list.cpp">
+      <Filter>tested files\kernel\scheduler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\catch.hpp">

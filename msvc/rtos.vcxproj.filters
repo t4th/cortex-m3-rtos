@@ -15,6 +15,12 @@
     <Filter Include="external">
       <UniqueIdentifier>{cec71a4d-45ab-4aea-bdc0-41544748a18a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\scheduler">
+      <UniqueIdentifier>{1d65a30c-1821-4d3d-85fa-e77e3460b812}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\scheduler">
+      <UniqueIdentifier>{3d6e8f73-4af4-4719-afa2-84a48602f8ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel\task\task.cpp">
@@ -29,16 +35,10 @@
     <ClCompile Include="..\source\main\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\timer\timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\kernel\event\event.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\kernel\critical_section\critical_section.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\kernel\internal\internal.cpp">
@@ -46,6 +46,15 @@
     </ClCompile>
     <ClCompile Include="..\source\kernel\common\assert.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp">
+      <Filter>Source Files\scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\scheduler\ready_list.cpp">
+      <Filter>Source Files\scheduler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\scheduler\wait_list.cpp">
+      <Filter>Source Files\scheduler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,9 +73,6 @@
     <ClInclude Include="..\source\kernel\common\circular_list.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\kernel\timer\timer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -79,14 +85,17 @@
     <ClInclude Include="..\source\kernel\event\event.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\critical_section\critical_section.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\kernel\internal\internal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\kernel\scheduler\ready_list.hpp">
+      <Filter>Header Files\scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp">
+      <Filter>Header Files\scheduler</Filter>
+    </ClInclude>
     <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\scheduler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

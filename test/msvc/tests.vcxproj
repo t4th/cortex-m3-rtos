@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\kernel\scheduler\ready_list.cpp" />
     <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
+    <ClCompile Include="..\..\source\kernel\scheduler\wait_list.cpp" />
     <ClCompile Include="..\..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\source\catch.cpp" />
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />

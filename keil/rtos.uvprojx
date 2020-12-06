@@ -338,7 +338,7 @@
               <MiscControls>-fno-exceptions</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\critical_section;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware;..\source\kernel\system_timer</IncludePath>
+              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware;..\source\kernel\system_timer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -408,19 +408,29 @@
               <FilePath>..\source\kernel\task\task.cpp</FilePath>
             </File>
             <File>
+              <FileName>event.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\source\kernel\event\event.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>scheduler</GroupName>
+          <Files>
+            <File>
               <FileName>scheduler.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\source\kernel\scheduler\scheduler.cpp</FilePath>
             </File>
             <File>
-              <FileName>event.cpp</FileName>
+              <FileName>ready_list.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>..\source\kernel\event\event.cpp</FilePath>
+              <FilePath>..\source\kernel\scheduler\ready_list.cpp</FilePath>
             </File>
             <File>
-              <FileName>critical_section.cpp</FileName>
+              <FileName>wait_list.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>..\source\kernel\critical_section\critical_section.cpp</FilePath>
+              <FilePath>..\source\kernel\scheduler\wait_list.cpp</FilePath>
             </File>
           </Files>
         </Group>
