@@ -5,9 +5,9 @@
 namespace kernel::internal
 {
     // Kernel Handler Mode interfaces
-    void loadNextTask(); // __attribute__((always_inline));
-    void switchContext(); // __attribute__((always_inline));
-    bool tick();// __attribute__((always_inline));
+    void loadNextTask();
+    void switchContext();
+    bool tick();
 }
 
 namespace kernel::hardware

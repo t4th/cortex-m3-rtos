@@ -108,7 +108,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\external;..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\..\source\kernel\timer;..\..\source\kernel\event;..\..\source\kernel\handle;..\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/D "__attribute__(a)=" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D "__attribute__(a)=" /D "always_inline=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

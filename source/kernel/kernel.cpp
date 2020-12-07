@@ -773,7 +773,7 @@ namespace kernel::internal
         unlockScheduler();
     }
 
-    bool tick()
+    bool tick() 
     {
         bool execute_context_switch = false;
 

@@ -1,4 +1,3 @@
-
 #include <ready_list.hpp>
 
 namespace kernel::internal::scheduler::ready_list
