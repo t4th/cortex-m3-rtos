@@ -177,6 +177,7 @@
     <ClInclude Include="..\source\kernel\kernel.hpp" />
     <ClInclude Include="..\source\kernel\scheduler\ready_list.hpp" />
     <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp" />
+    <ClInclude Include="..\source\kernel\scheduler\wait_conditions.hpp" />
     <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp" />
     <ClInclude Include="..\source\kernel\task\task.hpp" />
     <ClInclude Include="..\source\kernel\timer\timer.hpp" />

@@ -9,32 +9,8 @@ namespace kernel::internal::task
     constexpr uint32_t MAX_NUMBER = 16U;
     constexpr uint32_t PRIORITIES_COUNT = static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
 
-    constexpr uint32_t MAX_INPUT_SIGNALS = 16U;
-    constexpr uint32_t MAX_OUTPUT_SIGNALS = 16U;
-
     // todo: consider it type strong
     typedef uint32_t Id;
-
-    namespace wait
-    {
-        // todo: move it separate header and add functions
-        struct Conditions
-        {
-            enum class Type
-            {
-                Sleep,
-                WaitForObj
-            } m_type{};
-
-            // TODO: make these as lists
-            internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_inputSignals{};
-            // internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals{};
-            bool    m_waitForver;
-            Time_ms m_interval;
-            Time_ms m_start;
-            kernel::sync::WaitResult m_result;
-        };
-    }
 
     struct Task
     {
@@ -45,7 +21,7 @@ namespace kernel::internal::task
         kernel::task::State             m_state;
         void *                          m_parameter;
         kernel::task::Routine           m_routine;
-        wait::Conditions                m_waitConditios;
+        kernel::sync::WaitResult        m_result;
     };
 
     struct Context
@@ -73,7 +49,7 @@ namespace kernel::internal::task
 
     namespace priority
     {
-        inline kernel::task::Priority get( Context & a_context, Id & a_id)
+        inline kernel::task::Priority get( Context & a_context, volatile Id & a_id)
         {
             return a_context.m_data.at(a_id).m_priority;
         }
@@ -131,9 +107,14 @@ namespace kernel::internal::task
 
     namespace wait
     {
-        inline volatile Conditions & getRef( Context & a_context, Id & a_id)
+        inline kernel::sync::WaitResult get( Context & a_context, Id & a_id)
         {
-            return a_context.m_data.at(a_id).m_waitConditios;
+            return a_context.m_data.at(a_id).m_result;
+        }
+
+        inline void set( Context & a_context, Id & a_id, kernel::sync::WaitResult a_value)
+        {
+            a_context.m_data.at(a_id).m_result = a_value;
         }
     }
 }

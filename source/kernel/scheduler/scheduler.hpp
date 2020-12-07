@@ -18,6 +18,7 @@ namespace kernel::internal::scheduler
         ready_list::Context m_ready_list{};
 
         // m_wait_list
+        
         wait_list::Context m_wait_list{};
 
         // todo: m_suspended_list
@@ -50,10 +51,20 @@ namespace kernel::internal::scheduler
         task::Id                    a_task_id
     );
 
-    bool setTaskToWait(
+    bool setTaskToSleep(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id                    a_task_id,
+        Time_ms                     a_interval
+    );
+
+    bool setTaskToWaitForObj(
+        Context &                   a_context,
+        internal::task::Context &   a_task_context,
+        task::Id                    a_task_id,
+        kernel::Handle &            a_waitingSignal,
+        bool                        a_wait_forver,
+        Time_ms                     a_timeout
     );
 
     // removing task, update current with next

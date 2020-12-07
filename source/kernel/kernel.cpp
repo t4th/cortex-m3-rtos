@@ -315,19 +315,11 @@ namespace kernel::task
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
-            volatile internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
-                context::m_tasks,
-                currentTask
-            );
-
-            wait_condtitions.m_type = internal::task::wait::Conditions::Type::Sleep;
-            wait_condtitions.m_interval = a_time;
-            wait_condtitions.m_start = kernel::getTime();
-
-            internal::scheduler::setTaskToWait(
+            internal::scheduler::setTaskToSleep(
                 context::m_scheduler,
                 context::m_tasks,
-                currentTask
+                currentTask,
+                a_time
             );
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
@@ -520,31 +512,19 @@ namespace kernel::sync
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
-            volatile internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
+            bool operation_result = internal::scheduler::setTaskToWaitForObj(
+                context::m_scheduler,
                 context::m_tasks,
-                currentTask
+                currentTask,
+                a_handle,
+                a_wait_forver,
+                a_timeout
             );
 
-            wait_condtitions.m_inputSignals.freeAll();
-
-            wait_condtitions.m_type = internal::task::wait::Conditions::Type::WaitForObj;
-            wait_condtitions.m_waitForver = a_wait_forver;
-            wait_condtitions.m_interval = a_timeout;
-            wait_condtitions.m_start = kernel::getTime();
-
-            uint32_t new_item;
-            if (false == wait_condtitions.m_inputSignals.allocate(new_item))
+            if (false == operation_result)
             {
                 hardware::debug::setBreakpoint();
             }
-
-            wait_condtitions.m_inputSignals.at(new_item) = a_handle;
-
-            internal::scheduler::setTaskToWait(
-                context::m_scheduler,
-                context::m_tasks,
-                currentTask
-            );
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
 
@@ -553,12 +533,7 @@ namespace kernel::sync
             internal::task::Id currentTask;
             internal::scheduler::getCurrentTaskId(context::m_scheduler, currentTask);
 
-            volatile internal::task::wait::Conditions & wait_condtitions = internal::task::wait::getRef(
-                context::m_tasks,
-                currentTask
-            );
-
-            result = wait_condtitions.m_result;
+            result = internal::task::wait::get(context::m_tasks, currentTask);
         }
         unlockScheduler();
 

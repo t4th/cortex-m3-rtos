@@ -83,17 +83,60 @@ namespace kernel::internal::scheduler
         removeTask(a_context, a_task_context, a_task_id);
     }
 
-    bool setTaskToWait(
+    bool setTaskToSleep(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id                    a_task_id,
+        Time_ms                     a_interval
     )
     {
-        // todo: addTask can fail because there is no memory or because
-        //       there is dublicate already added. Consider return value
-        //       indicating that task is already added and only condition
-        //        can be updated.
-        bool task_added = wait_list::addTask( a_context.m_wait_list, a_task_id);
+        bool task_added = wait_list::addTaskSleep(
+            a_context.m_wait_list,
+            a_task_id,
+            a_interval
+            );
+
+        if (false == task_added)
+        {
+            return false;
+        }
+
+        kernel::task::Priority prio = internal::task::priority::get(
+            a_task_context,
+            a_task_id
+        );
+
+        ready_list::removeTask(
+            a_context.m_ready_list,
+            prio,
+            a_task_id
+        );
+
+        kernel::internal::task::state::set(
+            a_task_context,
+            a_task_id,
+            kernel::task::State::Waiting
+        );
+
+        return true;
+    }
+
+    bool setTaskToWaitForObj(
+        Context &                   a_context,
+        internal::task::Context &   a_task_context,
+        task::Id                    a_task_id,
+        kernel::Handle &            a_waitingSignal,
+        bool                        a_wait_forver,
+        Time_ms                     a_timeout
+    )
+    {
+        bool task_added = wait_list::addTaskWaitObj(
+            a_context.m_wait_list,
+            a_task_id,
+            a_waitingSignal,
+            a_wait_forver,
+            a_timeout
+        );
 
         if (false == task_added)
         {
@@ -249,7 +292,8 @@ namespace kernel::internal::scheduler
         return next_task_found;
     }
 
-    // TODO: this function is just overkill
+    // TODO: I dont like this lambda interface, its obfuscated simple thing
+    //       like iterating through array..
     void checkWaitConditions(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -257,112 +301,34 @@ namespace kernel::internal::scheduler
         internal::event::Context &  a_event_context
     )
     {
-        auto check_condition = [](
-            wait_list::Context &        a_wait_list,
-            ready_list::Context &       a_ready_list,
-            internal::task::Context &   a_task_context,
-            internal::timer::Context &  a_timer_context,
-            internal::event::Context &  a_event_context,
-            task::Id &                  a_task_id
+        auto wait_condition_met = [] (
+            internal::scheduler::Context &  a_scheduler_context,
+            internal::task::Context &       a_task_context,
+            volatile task::Id &             a_task_id
             )
         {
-            const kernel::Time_ms current = kernel::getTime();
-            bool task_ready = false;
+            kernel::task::Priority prio = 
+                task::priority::get(a_task_context, a_task_id);
 
-            volatile internal::task::wait::Conditions & conditions =
-                internal::task::wait::getRef(
+            bool task_added = addReadyTask(a_scheduler_context, a_task_context, prio, a_task_id);
+
+            if (task_added)
+            {
+                kernel::internal::task::state::set(
                     a_task_context,
-                    a_task_id
+                    a_task_id,
+                    kernel::task::State::Ready
                 );
-
-            // TODO: move conditions checks to wait::Conditions
-            switch(conditions.m_type)
-            {
-                case task::wait::Conditions::Type::Sleep:
-                {
-                    if (current - conditions.m_start > conditions.m_interval)
-                    {
-                        task_ready = true;
-                    }
-                }
-                break;
-                case task::wait::Conditions::Type::WaitForObj:
-                {
-                    if (false == conditions.m_waitForver)
-                    {
-                        if (current - conditions.m_start > conditions.m_interval)
-                        {
-                            conditions.m_result = kernel::sync::WaitResult::TimeoutOccurred;
-                            task_ready = true;
-                        }
-                    }
-
-                    if (false == task_ready)
-                    {
-                        for (uint32_t i = 0; i < task::MAX_INPUT_SIGNALS; ++i)
-                        {
-                            if (false == conditions.m_inputSignals.isAllocated(i))
-                            {
-                                break;
-                            }
-
-                            volatile kernel::Handle & objHandle = conditions.m_inputSignals.at(i);
-                            internal::handle::ObjectType objType =
-                                internal::handle::getObjectType(objHandle);
-
-                            switch (objType)
-                            {
-                            case internal::handle::ObjectType::Event:
-                                {
-                                auto event_id = internal::handle::getId<internal::event::Id>(objHandle);
-                                event::State evState = event::getState(a_event_context, event_id);
-                                if (event::State::Set == evState)
-                                {
-                                    conditions.m_result = kernel::sync::WaitResult::ObjectSet;
-                                    task_ready = true;
-                                }
-                                break;
-                                }
-                            case internal::handle::ObjectType::Timer:
-                                {
-                                auto timer_id = internal::handle::getId<internal::timer::Id>(objHandle);
-                                timer::State timerState = timer::getState(a_timer_context, timer_id);
-
-                                if (timer::State::Finished == timerState)
-                                {
-                                    conditions.m_result = kernel::sync::WaitResult::ObjectSet;
-                                    task_ready = true;
-                                }
-                                break;
-                                }
-                            default:
-                                break;
-                            };
-                        }
-                    }
-                }
-                break;
-            }
-
-            if (task_ready)
-            {
-                // TODO: removing waiting task should not be done from wait_list context..
-                wait_list::removeTask(a_wait_list, a_task_id);
-
-                kernel::task::Priority prio = 
-                    task::priority::get(a_task_context, a_task_id);
-
-                ready_list::addTask(a_ready_list, prio, a_task_id);
             }
         };
 
-        wait_list::iterate(
+        wait_list::checkConditions(
             a_context.m_wait_list,
-            a_context.m_ready_list,
+            a_context,
             a_task_context,
             a_timer_context,
             a_event_context,
-            check_condition
+            wait_condition_met
         );
     }
 }
