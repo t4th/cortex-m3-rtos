@@ -33,12 +33,10 @@ namespace kernel::internal::timer
         return true;
     }
 
-    void tick( Context & a_context)
+    void tick( Context & a_context, Time_ms & a_current)
     {
-        // todo: consider memory barrier since this funtion is
+        // TODO: consider memory barrier since this funtion is
         //       called from interrupt handler.
-
-        Time_ms current = kernel::getTime();
 
         // TODO: Iterate through all timers, even not allocated.
         //       Limiting branches should be more effective that
@@ -52,7 +50,7 @@ namespace kernel::internal::timer
             {
                 volatile Timer & timer = a_context.m_data.at(i);
 
-                if ((current - timer.m_start) > timer.m_interval)
+                if ((a_current - timer.m_start) > timer.m_interval)
                 {
                     // TODO: Call the callback signal.
                     //       It would be more effective to make 2

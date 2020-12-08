@@ -53,9 +53,6 @@
     <ClCompile Include="..\source\kernel\scheduler\ready_list.cpp">
       <Filter>Source Files\scheduler</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\scheduler\wait_list.cpp">
-      <Filter>Source Files\scheduler</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_compat.h">
@@ -95,6 +92,9 @@
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
     <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp">
+      <Filter>Header Files\scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\kernel\scheduler\wait_conditions.hpp">
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
   </ItemGroup>

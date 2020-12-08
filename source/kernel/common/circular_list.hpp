@@ -2,6 +2,7 @@
 
 #include <memory_buffer.hpp>
 
+// TODO: inline functions
 namespace kernel::internal::common
 {
     // TDataType must be of primitive type.
@@ -94,7 +95,7 @@ namespace kernel::internal::common
             }
 
             bool find(
-                TDataType   a_key,
+                TDataType & a_key,
                 uint32_t &  a_found_index,
                 bool        a_compare(TDataType &, volatile TDataType &)) volatile
             {
