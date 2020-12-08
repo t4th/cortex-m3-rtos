@@ -57,5 +57,5 @@ namespace kernel::internal::timer
         return a_context.m_data.at(a_id).m_state;
     }
 
-    void tick( Context & a_context);
+    void tick( Context & a_context, Time_ms & current);
 }

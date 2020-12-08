@@ -15,11 +15,10 @@ namespace
     }
 }
 
-namespace kernel
+namespace kernel::hardware::debug
 {
-    Time_ms getTime()
+    void setBreakpoint()
     {
-        return 0U;
     }
 }
 
@@ -103,7 +102,6 @@ TEST_CASE("Scheduler")
             bool result = scheduler::addReadyTask(
                 context.m_Scheduler,
                 context.m_Task,
-                kernel::task::Priority::Low,
                 context.m_TaskHandles.at(current)
             );
 
@@ -111,11 +109,9 @@ TEST_CASE("Scheduler")
 
             // get current task
             {
-                task::Id found_id;
-                scheduler::getCurrentTaskId(
-                    context.m_Scheduler,
-                    found_id
-                );
+                task::Id found_id =
+                    scheduler::getCurrentTaskId( context.m_Scheduler);
+
                 REQUIRE(expected_curr == found_id);
             }
 
@@ -186,7 +182,6 @@ TEST_CASE("Scheduler")
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    kernel::task::Priority::Low,
                     context->m_TaskHandles.at(i)
                 );
                 REQUIRE(true == result);
@@ -199,7 +194,6 @@ TEST_CASE("Scheduler")
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    kernel::task::Priority::Medium,
                     context->m_TaskHandles.at(3U + i)
                 );
                 REQUIRE(true == result);
@@ -212,7 +206,6 @@ TEST_CASE("Scheduler")
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    kernel::task::Priority::High,
                     context->m_TaskHandles.at(6U + i)
                 );
                 REQUIRE(true == result);
@@ -289,12 +282,8 @@ TEST_CASE("Scheduler")
 
         // get current task Id and remove it
         {
-            task::Id found_id;
-
-            scheduler::getCurrentTaskId(
-                context->m_Scheduler,
-                found_id
-            );
+            task::Id found_id = 
+                scheduler::getCurrentTaskId( context->m_Scheduler);
 
             // should find previous getNextTask result, which is 4
             REQUIRE(4U == found_id);

@@ -427,11 +427,6 @@
               <FileType>8</FileType>
               <FilePath>..\source\kernel\scheduler\ready_list.cpp</FilePath>
             </File>
-            <File>
-              <FileName>wait_list.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\kernel\scheduler\wait_list.cpp</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>

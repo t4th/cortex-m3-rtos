@@ -32,21 +32,23 @@ namespace kernel::internal::scheduler::wait
 
     inline void initSleep(
         volatile Conditions &   a_conditions,
-        Time_ms                 a_interval
+        Time_ms                 a_interval,
+        Time_ms                 a_current
     )
     {
         a_conditions.m_waitSignals.freeAll();
 
         a_conditions.m_type = Type::Sleep;
         a_conditions.m_interval = a_interval;
-        a_conditions.m_start = kernel::getTime();
+        a_conditions.m_start = a_current;
     }
 
     inline bool initWaitForObj(
         volatile Conditions &   a_conditions,
         kernel::Handle &        a_waitingSignal,
         bool                    a_wait_forver,
-        Time_ms                 a_timeout
+        Time_ms                 a_timeout,
+        Time_ms                 a_current
     )
     {
         a_conditions.m_waitSignals.freeAll();
@@ -62,7 +64,7 @@ namespace kernel::internal::scheduler::wait
         a_conditions.m_type = Type::WaitForObj;
         a_conditions.m_waitForver = a_wait_forver;
         a_conditions.m_interval = a_timeout;
-        a_conditions.m_start = kernel::getTime();
+        a_conditions.m_start = a_current;
 
         return true;
     }
@@ -71,17 +73,17 @@ namespace kernel::internal::scheduler::wait
         volatile Conditions &       a_conditions,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
-        kernel::sync::WaitResult &  a_result
+        kernel::sync::WaitResult &  a_result,
+        Time_ms                     a_current
         )
     {
-        const kernel::Time_ms current = kernel::getTime();
         bool condition_fulfilled = false;
 
         switch(a_conditions.m_type)
         {
         case Type::Sleep:
         {
-            if (current - a_conditions.m_start > a_conditions.m_interval)
+            if (a_current - a_conditions.m_start > a_conditions.m_interval)
             {
                 condition_fulfilled = true;
             }
@@ -91,7 +93,7 @@ namespace kernel::internal::scheduler::wait
         {
             if (false == a_conditions.m_waitForver)
             {
-                if (current - a_conditions.m_start > a_conditions.m_interval)
+                if (a_current - a_conditions.m_start > a_conditions.m_interval)
                 {
                     a_result = kernel::sync::WaitResult::TimeoutOccurred;
                     condition_fulfilled = true;

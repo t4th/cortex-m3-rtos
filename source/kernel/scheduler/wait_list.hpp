@@ -1,7 +1,7 @@
 #pragma once
 
-// Scheduler is used to order wihch task is to be served next.
-// For each priority there is circular list holding task IDs.
+// TODO: consider removing wait_list interface layer, leaving
+//       only POD array used by scheduler.
 
 #include <wait_conditions.hpp>
 
@@ -28,37 +28,85 @@ namespace kernel::internal::scheduler::wait_list
         > m_list{};
     };
 
-    bool addTaskSleep(
+    inline bool addTaskSleep(
         Context &   a_context,
         task::Id    a_task_id,
-        Time_ms     a_interval
-    );
+        Time_ms     a_interval,
+        Time_ms     a_current
+    )
+    {
+        uint32_t    item_index;
+        bool        allocated = a_context.m_list.allocate(item_index);
 
-    bool addTaskWaitObj(
+        if (true == allocated)
+        {
+            a_context. m_list.at(item_index).m_id = a_task_id;
+        }
+        else
+        {
+            return false;
+        }
+
+        volatile wait::Conditions & conditions =
+            a_context.m_list.at(item_index).m_conditions;
+
+        wait::initSleep(conditions, a_interval, a_current);
+
+        return true;
+    }
+
+    inline bool addTaskWaitObj(
         Context &           a_context,
         task::Id            a_task_id,
         kernel::Handle &    a_waitingSignal,
         bool                a_wait_forver,
-        Time_ms             a_timeout
-    );
+        Time_ms             a_timeout,
+        Time_ms             a_current
+    )
+    {
+        // Note: function allocate without checking for dublicates in m_list.
+        uint32_t    item_index;
+        bool        allocated = a_context.m_list.allocate(item_index);
 
-    //check condition and removeTask if true
-    void checkConditions(
-        Context &                       a_context,
-        internal::scheduler::Context &  a_scheduler_context,
-        internal::task::Context &       a_task_context,
-        internal::timer::Context &      a_timer_context,
-        internal::event::Context &      a_event_context,
-        void condition_fulfilled(
-            internal::scheduler::Context &  a_scheduler_context,
-            internal::task::Context &       a_task_context,
-            volatile task::Id &             a_task_id
-        )
-    );
+        if (true == allocated)
+        {
+            a_context. m_list.at(item_index).m_id = a_task_id;
+        }
+        else
+        {
+            return false;
+        }
 
-    void removeTask(
+        volatile wait::Conditions & conditions =
+            a_context.m_list.at(item_index).m_conditions;
+
+        wait::initWaitForObj(
+            conditions,
+            a_waitingSignal,
+            a_waitingSignal,
+            a_timeout,
+            a_current
+        );
+
+        return true;
+    }
+
+    inline void removeTask(
         Context & a_context,
-        task::Id a_task_id
-    );
-
+        task::Id & a_task_id
+    )
+    {
+        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        {
+            // TODO: it doesn't matter if memmory is allocated or not. Consider removing.
+            if (true == a_context.m_list.isAllocated(i))
+            {
+                if (a_context.m_list.at(i).m_id == a_task_id)
+                {
+                    a_context.m_list.free(i);
+                    break;
+                }
+            }
+        }
+    }
 }
