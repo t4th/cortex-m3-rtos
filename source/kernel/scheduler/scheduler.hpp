@@ -10,21 +10,19 @@ namespace kernel::internal::scheduler
 {
     struct Context
     {
-        // Note: by design, Idle task always must be available and has Id = 0.
-        volatile kernel::internal::task::Id m_current{0U}; // Indicate currently running task ID.
-        volatile kernel::internal::task::Id m_next{0U};    // Indicate next task ID.
+        // Note: by design, Idle task must always be available
+        //       and has Id = 0 and Idle priority.
+        volatile kernel::internal::task::Id m_current{0U};
+        volatile kernel::internal::task::Id m_next{0U};
 
-        // ready list
+        // Ready list.
         ready_list::Context m_ready_list{};
 
-        // m_wait_list
-        
+        // Wait list.
         wait_list::Context m_wait_list{};
-
-        // todo: m_suspended_list
     };
 
-    // public declarations
+    // Public declarations:
     bool addReadyTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -67,21 +65,17 @@ namespace kernel::internal::scheduler
         Time_ms &                   a_current
     );
 
-    // removing task, update current with next
     void removeTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_task_id
     );
 
-
     inline task::Id getCurrentTaskId( Context & a_context)
     {
         return a_context.m_current;
     }
 
-    // find next task and update current = next
-    // function assume that there is at least one task available
     bool getNextTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,

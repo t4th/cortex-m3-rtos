@@ -19,10 +19,9 @@ namespace kernel::internal::timer
 
     struct Timer
     {
-        Time_ms             m_start;
-        Time_ms             m_interval;
-        State               m_state;
-        kernel::Handle *    m_signal;
+        Time_ms     m_start;
+        Time_ms     m_interval;
+        State       m_state;
     };
 
     struct Context
@@ -31,11 +30,10 @@ namespace kernel::internal::timer
     };
 
     bool create(
-        Context &           a_context,
-        Id &                a_id,
-        Time_ms &           a_start,
-        Time_ms &           a_interval,
-        kernel::Handle *    a_signal = nullptr
+        Context &   a_context,
+        Id &        a_id,
+        Time_ms &   a_start,
+        Time_ms &   a_interval
     );
 
     inline void destroy( Context & a_context, Id & a_id)

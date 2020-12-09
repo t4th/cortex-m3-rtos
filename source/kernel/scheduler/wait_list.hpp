@@ -1,8 +1,5 @@
 #pragma once
 
-// TODO: consider removing wait_list interface layer, leaving
-//       only POD array used by scheduler.
-
 #include <wait_conditions.hpp>
 
 #include <task.hpp>

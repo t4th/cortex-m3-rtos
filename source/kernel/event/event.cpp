@@ -36,6 +36,7 @@ namespace kernel::internal::event
         {
             event.m_state = State::Reset;
         }
+        // TODO: Memory barrier here.
 
         return state;
     }

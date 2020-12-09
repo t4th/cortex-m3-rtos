@@ -1,15 +1,12 @@
 #include <timer.hpp>
 
-#include <handle.hpp>
-
 namespace kernel::internal::timer
 {
     bool create(
-        Context &           a_context,
-        Id &                a_id,
-        Time_ms &           a_start,
-        Time_ms &           a_interval,
-        kernel::Handle *    a_signal
+        Context &   a_context,
+        Id &        a_id,
+        Time_ms &   a_start,
+        Time_ms &   a_interval
     )
     {
         // Create new Timer object.
@@ -27,7 +24,6 @@ namespace kernel::internal::timer
 
         new_timer.m_start = a_start;
         new_timer.m_interval = a_interval;
-        new_timer.m_signal = a_signal;
 
         new_timer.m_state = State::Stopped;
 
@@ -53,8 +49,7 @@ namespace kernel::internal::timer
 
                 if ((a_current - timer.m_start) > timer.m_interval)
                 {
-                    // TODO: Call the callback signal.
-                    //       It would be more effective to make 2
+                    // TODO: It would be more effective to make 2
                     //       buffers for each timer state.
                     timer.m_state = State::Finished;
                 }

@@ -4,7 +4,6 @@
 
 namespace kernel::internal::scheduler
 {
-    // public declarations
     bool addReadyTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -182,7 +181,6 @@ namespace kernel::internal::scheduler
         return true;
     }
 
-    // removing task, update current with next
     void removeTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -204,12 +202,8 @@ namespace kernel::internal::scheduler
             a_context.m_wait_list,
             a_task_id
         );
-
-        // todo: remove task suspended list
     }
 
-    // Search for highest priority task in all priority queues.
-    // return true when task is found.
     bool getNextTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
@@ -282,15 +276,6 @@ namespace kernel::internal::scheduler
 
         if (next_task_found)
         {
-            // todo: Trying to access not allocated task context.
-#if 0
-            kernel::internal::task::state::set(
-                a_task_context,
-                a_context.m_current,
-                kernel::task::State::Ready
-            );
-#endif
-
             kernel::internal::task::state::set(
                 a_task_context,
                 a_context.m_next,
@@ -307,6 +292,8 @@ namespace kernel::internal::scheduler
     //       not be obfuscated by too many interface. Previous implementation
     //       included passing lambda with multitude of arguments ignoring 
     //       top-down architecture principle.
+    //
+    //       Now Wait list data is accessed directly skipping Wait list interface.
     void checkWaitConditions(
         Context &                   a_context,
         internal::task::Context &   a_task_context,

@@ -71,7 +71,6 @@ namespace kernel::internal::scheduler::ready_list
             }
 
             a_context.m_ready_list[prio].m_list.remove(found_index);
-
         }
     }
 

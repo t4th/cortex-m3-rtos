@@ -8,8 +8,6 @@
 #include <event.hpp>
 #include <system_timer.hpp>
 
-#include <atomic>
-
 namespace kernel::context
 {
         internal::system_timer::Context m_systemTimer;
@@ -29,15 +27,15 @@ namespace kernel::context
 
 namespace kernel
 {
-    inline void storeContext(kernel::internal::task::Id a_task);
-    inline void loadContext(kernel::internal::task::Id a_task);
+    inline void storeContext( kernel::internal::task::Id a_task);
+    inline void loadContext( kernel::internal::task::Id a_task);
 
     inline void lockScheduler();
     inline void unlockScheduler();
 
     void task_routine();
-    void idle_routine(void * a_parameter);
-    void terminateTask(kernel::internal::task::Id a_id);
+    void idle_routine( void * a_parameter);
+    void terminateTask( kernel::internal::task::Id a_id);
 }
 
 namespace kernel
@@ -194,7 +192,7 @@ namespace kernel::task
         return new_handle;
     }
 
-    void terminate(kernel::Handle & a_handle)
+    void terminate( kernel::Handle & a_handle)
     {
         switch(internal::handle::getObjectType(a_handle))
         {
@@ -209,7 +207,7 @@ namespace kernel::task
         }
     }
 
-    void suspend(kernel::Handle & a_handle)
+    void suspend( kernel::Handle & a_handle)
     {
         if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_handle))
         {
@@ -246,7 +244,7 @@ namespace kernel::task
         }
     }
 
-    void resume(kernel::Handle & a_handle)
+    void resume( kernel::Handle & a_handle)
     {
         if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_handle))
         {
@@ -300,11 +298,11 @@ namespace kernel::task
         }
     }
 
-    // TODO: current round-robin timestamp is 1ms. In case a_time = 1ms,
-    //       scheduling might make no sense.
-    void sleep(Time_ms a_time)
+    void sleep( Time_ms a_time)
     {
-        if (0U == a_time)
+        // Note: Skip sleeping if provided time is smaller or equal
+        //       to single context switch interval.
+        if (a_time <= kernel::internal::system_timer::CONTEXT_SWITCH_INTERVAL_MS)
         {
             return;
         }
@@ -332,8 +330,7 @@ namespace kernel::timer
 {
     bool create(
         kernel::Handle &    a_handle,
-        Time_ms             a_interval,
-        kernel::Handle *    a_signal
+        Time_ms             a_interval
     )
     {
         kernel::lockScheduler();
@@ -346,8 +343,7 @@ namespace kernel::timer
                 context::m_timers,
                 new_timer_id,
                 currentTime,
-                a_interval,
-                a_signal
+                a_interval
             );
 
             if (false == timer_created)
@@ -587,7 +583,7 @@ namespace kernel::critical_section
 {
     // todo: consider memory barrier
 
-    bool init(Context & a_context, uint32_t a_spinLock)
+    bool init( Context & a_context, uint32_t a_spinLock)
     {
         lockScheduler();
         {
@@ -613,7 +609,7 @@ namespace kernel::critical_section
         return true;
     }
 
-    void deinit(Context & a_context)
+    void deinit( Context & a_context)
     {
         lockScheduler();
         {
@@ -622,9 +618,11 @@ namespace kernel::critical_section
         unlockScheduler();
     }
 
-    void enter(Context & a_context)
+    void enter( Context & a_context)
     {
-        for (uint32_t i = 0U; i < a_context.m_spinLock; ++i)
+        // Test critical state condition m_spinLock times, before
+        // creating any system object and context switching.
+        for (volatile uint32_t i = 0U; i < a_context.m_spinLock; ++i)
         {
             if (0U == a_context.m_lockCount)
             {
@@ -636,7 +634,7 @@ namespace kernel::critical_section
         sync::waitForSingleObject(a_context.m_event);
     }
 
-    void leave(Context & a_context)
+    void leave( Context & a_context)
     {
         lockScheduler();
         {
@@ -681,7 +679,7 @@ namespace kernel
         --context::m_schedule_lock;
     }
 
-    void terminateTask(kernel::internal::task::Id a_id)
+    void terminateTask( kernel::internal::task::Id a_id)
     {
         lockScheduler();
         {
@@ -735,7 +733,7 @@ namespace kernel
         terminateTask(currentTask); // Cleanup task data.
     }
 
-    void idle_routine(void * a_parameter)
+    void idle_routine( void * a_parameter)
     {
         volatile int i = 0;
         while(1)

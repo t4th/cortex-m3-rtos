@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <atomic>
 
 // User API
 namespace kernel
@@ -57,21 +58,20 @@ namespace kernel::task
     kernel::Handle getCurrent();
 
     // Brute force terminate task.
-    void terminate(kernel::Handle & a_handle);
+    void terminate( kernel::Handle & a_handle);
 
-    void suspend(kernel::Handle & a_handle);
+    void suspend( kernel::Handle & a_handle);
 
-    void resume(kernel::Handle & a_handle);
+    void resume( kernel::Handle & a_handle);
 
-    void sleep(Time_ms a_time);
+    void sleep( Time_ms a_time);
 }
 
 namespace kernel::timer
 {
     bool create(
         kernel::Handle &    a_handle,
-        Time_ms             a_interval,
-        kernel::Handle *    a_signal = nullptr // Can point to Event object.
+        Time_ms             a_interval
     );
     void destroy( kernel::Handle & a_handle);
     void start( kernel::Handle & a_handle);
@@ -90,17 +90,17 @@ namespace kernel::critical_section
 {
     struct Context
     {
-        volatile uint32_t m_lockCount; // todo: interlocked
+        volatile std::atomic<uint32_t> m_lockCount;
         volatile uint32_t m_spinLock;
         kernel::Handle m_event;
         kernel::Handle m_ownerTask; // debug information
     };
 
-    bool init(Context & a_context, uint32_t a_spinLock = 100U);
-    void deinit(Context & a_context);
+    bool init( Context & a_context, uint32_t a_spinLock = 100U);
+    void deinit( Context & a_context);
 
-    void enter(Context & a_context);
-    void leave(Context & a_context);
+    void enter( Context & a_context);
+    void leave( Context & a_context);
 }
 
 namespace kernel::sync
