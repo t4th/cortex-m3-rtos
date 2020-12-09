@@ -43,6 +43,12 @@
     <Filter Include="stubs">
       <UniqueIdentifier>{c99b0977-6086-463c-941b-1ed1a72dc73d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tested files\kernel\event">
+      <UniqueIdentifier>{3dbfb85f-ac50-42b4-9178-9ef2b7eccd72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\timer">
+      <UniqueIdentifier>{bb13ca7c-4fe1-464a-8c0b-1bb2b9643972}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\catch.cpp">
@@ -72,8 +78,11 @@
     <ClCompile Include="..\..\source\kernel\scheduler\ready_list.cpp">
       <Filter>tested files\kernel\scheduler</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\kernel\scheduler\wait_list.cpp">
-      <Filter>tested files\kernel\scheduler</Filter>
+    <ClCompile Include="..\..\source\kernel\event\event.cpp">
+      <Filter>tested files\kernel\event</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\kernel\timer\timer.cpp">
+      <Filter>tested files\kernel\timer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

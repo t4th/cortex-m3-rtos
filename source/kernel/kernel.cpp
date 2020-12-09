@@ -338,11 +338,14 @@ namespace kernel::timer
     {
         kernel::lockScheduler();
         {
+            Time_ms currentTime = internal::system_timer::get( context::m_systemTimer);
+
             kernel::internal::timer::Id new_timer_id;
 
             bool timer_created = internal::timer::create(
                 context::m_timers,
                 new_timer_id,
+                currentTime,
                 a_interval,
                 a_signal
             );

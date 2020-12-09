@@ -7,11 +7,6 @@
 
 #include <task.hpp>
 
-namespace kernel::internal::scheduler
-{
-    struct Context;
-}
-
 namespace kernel::internal::scheduler::wait_list
 {
     struct WaitItem
@@ -22,7 +17,7 @@ namespace kernel::internal::scheduler::wait_list
 
     struct Context
     {
-        common::MemoryBuffer<
+        volatile common::MemoryBuffer<
             WaitItem,
             task::MAX_NUMBER
         > m_list{};

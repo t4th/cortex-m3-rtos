@@ -7,7 +7,8 @@ namespace kernel::internal::timer
     bool create(
         Context &           a_context,
         Id &                a_id,
-        Time_ms             a_interval,
+        Time_ms &           a_start,
+        Time_ms &           a_interval,
         kernel::Handle *    a_signal
     )
     {
@@ -24,7 +25,7 @@ namespace kernel::internal::timer
         // Initialize new Timer object.
         volatile Timer & new_timer = a_context.m_data.at(new_item_id);
 
-        new_timer.m_start = kernel::getTime();
+        new_timer.m_start = a_start;
         new_timer.m_interval = a_interval;
         new_timer.m_signal = a_signal;
 

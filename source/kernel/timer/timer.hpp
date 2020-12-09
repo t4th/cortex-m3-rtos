@@ -33,7 +33,8 @@ namespace kernel::internal::timer
     bool create(
         Context &           a_context,
         Id &                a_id,
-        Time_ms             a_interval,
+        Time_ms &           a_start,
+        Time_ms &           a_interval,
         kernel::Handle *    a_signal = nullptr
     );
 
