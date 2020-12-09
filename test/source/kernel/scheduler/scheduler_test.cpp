@@ -711,5 +711,131 @@ TEST_CASE("Scheduler")
         }
 
         // set Task 2 to wait for timer
+        // set Task 1 to wait for event
+        {
+            // create event
+            {
+                kernel::internal::timer::Id new_timer_id;
+                kernel::Time_ms start = 0U;
+                kernel::Time_ms interval = 10000U;
+
+                bool result = kernel::internal::timer::create(
+                    context->m_Timer,
+                    new_timer_id,
+                    start,
+                    interval
+                );
+
+                REQUIRE(true == result);
+
+                timer = kernel::internal::handle::create(
+                    kernel::internal::handle::ObjectType::Timer,
+                    new_timer_id
+                );
+            }
+
+            // set task to wait for event
+            {
+                kernel::Time_ms unused_ref = 0U;
+                bool wait_forever = true;
+
+                task::Id task_to_wait = context->m_TaskHandles.at(2U);
+
+                setTaskToWaitForObj(
+                    context->m_Scheduler,
+                    context->m_Task,
+                    task_to_wait,
+                    timer,
+                    wait_forever,
+                    unused_ref,
+                    unused_ref
+                );
+            }
+        }
+
+        // Check tasks states
+        {
+            using namespace kernel::internal;
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
+            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
+            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+        }
+
+        // check conditions
+        {
+            kernel::Time_ms currentTime = 10U;
+
+            checkWaitConditions(
+                context->m_Scheduler,
+                context->m_Task,
+                context->m_Timer,
+                context->m_Event,
+                currentTime
+                );
+        }
+
+        // Check tasks states
+        {
+            using namespace kernel::internal;
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
+            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
+            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+        }
+
+        // set event
+        {
+            auto id = kernel::internal::handle::getId<kernel::internal::event::Id>(event);
+            kernel::internal::event::set(context->m_Event, id);
+        }
+
+        // check conditions
+        {
+            kernel::Time_ms currentTime = 11U;
+
+            checkWaitConditions(
+                context->m_Scheduler,
+                context->m_Task,
+                context->m_Timer,
+                context->m_Event,
+                currentTime
+            );
+        }
+
+        // Check tasks states
+        {
+            using namespace kernel::internal;
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
+            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+        }
+
+        // finish timer
+        {
+            // Timer start value was 0, interval 10000U
+            kernel::Time_ms currentTime = 10001U;
+
+            kernel::internal::timer::tick(context->m_Timer, currentTime);
+        }
+
+        // check conditions
+        {
+            kernel::Time_ms currentTime = 11U;
+
+            checkWaitConditions(
+                context->m_Scheduler,
+                context->m_Task,
+                context->m_Timer,
+                context->m_Event,
+                currentTime
+            );
+        }
+
+        // Check tasks states
+        {
+            using namespace kernel::internal;
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
+            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+        }
     }
 }
