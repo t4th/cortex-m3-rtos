@@ -28,50 +28,50 @@ namespace kernel::internal::scheduler
     bool addReadyTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     );
 
     bool addSuspendedTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     );
 
     bool setTaskToReady(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     );
 
     void setTaskToSuspended(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     );
 
     bool setTaskToSleep(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id,
-        Time_ms                     a_interval,
-        Time_ms                     a_current
+        task::Id &                  a_task_id,
+        Time_ms &                   a_interval,
+        Time_ms &                   a_current
     );
 
     bool setTaskToWaitForObj(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id,
+        task::Id &                  a_task_id,
         kernel::Handle &            a_waitingSignal,
-        bool                        a_wait_forver,
-        Time_ms                     a_timeout,
-        Time_ms                     a_current
+        bool &                      a_wait_forver,
+        Time_ms &                   a_timeout,
+        Time_ms &                   a_current
     );
 
     // removing task, update current with next
     void removeTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     );
 
 
@@ -99,6 +99,6 @@ namespace kernel::internal::scheduler
         internal::task::Context &   a_task_context,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
-        Time_ms                     a_current
+        Time_ms &                   a_current
     );
 }

@@ -26,8 +26,8 @@ namespace kernel::internal::scheduler::wait_list
     inline bool addTaskSleep(
         Context &   a_context,
         task::Id    a_task_id,
-        Time_ms     a_interval,
-        Time_ms     a_current
+        Time_ms &   a_interval,
+        Time_ms &   a_current
     )
     {
         uint32_t    item_index;
@@ -54,9 +54,9 @@ namespace kernel::internal::scheduler::wait_list
         Context &           a_context,
         task::Id            a_task_id,
         kernel::Handle &    a_waitingSignal,
-        bool                a_wait_forver,
-        Time_ms             a_timeout,
-        Time_ms             a_current
+        bool &              a_wait_forver,
+        Time_ms &           a_timeout,
+        Time_ms &           a_current
     )
     {
         // Note: function allocate without checking for dublicates in m_list.
@@ -78,7 +78,7 @@ namespace kernel::internal::scheduler::wait_list
         wait::initWaitForObj(
             conditions,
             a_waitingSignal,
-            a_waitingSignal,
+            a_wait_forver,
             a_timeout,
             a_current
         );

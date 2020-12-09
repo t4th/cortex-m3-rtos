@@ -8,7 +8,7 @@ namespace kernel::internal::scheduler
     bool addReadyTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     )
     {
         kernel::task::Priority priority = 
@@ -31,7 +31,7 @@ namespace kernel::internal::scheduler
     bool addSuspendedTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     )
     {
         // TODO: implement suspended list
@@ -47,7 +47,7 @@ namespace kernel::internal::scheduler
     bool setTaskToReady(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     )
     {
         wait_list::removeTask(
@@ -72,7 +72,7 @@ namespace kernel::internal::scheduler
     void setTaskToSuspended(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     )
     {
         kernel::internal::task::state::set(
@@ -81,16 +81,29 @@ namespace kernel::internal::scheduler
             kernel::task::State::Suspended
         );
 
-        // TODO: implement suspended list
-        removeTask(a_context, a_task_context, a_task_id);
+        kernel::task::Priority prio = internal::task::priority::get(
+            a_task_context,
+            a_task_id
+        );
+
+        ready_list::removeTask(
+            a_context.m_ready_list,
+            prio,
+            a_task_id
+        );
+
+        wait_list::removeTask(
+            a_context.m_wait_list,
+            a_task_id
+        );
     }
 
     bool setTaskToSleep(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id,
-        Time_ms                     a_interval,
-        Time_ms                     a_current
+        task::Id &                  a_task_id,
+        Time_ms &                   a_interval,
+        Time_ms &                   a_current
     )
     {
         bool task_added = wait_list::addTaskSleep(
@@ -128,11 +141,11 @@ namespace kernel::internal::scheduler
     bool setTaskToWaitForObj(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id,
+        task::Id &                  a_task_id,
         kernel::Handle &            a_waitingSignal,
-        bool                        a_wait_forver,
-        Time_ms                     a_timeout,
-        Time_ms                     a_current
+        bool &                      a_wait_forver,
+        Time_ms &                   a_timeout,
+        Time_ms &                   a_current
     )
     {
         bool task_added = wait_list::addTaskWaitObj(
@@ -173,7 +186,7 @@ namespace kernel::internal::scheduler
     void removeTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
-        task::Id                    a_task_id
+        task::Id &                  a_task_id
     )
     {
         kernel::task::Priority prio = internal::task::priority::get(
@@ -299,7 +312,7 @@ namespace kernel::internal::scheduler
         internal::task::Context &   a_task_context,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
-        Time_ms                     a_current
+        Time_ms &                   a_current
     )
     {
         // Iterate over WaitItem which hold conditions used to wake up

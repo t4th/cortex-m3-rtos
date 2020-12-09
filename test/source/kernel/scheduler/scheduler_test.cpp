@@ -420,8 +420,8 @@ TEST_CASE("Scheduler")
     {
         std::unique_ptr<local_context> context(new local_context);
 
-        const kernel::Time_ms timeout = 100U;
-        const kernel::Time_ms current = 100U;
+        kernel::Time_ms timeout = 100U;
+        kernel::Time_ms current = 100U;
 
         // create 3 tasks
         {
@@ -501,13 +501,14 @@ TEST_CASE("Scheduler")
         // ready: 1(current) - 2
         {
             task::Id task_to_sleep = context->m_TaskHandles.at(0U);
+            kernel::Time_ms current_time = 0U;
 
             bool result = scheduler::setTaskToSleep(
                 context->m_Scheduler,
                 context->m_Task,
                 task_to_sleep,
                 timeout,
-                0U
+                current_time
             );
 
             REQUIRE(true == result);
@@ -684,6 +685,9 @@ TEST_CASE("Scheduler")
 
             // set task to wait for event
             {
+                kernel::Time_ms unused_ref = 0U;
+                bool wait_forever = true;
+
                 task::Id task_to_wait = context->m_TaskHandles.at(1U);
 
                 setTaskToWaitForObj(
@@ -691,9 +695,9 @@ TEST_CASE("Scheduler")
                     context->m_Task,
                     task_to_wait,
                     event,
-                    true,
-                    0U,
-                    0U
+                    wait_forever,
+                    unused_ref,
+                    unused_ref
                 );
             }
         }

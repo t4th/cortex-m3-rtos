@@ -32,8 +32,8 @@ namespace kernel::internal::scheduler::wait
 
     inline void initSleep(
         volatile Conditions &   a_conditions,
-        Time_ms                 a_interval,
-        Time_ms                 a_current
+        Time_ms &               a_interval,
+        Time_ms &               a_current
     )
     {
         a_conditions.m_waitSignals.freeAll();
@@ -46,9 +46,9 @@ namespace kernel::internal::scheduler::wait
     inline bool initWaitForObj(
         volatile Conditions &   a_conditions,
         kernel::Handle &        a_waitingSignal,
-        bool                    a_wait_forver,
-        Time_ms                 a_timeout,
-        Time_ms                 a_current
+        bool &                  a_wait_forver,
+        Time_ms &               a_timeout,
+        Time_ms &               a_current
     )
     {
         a_conditions.m_waitSignals.freeAll();
@@ -74,7 +74,7 @@ namespace kernel::internal::scheduler::wait
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
         kernel::sync::WaitResult &  a_result,
-        Time_ms                     a_current
+        Time_ms &                   a_current
         )
     {
         bool condition_fulfilled = false;
