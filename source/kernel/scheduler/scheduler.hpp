@@ -6,6 +6,13 @@
 // Scheduler is used to order wihch task is to be served next.
 // It is state machine using m_current and m_next to evaluate
 // arbitration queues.
+
+// Scheduler is not responsible for allocating Task memory, but
+// only uses internal::task:Id type, which is internal::task
+// unique identifier.
+
+// For scheduler it does not matter if provided task ID is valid or not.
+
 namespace kernel::internal::scheduler
 {
     struct Context

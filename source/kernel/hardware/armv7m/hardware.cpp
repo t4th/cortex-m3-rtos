@@ -181,12 +181,14 @@ extern "C"
             case 0U:       // SyscallId::LoadNextTask:
             {
                 kernel::internal::loadNextTask();
+                __DSB(); // Complete all explicit memory transfers
                 LoadTask();
                 break;
             }
             case 1U:       // SyscallId::ExecuteContextSwitch
             {
                 kernel::internal::switchContext();
+                __DSB(); // Complete all explicit memory transfers
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state so it can tail chain from SVC.
                 break;
             }
@@ -208,18 +210,15 @@ extern "C"
 
     void SysTick_Handler(void)
     {
-        __DSB();
-        
         // TODO: Make this function explicitly inline.
         bool execute_context_switch = kernel::internal::tick();
-        
+
+        __DSB(); // Complete all explicit memory transfers
+
         if (execute_context_switch)
         {
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV interrupt to pending state.
         }
-        
-        __DSB(); // This is not needed in this case, due to write buffer being cleared on interrupt exit,
-                 // but it is nice to have explicit information that memory write delay is taken into account.
     }
     
     __attribute__ (( naked )) void PendSV_Handler(void) // Use 'naked' attribute to remove C ABI, because return from interrupt must be set manually.

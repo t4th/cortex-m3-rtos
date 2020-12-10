@@ -4,7 +4,7 @@
 
 namespace kernel::internal
 {
-    // Kernel Handler Mode interfaces
+    // Kernel Handler Mode interfaces.
     void loadNextTask();
     void switchContext();
     bool tick();
@@ -22,6 +22,7 @@ namespace kernel::hardware
                                 r8, r9, r10, r11;
         };
         
+        // TODO: Make it a struct.
         class Stack
         {
             public:

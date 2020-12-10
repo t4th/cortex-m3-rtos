@@ -4,9 +4,9 @@ namespace kernel::internal::scheduler::ready_list
 {
     // public
     bool addTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
+        ready_list::Context &        a_context,
+        kernel::task::Priority &     a_priority,
+        kernel::internal::task::Id & a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -43,9 +43,9 @@ namespace kernel::internal::scheduler::ready_list
     }
 
     void removeTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
+        ready_list::Context &        a_context,
+        kernel::task::Priority &     a_priority,
+        kernel::internal::task::Id & a_id
     )
     {
         const uint32_t prio = static_cast<uint32_t>(a_priority);
@@ -76,7 +76,7 @@ namespace kernel::internal::scheduler::ready_list
 
     bool findNextTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
+        kernel::task::Priority &        a_priority,
         kernel::internal::task::Id &    a_id
     )
     {
@@ -107,7 +107,7 @@ namespace kernel::internal::scheduler::ready_list
 
     bool findCurrentTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
+        kernel::task::Priority &        a_priority,
         kernel::internal::task::Id &    a_id
     )
     {

@@ -733,7 +733,7 @@ namespace kernel
         terminateTask(currentTask); // Cleanup task data.
     }
 
-    void idle_routine( void * a_parameter)
+    __attribute__((weak)) void idle_routine( void * a_parameter)
     {
         volatile int i = 0;
         while(1)

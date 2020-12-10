@@ -1,6 +1,6 @@
 #pragma once
 
-// Scheduler is used to order wihch task is to be served next.
+// Ready list is used to order which task is to be served next.
 // For each priority there is circular list holding task IDs.
 
 #include <circular_list.hpp>
@@ -28,27 +28,27 @@ namespace kernel::internal::scheduler::ready_list
 
     // declarations
     bool addTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
+        ready_list::Context &        a_context,
+        kernel::task::Priority &     a_priority,
+        kernel::internal::task::Id & a_id
     );
 
     void removeTask(
-        ready_list::Context &       a_context,
-        kernel::task::Priority      a_priority,
-        kernel::internal::task::Id  a_id
+        ready_list::Context &         a_context,
+        kernel::task::Priority &      a_priority,
+        kernel::internal::task::Id  & a_id
     );
 
     // Find next task in selected priority group and UPDATE current task.
     bool findNextTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
+        kernel::task::Priority &        a_priority,
         kernel::internal::task::Id &    a_id
     );
 
     bool findCurrentTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority          a_priority,
+        kernel::task::Priority &        a_priority,
         kernel::internal::task::Id &    a_id
     );
 }

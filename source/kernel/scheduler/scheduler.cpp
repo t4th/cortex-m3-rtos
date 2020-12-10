@@ -216,9 +216,11 @@ namespace kernel::internal::scheduler
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {
+            kernel::task::Priority priority = static_cast<kernel::task::Priority>(prio);
+
             next_task_found = ready_list::findNextTask(
                 a_context.m_ready_list,
-                static_cast<kernel::task::Priority>(prio),
+                priority,
                 a_next_task_id
             );
 
@@ -261,9 +263,11 @@ namespace kernel::internal::scheduler
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {
+            kernel::task::Priority priority = static_cast<kernel::task::Priority>(prio);
+
             next_task_found = ready_list::findCurrentTask(
                 a_context.m_ready_list,
-                static_cast<kernel::task::Priority>(prio),
+                priority,
                 a_next_task_id
             );
 

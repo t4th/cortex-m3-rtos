@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <atomic>
 
-// User API
+// User API.
 namespace kernel
 {
     typedef uint32_t Time_ms;
