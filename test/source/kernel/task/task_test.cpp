@@ -6,7 +6,6 @@ namespace
 {
     void task_routine(void * param)
     {
-        // empty task routine
     }
 
     void kernel_task_routine()
@@ -18,26 +17,17 @@ namespace kernel::hardware::task
 {
     void Stack::init(uint32_t a_routine) volatile
     {
-        // TODO: Do something with magic numbers.
-        m_data[TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
-        m_data[TASK_STACK_SIZE - 7U] = 0xCD'CD'CD'CDU; // R1
-        m_data[TASK_STACK_SIZE - 6U] = 0xCD'CD'CD'CDU; // R2
-        m_data[TASK_STACK_SIZE - 5U] = 0xCD'CD'CD'CDU; // R3
-        m_data[TASK_STACK_SIZE - 4U] = 0U; // R12
-        m_data[TASK_STACK_SIZE - 3U] = 0U; // LR R14
-        m_data[TASK_STACK_SIZE - 2U] = a_routine;
-        m_data[TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
     }
 
     uint32_t Stack::getStackPointer() volatile
     {
-        return reinterpret_cast<uint32_t>(&m_data[TASK_STACK_SIZE - 8]);
+        return 0U;
     }
 }
 
 TEST_CASE("Task")
 {
-    SECTION ("create new task and verify context data")
+    SECTION ("Create new task and verify context data.")
     {
         std::unique_ptr<kernel::internal::task::Context> m_heap_context(new kernel::internal::task::Context);
         kernel::internal::task::Context & context = *m_heap_context;
@@ -45,7 +35,7 @@ TEST_CASE("Task")
         kernel::internal::task::Id task_id{};
         uint32_t parameter;
 
-        // create maximum number of tasks
+        // Create maximum number of tasks.
         for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
         {
             bool result = kernel::internal::task::create(
@@ -73,8 +63,8 @@ TEST_CASE("Task")
             // SP
             REQUIRE(context.m_data.at(i).m_sp == kernel::internal::task::sp::get(context, task_id));
 
-            kernel::internal::task::sp::set(context, task_id, 0xdeadbeef);
-            REQUIRE(0xdeadbeef == kernel::internal::task::sp::get(context, task_id));
+            kernel::internal::task::sp::set(context, task_id, 0xdeadbeefU);
+            REQUIRE(0xdeadbeefU == kernel::internal::task::sp::get(context, task_id));
 
             // routine
             REQUIRE(&task_routine == kernel::internal::task::routine::get(context, task_id));
@@ -83,7 +73,7 @@ TEST_CASE("Task")
             REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
         }
 
-        // try overflow task buffer
+        // Try overflow task buffer.
         bool result = kernel::internal::task::create(
             context,
             kernel_task_routine,
@@ -96,13 +86,12 @@ TEST_CASE("Task")
 
         REQUIRE(false == result);
 
-        // remove 3rd task
-        task_id = 3;
+        // Remove task with ID 3.
+        task_id = 3U;
         kernel::internal::task::destroy(context, task_id);
         
-        // allocate new task with id 3
-
-        // try overflow task buffer
+        // Allocate new task with ID 3.
+        // Expected: new task will get ID 3.
         result = kernel::internal::task::create(
             context,
             kernel_task_routine,
@@ -114,19 +103,19 @@ TEST_CASE("Task")
         );
 
         REQUIRE(true == result);
-        REQUIRE(3 == task_id);
+        REQUIRE(3U == task_id);
 
         // priority
         REQUIRE(kernel::task::Priority::Medium == kernel::internal::task::priority::get(context, task_id));
 
         // context
-        REQUIRE(&context.m_data.at(3).m_context == kernel::internal::task::context::get(context, task_id));
+        REQUIRE(&context.m_data.at(3U).m_context == kernel::internal::task::context::get(context, task_id));
 
         // SP
-        REQUIRE(context.m_data.at(3).m_sp == kernel::internal::task::sp::get(context, task_id));
+        REQUIRE(context.m_data.at(3U).m_sp == kernel::internal::task::sp::get(context, task_id));
 
-        kernel::internal::task::sp::set(context, task_id, 0x123);
-        REQUIRE(0x123 == kernel::internal::task::sp::get(context, task_id));
+        kernel::internal::task::sp::set(context, task_id, 0x123U);
+        REQUIRE(0x123U == kernel::internal::task::sp::get(context, task_id));
 
         // routine
         REQUIRE(&task_routine == kernel::internal::task::routine::get(context, task_id));
@@ -135,7 +124,7 @@ TEST_CASE("Task")
         REQUIRE(reinterpret_cast<void*>(&parameter) == kernel::internal::task::parameter::get(context, task_id));
     }
 
-    SECTION ("create new task and modify context data with API")
+    SECTION ("Create new task and modify context data with API.")
     {
         std::unique_ptr<kernel::internal::task::Context> m_heap_context(new kernel::internal::task::Context);
         kernel::internal::task::Context & context = *m_heap_context;
