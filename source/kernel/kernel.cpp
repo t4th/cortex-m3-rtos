@@ -581,8 +581,6 @@ namespace kernel::sync
 
 namespace kernel::critical_section
 {
-    // todo: consider memory barrier
-
     bool init( Context & a_context, uint32_t a_spinLock)
     {
         lockScheduler();
@@ -622,16 +620,25 @@ namespace kernel::critical_section
     {
         // Test critical state condition m_spinLock times, before
         // creating any system object and context switching.
+        bool is_condition_met = false;
+
         for (volatile uint32_t i = 0U; i < a_context.m_spinLock; ++i)
         {
             if (0U == a_context.m_lockCount)
             {
-                ++a_context.m_lockCount;
+                is_condition_met = true;
                 break;
             }
         }
 
-        sync::waitForSingleObject(a_context.m_event);
+        if (true == is_condition_met)
+        {
+            ++a_context.m_lockCount;
+        }
+        else
+        {
+            sync::waitForSingleObject(a_context.m_event);
+        }
     }
 
     void leave( Context & a_context)
@@ -666,9 +673,6 @@ namespace kernel
         kernel::hardware::sp::set(next_sp);
     }
 
-    // TODO: Lock/unlock need more elegant implementation.
-    //       Most likely each kernel task ended with some kind of
-    //       context switch would have its own SVC call.
     void lockScheduler()
     {
         ++context::m_schedule_lock;
