@@ -94,6 +94,7 @@ namespace kernel::internal::common
                 }
             }
 
+            // TODO: Check if function is used only by POD. If yes -> remove a_compare.
             bool find(
                 TDataType & a_key,
                 uint32_t &  a_found_index,

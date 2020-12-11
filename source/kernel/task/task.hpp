@@ -21,7 +21,10 @@ namespace kernel::internal::task
         kernel::task::State             m_state;
         void *                          m_parameter;
         kernel::task::Routine           m_routine;
+
+        // Results from Wait for Object function.
         kernel::sync::WaitResult        m_result;
+        uint32_t                        m_last_signal_index;
     };
 
     struct Context
@@ -107,14 +110,30 @@ namespace kernel::internal::task
 
     namespace wait
     {
-        inline kernel::sync::WaitResult get( Context & a_context, Id & a_id)
+        namespace result
         {
-            return a_context.m_data.at(a_id).m_result;
+            inline kernel::sync::WaitResult get( Context & a_context, Id & a_id)
+            {
+                return a_context.m_data.at(a_id).m_result;
+            }
+
+            inline void set( Context & a_context, Id & a_id, kernel::sync::WaitResult a_value)
+            {
+                a_context.m_data.at(a_id).m_result = a_value;
+            }
         }
 
-        inline void set( Context & a_context, Id & a_id, kernel::sync::WaitResult a_value)
+        namespace last_signal_index
         {
-            a_context.m_data.at(a_id).m_result = a_value;
+            inline uint32_t get( Context & a_context, Id & a_id)
+            {
+                return a_context.m_data.at(a_id).m_last_signal_index;
+            }
+
+            inline void set( Context & a_context, Id & a_id, uint32_t a_value)
+            {
+                a_context.m_data.at(a_id).m_last_signal_index = a_value;
+            }
         }
     }
 }
