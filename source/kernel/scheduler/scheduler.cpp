@@ -43,12 +43,22 @@ namespace kernel::internal::scheduler
         return true;
     }
 
-    bool setTaskToReady(
+    bool resumeSuspendedTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_task_id
     )
     {
+        const auto resumed_task_state = kernel::internal::task::state::get(
+                a_task_context,
+                a_task_id
+            );
+
+        if (kernel::task::State::Suspended != resumed_task_state)
+        {
+            return false;
+        }
+
         wait_list::removeTask(
             a_context.m_wait_list,
             a_task_id

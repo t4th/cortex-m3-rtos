@@ -42,7 +42,7 @@ namespace kernel::internal::scheduler
         task::Id &                  a_task_id
     );
 
-    bool setTaskToReady(
+    bool resumeSuspendedTask(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_task_id
