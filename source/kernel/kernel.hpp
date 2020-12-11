@@ -126,9 +126,9 @@ namespace kernel::sync
     WaitResult waitForMultipleObjects(
         kernel::Handle *    a_array_of_handles,
         uint32_t            a_number_of_elements,
-        uint32_t &          a_signaled_item_index,
         bool                a_wait_for_all = true,
         bool                a_wait_forver = true,
-        Time_ms             a_timeout = 0U
+        Time_ms             a_timeout = 0U,
+        uint32_t *          a_signaled_item_index = nullptr
     );
 }

@@ -498,51 +498,14 @@ namespace kernel::sync
         Time_ms             a_timeout
     )
     {
-        WaitResult result = WaitResult::WaitFailed;
-
-        // Note: Before creating system object, this function used to check
-        //       all wait conditions SpinLock times, but testing it with
-        //       test project didn't show any performance boost, so it was 
-        //       removed.
-
-        lockScheduler();
-        {
-            // Set task to Wait state for object pointed by a_handle
-            Time_ms currentTime = internal::system_timer::get( context::m_systemTimer);
-
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId(context::m_scheduler);
-
-            bool operation_result = internal::scheduler::setTaskToWaitForObj(
-                context::m_scheduler,
-                context::m_tasks,
-                current_task_id,
-                &a_handle,
-                1U,      // Single wait object.
-                false,   // There is only 1 signal, so dont wait for others.
-                a_wait_forver,
-                a_timeout,
-                currentTime
-            );
-
-            if (false == operation_result)
-            {
-                hardware::debug::setBreakpoint();
-            }
-        }
-        hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
-
-        lockScheduler();
-        {
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId(context::m_scheduler);
-
-            result = internal::task::wait::result::get(
-                context::m_tasks,
-                current_task_id
-            );
-        }
-        unlockScheduler();
+        WaitResult result = waitForMultipleObjects(
+            &a_handle,
+            1U,
+            false,
+            a_wait_forver,
+            a_timeout,
+            nullptr
+        );
 
         return result;
     }
@@ -550,10 +513,10 @@ namespace kernel::sync
     WaitResult waitForMultipleObjects(
         kernel::Handle *    a_array_of_handles,
         uint32_t            a_number_of_elements,
-        uint32_t &          a_signaled_item_index,
         bool                a_wait_for_all,
         bool                a_wait_forver,
-        Time_ms             a_timeout
+        Time_ms             a_timeout,
+        uint32_t *          a_signaled_item_index
     )
     {
         WaitResult result = WaitResult::WaitFailed;
@@ -564,6 +527,11 @@ namespace kernel::sync
         {
             return kernel::sync::WaitResult::InvalidHandle;
         }
+
+        // Note: Before creating system object, this function used to check
+        //       all wait conditions SpinLock times, but testing it with
+        //       test project didn't show any performance boost, so it was 
+        //       removed.
 
         lockScheduler();
         {
@@ -602,10 +570,13 @@ namespace kernel::sync
                 current_task_id
             );
 
-            a_signaled_item_index = internal::task::wait::last_signal_index::get(
-                context::m_tasks,
-                current_task_id
-            );
+            if (a_signaled_item_index)
+            {
+                *a_signaled_item_index = internal::task::wait::last_signal_index::get(
+                    context::m_tasks,
+                    current_task_id
+                );
+            }
         }
         unlockScheduler();
 
@@ -693,15 +664,15 @@ namespace kernel
         const uint32_t sp = hardware::sp::get();
         internal::task::sp::set( context::m_tasks, a_task, sp);
 
-        volatile kernel::hardware::task::Context * current_task = internal::task::context::get(context::m_tasks, a_task);
-        kernel::hardware::context::current::set(current_task);
+        auto current_task_context = internal::task::context::get(context::m_tasks, a_task);
+        kernel::hardware::context::current::set(current_task_context);
     }
 
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
     void loadContext(kernel::internal::task::Id a_task)
     {
-        volatile kernel::hardware::task::Context * next_task = internal::task::context::get(context::m_tasks, a_task);
-        kernel::hardware::context::next::set(next_task);
+        auto next_task_context = internal::task::context::get(context::m_tasks, a_task);
+        kernel::hardware::context::next::set(next_task_context);
 
         const uint32_t next_sp = kernel::internal::task::sp::get(context::m_tasks, a_task);
         kernel::hardware::sp::set(next_sp);

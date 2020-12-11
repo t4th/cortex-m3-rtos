@@ -55,11 +55,6 @@ namespace kernel::internal::scheduler::wait
         assert(a_wait_signals);
         assert(a_number_of_signals > 0U);
 
-        if (nullptr == a_wait_signals)
-        {
-            return false;
-        }
-
         if (a_number_of_signals < MAX_INPUT_SIGNALS)
         {
             a_conditions.m_numberOfSignals = a_number_of_signals;
