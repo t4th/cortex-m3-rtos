@@ -582,7 +582,9 @@ namespace kernel::sync
                 context::m_scheduler,
                 context::m_tasks,
                 current_task_id,
-                a_handle,
+                &a_handle,
+                1U,     // Single wait object.
+                true,   // Wait for all wait signals.
                 a_wait_forver,
                 a_timeout,
                 currentTime

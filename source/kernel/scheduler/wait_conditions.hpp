@@ -7,7 +7,6 @@
 namespace kernel::internal::scheduler::wait
 {
     constexpr uint32_t MAX_INPUT_SIGNALS = 8U;
-    constexpr uint32_t MAX_OUTPUT_SIGNALS = 8U;
 
     enum class Type
     {
@@ -19,12 +18,11 @@ namespace kernel::internal::scheduler::wait
     {
         Type m_type;
 
-        // TODO: make these as lists to reduce iterations
-        internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_waitSignals{};
+        // TODO: consider POD array, since 'status' information is not needed.
+        internal::common::MemoryBuffer<Handle, MAX_INPUT_SIGNALS>   m_waitSignals;
+        uint32_t m_numberOfSignals;
 
-        // TODO: implement two-way signal tracking
-        // internal::common::MemoryBuffer<Handle, MAX_OUTPUT_SIGNALS>  m_outputSignals{};
-
+        bool    m_waitForAllSignals; // TODO: implement
         bool    m_waitForver;
         Time_ms m_interval;
         Time_ms m_start;
@@ -45,22 +43,42 @@ namespace kernel::internal::scheduler::wait
 
     inline bool initWaitForObj(
         volatile Conditions &   a_conditions,
-        kernel::Handle &        a_waitingSignal,
+        kernel::Handle *        a_wait_signals,
+        uint32_t                a_number_of_signals,
+        bool &                  a_wait_for_all_signals,
         bool &                  a_wait_forver,
         Time_ms &               a_timeout,
         Time_ms &               a_current
     )
     {
-        a_conditions.m_waitSignals.freeAll();
-
-        uint32_t new_item;
-        if (false == a_conditions.m_waitSignals.allocate(new_item))
+        if (nullptr == a_wait_signals)
         {
             return false;
         }
 
-        a_conditions.m_waitSignals.at(new_item) = a_waitingSignal;
-        
+        if (a_number_of_signals < MAX_INPUT_SIGNALS)
+        {
+            a_conditions.m_numberOfSignals = a_number_of_signals;
+        }
+        else
+        {
+            return false;
+        }
+
+        a_conditions.m_waitSignals.freeAll();
+
+        uint32_t new_item_index;
+        for (uint32_t i = 0U; i < a_conditions.m_numberOfSignals; ++i)
+        {
+            if (false == a_conditions.m_waitSignals.allocate(new_item_index))
+            {
+                return false;
+            }
+
+            a_conditions.m_waitSignals.at(new_item_index) = a_wait_signals[i];
+        }
+
+        a_conditions.m_waitForAllSignals = a_wait_for_all_signals;
         a_conditions.m_type = Type::WaitForObj;
         a_conditions.m_waitForver = a_wait_forver;
         a_conditions.m_interval = a_timeout;
@@ -101,13 +119,9 @@ namespace kernel::internal::scheduler::wait
                 }
             }
 
-            for (uint32_t i = 0; i < MAX_INPUT_SIGNALS; ++i)
+            for (uint32_t i = 0; i < a_conditions.m_numberOfSignals; ++i)
             {
-                if (false == a_conditions.m_waitSignals.isAllocated(i))
-                {
-                    break;
-                }
-
+                // TODO: this is code dublicate of kernel::sync::testHandleCondition.
                 volatile kernel::Handle & objHandle = a_conditions.m_waitSignals.at(i);
                 internal::handle::ObjectType objType =
                     internal::handle::getObjectType(objHandle);

@@ -66,7 +66,9 @@ namespace kernel::internal::scheduler
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_task_id,
-        kernel::Handle &            a_waitingSignal,
+        kernel::Handle *            a_wait_signals,
+        uint32_t                    a_number_of_signals,
+        bool                        a_wait_for_all_signals,
         bool &                      a_wait_forver,
         Time_ms &                   a_timeout,
         Time_ms &                   a_current

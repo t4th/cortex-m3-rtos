@@ -4,6 +4,16 @@
 
 #include <task.hpp>
 
+// Wait List keep task ID of tasks in Wait state and their waking up
+// conditions.
+
+// Note: I tried keeping those information within internal::task,
+//       but it just bloated task structure and needed internal::task
+//       to have information about the whole kernel context, because
+//       of conditon check in kernel::internal::scheduler::wait::check.
+
+// TODO: consider simplyfing this. Maybe iteration through tasks buffer
+//       and just checking if task::state is waiting more clear?
 namespace kernel::internal::scheduler::wait_list
 {
     struct WaitItem
@@ -14,6 +24,7 @@ namespace kernel::internal::scheduler::wait_list
 
     struct Context
     {
+        // TODO: consider this a list to reduce search iterations.
         volatile common::MemoryBuffer<
             WaitItem,
             task::MAX_NUMBER
@@ -50,7 +61,9 @@ namespace kernel::internal::scheduler::wait_list
     inline bool addTaskWaitObj(
         Context &           a_context,
         task::Id            a_task_id,
-        kernel::Handle &    a_waitingSignal,
+        kernel::Handle *    a_wait_signals,
+        uint32_t            a_number_of_signals,
+        bool &              a_wait_for_all_signals,
         bool &              a_wait_forver,
         Time_ms &           a_timeout,
         Time_ms &           a_current
@@ -72,13 +85,20 @@ namespace kernel::internal::scheduler::wait_list
         volatile wait::Conditions & conditions =
             a_context.m_list.at(item_index).m_conditions;
 
-        wait::initWaitForObj(
+        bool init_succesful = wait::initWaitForObj(
             conditions,
-            a_waitingSignal,
+            a_wait_signals,
+            a_number_of_signals,
+            a_wait_for_all_signals,
             a_wait_forver,
             a_timeout,
             a_current
         );
+
+        if (false == init_succesful)
+        {
+            hardware::debug::setBreakpoint();
+        }
 
         return true;
     }
