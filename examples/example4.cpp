@@ -8,66 +8,60 @@
 #include <cctype>
 #include <cstring>
 
-// Comment define to not use critical section.
-#define USE_CRITICAL_SECTION
+// Example options:
+// true - enable use of critical section
+// false - disable use of critical section
+
+constexpr bool use_critical_section = false;
 
 void printText(const char * a_text)
 {
     kernel::hardware::debug::print(a_text);
 }
 
-const size_t MAX = 100;
+constexpr size_t MAX = 100;
 
-struct SharedDara
+struct SharedData
 {
-#ifdef USE_CRITICAL_SECTION
-    kernel::critical_section::Context context;
-#endif
+    kernel::critical_section::Context cs_context;
     char        text[MAX];
     size_t      size;
 };
 
-void changeCaseSize(SharedDara & a_shared)
+void changeCaseSize( SharedData & a_shared_data)
 {
-#ifdef USE_CRITICAL_SECTION
-    kernel::critical_section::enter(a_shared.context);
-#endif
-
-    for (size_t i = 0; i < a_shared.size; ++i)
+    for (size_t i = 0; i < a_shared_data.size; ++i)
     {
-        if (isupper(a_shared.text[i]))
+        if (isupper(a_shared_data.text[i]))
         {
-            a_shared.text[i] = tolower(a_shared.text[i]);
+            a_shared_data.text[i] = tolower(a_shared_data.text[i]);
         }
         else
         {
-            a_shared.text[i] = toupper(a_shared.text[i]);
+            a_shared_data.text[i] = toupper(a_shared_data.text[i]);
         }
     }
-
-#ifdef USE_CRITICAL_SECTION
-    kernel::critical_section::leave(a_shared.context);
-#endif
 }
 
 void worker_task(void * a_parameter);
 
 int main()
 {
-    SharedDara shared;
+    SharedData shared_data;
 
-    strcpy(shared.text, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
-    shared.size = strlen(shared.text);
+    strcpy(shared_data.text, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+    shared_data.size = strlen(shared_data.text);
 
-#ifdef USE_CRITICAL_SECTION
-    kernel::critical_section::init(shared.context);
-#endif
+    if constexpr(use_critical_section)
+    {
+        kernel::critical_section::init(shared_data.cs_context);
+    }
 
     kernel::init();
 
-    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared);
-    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared);
-    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared);
+    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared_data);
+    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared_data);
+    kernel::task::create(worker_task, kernel::task::Priority::Medium, nullptr, &shared_data);
 
     kernel::start();
 
@@ -76,11 +70,21 @@ int main()
 
 void worker_task(void * a_parameter)
 {
-    SharedDara * shared = (SharedDara*) a_parameter;
+    SharedData & shared_data = *((SharedData*) a_parameter);
 
     while (1)
     {
-        changeCaseSize(*shared);
-        kernel::hardware::debug::print(shared->text);
+        if constexpr(use_critical_section)
+        {
+            kernel::critical_section::enter(shared_data.cs_context);
+        }
+
+        changeCaseSize(shared_data);
+        kernel::hardware::debug::print(shared_data.text);
+
+        if constexpr(use_critical_section)
+        {
+            kernel::critical_section::leave(shared_data.cs_context);
+        }
     }
 }
