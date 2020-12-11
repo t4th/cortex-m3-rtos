@@ -492,90 +492,131 @@ namespace kernel::event
 
 namespace kernel::sync
 {
+    // Spin lock value used by kernel::sync functions.
+    volatile uint32_t SpinLock = 100;
+
+    // private:
+
+    // Check if system object pointed by a_handle is in signaled state.
+    bool testHandleCondition(kernel::Handle & a_handle, bool & a_condition_fulfilled)
+    {
+        const auto objectType = internal::handle::getObjectType(a_handle);
+
+        a_condition_fulfilled = false;
+
+        switch (objectType)
+        {
+        case internal::handle::ObjectType::Event:
+        {
+            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            auto evState = internal::event::getState(context::m_events, event_id);
+            if (internal::event::State::Set == evState)
+            {
+                a_condition_fulfilled = true;
+            }
+            break;
+        }
+        case internal::handle::ObjectType::Timer:
+        {
+            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            auto timerState = internal::timer::getState(context::m_timers, timer_id);
+            if (internal::timer::State::Finished == timerState)
+            {
+                a_condition_fulfilled = true;
+            }
+            break;
+        }
+        default:
+        {
+            return false; // Handle is pointing to unsupported system object type
+        }
+        };
+
+        return true; // Handle is pointing to supported system object type
+    }
+
+    // public:
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver,
         Time_ms             a_timeout
     )
     {
-        internal::task::Id currentTask;
-        WaitResult result = WaitResult::Abandon;
+        WaitResult result = WaitResult::WaitFailed;
 
-        lockScheduler();
-        {
-            // TODO: create spin lock to test below some times.
-
-            // Test a_handle condition first.
+            // Test object condition kernel::sync::SpinLock times,
+            // before making any CPU expensive operations.
+            for (volatile uint32_t i = 0U; i < SpinLock; ++i)
             {
-                bool condition_fulfilled = false;
-                const auto objectType = internal::handle::getObjectType(a_handle);
+                bool condition_fulfilled;
+                bool valid_handle;
 
-                switch (objectType)
+                lockScheduler();
                 {
-                case internal::handle::ObjectType::Event:
-                {
-                    auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-                    auto evState = internal::event::getState(context::m_events, event_id);
-                    if (internal::event::State::Set == evState)
-                    {
-                        condition_fulfilled = true;
-                    }
-                    break;
+                    valid_handle = testHandleCondition(a_handle, condition_fulfilled);
                 }
-                case internal::handle::ObjectType::Timer:
+                unlockScheduler();
+
+                if (false == valid_handle)
                 {
-                    auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-                    auto timerState = internal::timer::getState(context::m_timers, timer_id);
-                    if (internal::timer::State::Finished == timerState)
-                    {
-                        condition_fulfilled = true;
-                    }
-                    break;
-                }
-                default:
-                {
-                    // Note: currently not implemented.
-                    unlockScheduler();
+                    result = kernel::sync::WaitResult::InvalidHandle;
                     return result;
                 }
-                };
 
                 if(true == condition_fulfilled)
                 {
                     result = kernel::sync::WaitResult::ObjectSet;
-                    unlockScheduler();
                     return result;
                 }
             }
 
-            // Set task to Wait state for object pointed by a_handle.
+        lockScheduler();
+        {
+        // Set task to Wait state for object pointed by a_handle
+            Time_ms currentTime = internal::system_timer::get( context::m_systemTimer);
+
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId(context::m_scheduler);
+
+            bool operation_result = internal::scheduler::setTaskToWaitForObj(
+                context::m_scheduler,
+                context::m_tasks,
+                current_task_id,
+                a_handle,
+                a_wait_forver,
+                a_timeout,
+                currentTime
+            );
+
+            if (false == operation_result)
             {
-                currentTask = internal::scheduler::getCurrentTaskId(context::m_scheduler);
-                Time_ms currentTime = internal::system_timer::get( context::m_systemTimer);
-
-                bool operation_result = internal::scheduler::setTaskToWaitForObj(
-                    context::m_scheduler,
-                    context::m_tasks,
-                    currentTask,
-                    a_handle,
-                    a_wait_forver,
-                    a_timeout,
-                    currentTime
-                );
-
-                if (false == operation_result)
-                {
-                    hardware::debug::setBreakpoint();
-                }
+                hardware::debug::setBreakpoint();
             }
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
 
         lockScheduler();
         {
-            result = internal::task::wait::get(context::m_tasks, currentTask);
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId(context::m_scheduler);
+
+            result = internal::task::wait::get(context::m_tasks, current_task_id);
         }
         unlockScheduler();
+
+        return result;
+    }
+
+    WaitResult waitForMultipleObjects(
+        kernel::Handle *    a_array_of_handles,
+        uint32_t            a_number_of_elements,
+        uint32_t &          a_signaled_item_index,
+        bool                a_wait_for_all,
+        bool                a_wait_forver,
+        Time_ms             a_timeout
+    )
+    {
+        WaitResult result = WaitResult::WaitFailed;
 
         return result;
     }

@@ -109,7 +109,8 @@ namespace kernel::sync
     {
         ObjectSet,
         TimeoutOccurred,
-        Abandon,
+        WaitFailed,
+        InvalidHandle
     };
 
     // Can wait for:
@@ -118,6 +119,15 @@ namespace kernel::sync
     // todo: consider add task to possible signal types
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
+        bool                a_wait_forver = true,
+        Time_ms             a_timeout = 0U
+    );
+
+    WaitResult waitForMultipleObjects(
+        kernel::Handle *    a_array_of_handles,
+        uint32_t            a_number_of_elements,
+        uint32_t &          a_signaled_item_index,
+        bool                a_wait_for_all = true,
         bool                a_wait_forver = true,
         Time_ms             a_timeout = 0U
     );
