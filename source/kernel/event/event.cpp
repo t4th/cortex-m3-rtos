@@ -26,18 +26,4 @@ namespace kernel::internal::event
 
         return true;
     }
-
-    State getState( Context & a_context, Id & a_id)
-    {
-        volatile Event & event = a_context.m_data.at(a_id);
-        State state = event.m_state;
-
-        if (false == event.m_manual_reset)
-        {
-            event.m_state = State::Reset;
-        }
-        // TODO: Memory barrier here.
-
-        return state;
-    }
 }

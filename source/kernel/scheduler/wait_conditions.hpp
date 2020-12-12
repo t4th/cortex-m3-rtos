@@ -95,7 +95,7 @@ namespace kernel::internal::scheduler::wait
         case internal::handle::ObjectType::Event:
         {
             auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            auto evState = internal::event::getState(a_event_context, event_id);
+            auto evState = internal::event::state::get(a_event_context, event_id);
             if (internal::event::State::Set == evState)
             {
                 a_condition_fulfilled = true;
@@ -155,7 +155,7 @@ namespace kernel::internal::scheduler::wait
                 }
             }
 
-            // TODO: seperate later-decision bools from loop.
+            // TODO: seperate late-decision bools from loop.
             for (uint32_t i = 0; i < a_conditions.m_numberOfSignals; ++i)
             {
                 bool valid_handle = testSignalCondition(
@@ -179,17 +179,35 @@ namespace kernel::internal::scheduler::wait
                 {
                     if (true == condition_fulfilled)
                     {
+                        internal::event::state::updateAll(a_event_context);
                         a_signaled_item_index = i;
                         a_result = kernel::sync::WaitResult::ObjectSet;
                         return true;
                     }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (false == condition_fulfilled)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        // Continue checking other events.
+                    }
                 }
             }
 
+            // Check if all provided signals are set.
             if (true == a_conditions.m_waitForAllSignals)
             {
                 if (true == condition_fulfilled)
                 {
+                    internal::event::state::updateAll(a_event_context);
                     a_result = kernel::sync::WaitResult::ObjectSet;
                     return true;
                 }

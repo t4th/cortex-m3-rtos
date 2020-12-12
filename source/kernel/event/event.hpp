@@ -13,7 +13,13 @@ namespace kernel::internal::event
     enum class State
     {
         Reset,
-        Set
+        Set,
+        // Note: this special state is used for 
+        //       WaitForMultipleObjects, where
+        //       all events that are being check
+        //       are cleared when ALL events are
+        //       set and then Updated.
+        SetUpdateLater
     };
 
     struct Event
@@ -49,6 +55,48 @@ namespace kernel::internal::event
         a_context.m_data.at(a_id).m_state = State::Reset;
     }
 
-    // if m_manual_reset this will Reset timer state.
-    State getState( Context & a_context, Id & a_id);
+    namespace state
+    {
+        // Reset all events than have manual reset disabled.
+        // This function should be called after all events were signaled via
+        // WaitForObject functions.
+        inline void updateAll( Context & a_context)
+        {
+            for (Id i = 0U; i < MAX_NUMBER; ++i)
+            {
+                if (true == a_context.m_data.isAllocated(i))
+                {
+                    if (false == a_context.m_data.at(i).m_manual_reset)
+                    {
+                        if (State::SetUpdateLater == a_context.m_data.at(i).m_state)
+                        {
+                            reset(a_context, i);
+                        }
+                    }
+                }
+            }
+        }
+
+        inline State get( Context & a_context, Id & a_id)
+        {
+            State state = a_context.m_data.at(a_id).m_state;
+
+            // TODO: possible memory barrier here
+
+            if (false == a_context.m_data.at(a_id).m_manual_reset)
+            {
+                if (State::Set == state)
+                {
+                    a_context.m_data.at(a_id).m_state = State::SetUpdateLater;
+                }
+            }
+
+            if (State::Reset != state)
+            {
+                state = State::Set;
+            }
+
+            return state;
+        }
+    }
 }
