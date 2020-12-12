@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <config.hpp>
 
 namespace kernel::internal
 {
@@ -12,8 +12,6 @@ namespace kernel::internal
 
 namespace kernel::hardware
 {
-    constexpr uint32_t TASK_STACK_SIZE = 192U;
-    
     namespace task
     {
         struct Context

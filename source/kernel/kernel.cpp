@@ -584,16 +584,24 @@ namespace kernel::critical_section
         {
             kernel::internal::event::Id new_event_id;
 
+            // Create event used to wake up tasks waiting for
+            // critical section.
             bool event_created = internal::event::create(
                 context::m_events,
                 new_event_id,
                 false
             );
+
             if (false == event_created)
             {
                 kernel::internal::lock::leave(context::m_lock);
                 return false;
             }
+
+            a_context.m_event = internal::handle::create(
+                internal::handle::ObjectType::Event,
+                new_event_id
+            );
 
             internal::task::Id currentTask =
                 internal::scheduler::getCurrentTaskId(context::m_scheduler);
@@ -602,6 +610,7 @@ namespace kernel::critical_section
                 internal::handle::ObjectType::Task,
                 currentTask
             );
+
             a_context.m_lockCount = 0U;
             a_context.m_spinLock = a_spinLock;
         }
@@ -636,11 +645,24 @@ namespace kernel::critical_section
 
         if (true == is_condition_met)
         {
-            ++a_context.m_lockCount;
+            kernel::internal::lock::enter(context::m_lock);
+            {
+                // Take semaphore
+                auto event_id = internal::handle::getId<internal::event::Id>(a_context.m_event);
+                internal::event::reset(context::m_events, event_id);
+
+                ++a_context.m_lockCount;
+            }
+            kernel::internal::lock::leave(context::m_lock);
         }
         else
         {
-            sync::waitForSingleObject(a_context.m_event);
+            sync::WaitResult result = sync::waitForSingleObject(a_context.m_event);
+
+            if (sync::WaitResult::ObjectSet != result)
+            {
+                hardware::debug::setBreakpoint();
+            }
         }
     }
 
@@ -649,6 +671,11 @@ namespace kernel::critical_section
         kernel::internal::lock::enter(context::m_lock);
         {
             --a_context.m_lockCount;
+            if (0U == a_context.m_lockCount)
+            {
+                auto event_id = internal::handle::getId<internal::event::Id>(a_context.m_event);
+                internal::event::set(context::m_events, event_id);
+            }
         }
         kernel::internal::lock::leave(context::m_lock);
     }

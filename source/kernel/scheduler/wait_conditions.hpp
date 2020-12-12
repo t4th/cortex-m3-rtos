@@ -1,13 +1,13 @@
 #pragma once
 
+#include <config.hpp>
+
 #include <timer.hpp>
 #include <event.hpp>
 #include <handle.hpp>
 
 namespace kernel::internal::scheduler::wait
 {
-    constexpr uint32_t MAX_INPUT_SIGNALS = 8U;
-
     enum class Type
     {
         Sleep,

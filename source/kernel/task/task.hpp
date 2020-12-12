@@ -6,8 +6,8 @@
 
 namespace kernel::internal::task
 {
-    constexpr uint32_t MAX_NUMBER = 16U;
-    constexpr uint32_t PRIORITIES_COUNT = static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
+    constexpr uint32_t PRIORITIES_COUNT = 
+        static_cast<uint32_t>(kernel::task::Priority::Idle) + 1U;
 
     // todo: consider it type strong
     typedef uint32_t Id;

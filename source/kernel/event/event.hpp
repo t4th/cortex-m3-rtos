@@ -1,12 +1,12 @@
 #pragma once
 
+#include <config.hpp>
+
 #include <kernel.hpp>
 #include <memory_buffer.hpp>
 
 namespace kernel::internal::event
 {
-    constexpr uint32_t MAX_NUMBER = 32U;
-
     // todo: consider it type strong
     typedef uint32_t Id;
 
