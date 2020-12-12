@@ -603,6 +603,8 @@ namespace kernel::critical_section
                 new_event_id
             );
 
+            internal::event::set(context::m_events, new_event_id);
+
             internal::task::Id currentTask =
                 internal::scheduler::getCurrentTaskId(context::m_scheduler);
 
@@ -632,36 +634,38 @@ namespace kernel::critical_section
     {
         // Test critical state condition m_spinLock times, before
         // creating any system object and context switching.
-        bool is_condition_met = false;
+        volatile uint32_t i = 0U;
 
-        for (volatile uint32_t i = 0U; i < a_context.m_spinLock; ++i)
-        {
-            if (0U == a_context.m_lockCount)
-            {
-                is_condition_met = true;
-                break;
-            }
-        }
-
-        if (true == is_condition_met)
+        // Note: function is constructed this way, because time between kernel lock/unlock and
+        //       waking from waitForSingleObject is big enough for context switches to occur
+        //       and modify m_lockCount even if m_event was set. So after waking up task,
+        //       m_lockCount test should be done again.
+        while (1)
         {
             kernel::internal::lock::enter(context::m_lock);
             {
-                // Take semaphore
-                auto event_id = internal::handle::getId<internal::event::Id>(a_context.m_event);
-                internal::event::reset(context::m_events, event_id);
-
-                ++a_context.m_lockCount;
+                if (0U == a_context.m_lockCount)
+                {
+                    ++a_context.m_lockCount;
+                    kernel::internal::lock::leave(context::m_lock);
+                    return;
+                }
             }
             kernel::internal::lock::leave(context::m_lock);
-        }
-        else
-        {
-            sync::WaitResult result = sync::waitForSingleObject(a_context.m_event);
 
-            if (sync::WaitResult::ObjectSet != result)
+            if (i >= a_context.m_spinLock)
             {
-                hardware::debug::setBreakpoint();
+                i = 0U;
+                sync::WaitResult result = sync::waitForSingleObject(a_context.m_event);
+
+                if (sync::WaitResult::ObjectSet != result)
+                {
+                    hardware::debug::setBreakpoint();
+                }
+            }
+            else
+            {
+                ++i;
             }
         }
     }
