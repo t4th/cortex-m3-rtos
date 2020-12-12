@@ -160,7 +160,6 @@
     <ClCompile Include="..\source\kernel\hardware\armv7m\hardware.cpp" />
     <ClCompile Include="..\source\kernel\internal\internal.cpp" />
     <ClCompile Include="..\source\kernel\kernel.cpp" />
-    <ClCompile Include="..\source\kernel\scheduler\ready_list.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp" />
     <ClCompile Include="..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\source\kernel\timer\timer.cpp" />

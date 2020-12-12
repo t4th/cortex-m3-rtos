@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\kernel\event\event.cpp" />
-    <ClCompile Include="..\..\source\kernel\scheduler\ready_list.cpp" />
     <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
     <ClCompile Include="..\..\source\kernel\task\task.cpp" />
     <ClCompile Include="..\..\source\kernel\timer\timer.cpp" />

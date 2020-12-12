@@ -75,9 +75,6 @@
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
       <Filter>tests\kernel\handle</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\kernel\scheduler\ready_list.cpp">
-      <Filter>tested files\kernel\scheduler</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\kernel\event\event.cpp">
       <Filter>tested files\kernel\event</Filter>
     </ClCompile>

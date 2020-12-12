@@ -50,9 +50,6 @@
     <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp">
       <Filter>Source Files\scheduler</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\scheduler\ready_list.cpp">
-      <Filter>Source Files\scheduler</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm_compat.h">

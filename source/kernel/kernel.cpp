@@ -41,7 +41,7 @@ namespace kernel::context
         internal::event::Context        m_events;
         internal::lock::Context         m_lock;
 
-        // Indicate if kernel is started. It is mostly used to detected
+        // Indicate if kernel is started. It is used to detected
         // if system object was created before or after kernel::start.
         bool m_started = false;
 }
