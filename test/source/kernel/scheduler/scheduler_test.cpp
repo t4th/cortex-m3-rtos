@@ -380,12 +380,12 @@ TEST_CASE("Scheduler")
 
         // Resume one Medium task, so Low priority is skipped.
         {
-            // 4U is first Medium task that was suspended,
+            // 3U is first Medium task that was suspended,
             // lets set it to Ready again
             task::Id task_to_resume;
-            task_to_resume = 4U;
+            task_to_resume = 3U;
 
-            scheduler::setTaskToReady(
+            scheduler::resumeSuspendedTask(
                 context->m_Scheduler,
                 context->m_Task,
                 task_to_resume
@@ -403,7 +403,7 @@ TEST_CASE("Scheduler")
             );
 
             REQUIRE(true == result);
-            REQUIRE(4U == found_id);
+            REQUIRE(3U == found_id);
         }
 
         // Check next task ID.
@@ -419,7 +419,7 @@ TEST_CASE("Scheduler")
             );
 
             REQUIRE(true == result);
-            REQUIRE(4U == found_id);
+            REQUIRE(3U == found_id);
         }
     }
 
@@ -695,6 +695,7 @@ TEST_CASE("Scheduler")
             // Set task to wait for new event.
             {
                 kernel::Time_ms unused_ref = 0U;
+                const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
                 task::Id task_to_wait = context->m_TaskHandles.at(1U);
@@ -703,7 +704,9 @@ TEST_CASE("Scheduler")
                     context->m_Scheduler,
                     context->m_Task,
                     task_to_wait,
-                    event,
+                    &event,
+                    1U,
+                    wait_for_all_signals,
                     wait_forever,
                     unused_ref,
                     unused_ref
@@ -745,6 +748,7 @@ TEST_CASE("Scheduler")
             // Set task to wait for new timer.
             {
                 kernel::Time_ms unused_ref = 0U;
+                const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
                 task::Id task_to_wait = context->m_TaskHandles.at(2U);
@@ -753,7 +757,9 @@ TEST_CASE("Scheduler")
                     context->m_Scheduler,
                     context->m_Task,
                     task_to_wait,
-                    timer,
+                    &timer,
+                    1U,
+                    wait_for_all_signals,
                     wait_forever,
                     unused_ref,
                     unused_ref

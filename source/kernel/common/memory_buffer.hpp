@@ -11,7 +11,8 @@ namespace kernel::internal::common
     class MemoryBuffer
     {
     public:
-        MemoryBuffer() : m_data{}, m_status{} {}
+        // Note: m_data is not initialized by design.
+        MemoryBuffer() : m_status{} {}
             
         inline bool allocate(uint32_t & a_item_id) volatile
         {
@@ -61,7 +62,9 @@ namespace kernel::internal::common
 
     private:
         TDataType   m_data[MaxSize];
-        bool        m_status[MaxSize]; // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
+
+        // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
+        bool        m_status[MaxSize];
 
     };
 }
