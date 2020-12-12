@@ -19,7 +19,7 @@ namespace kernel::internal::common
        
         public:
 
-            CircularList() : m_first{0U}, m_last{0U}, m_count{0U}, m_buffer() {}
+            CircularList() : m_first{0U}, m_last{0U}, m_count{0U}, m_buffer{} {}
             
             bool add(TDataType a_new_data, uint32_t & a_new_node_index) volatile
             {

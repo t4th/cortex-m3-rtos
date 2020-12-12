@@ -31,7 +31,7 @@ namespace kernel::internal::event
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer<Event, MAX_NUMBER> m_data;
+        volatile kernel::internal::common::MemoryBuffer<Event, MAX_NUMBER> m_data{};
     };
 
     bool create(

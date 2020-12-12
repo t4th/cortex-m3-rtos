@@ -29,7 +29,7 @@ namespace kernel::internal::task
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer<Task, MAX_NUMBER> m_data;
+        volatile kernel::internal::common::MemoryBuffer<Task, MAX_NUMBER> m_data{};
     };
 
     typedef void(*TaskRoutine)(void);

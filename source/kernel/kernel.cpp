@@ -13,9 +13,7 @@ namespace kernel::internal::lock
 {
     struct Context
     {
-        volatile std::atomic<uint32_t> m_interlock;
-
-        Context() : m_interlock{0U} {}
+        volatile std::atomic<uint32_t> m_interlock = 0U;
     };
 
     inline bool isLocked( Context & a_context)

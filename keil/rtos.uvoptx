@@ -168,7 +168,7 @@
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>context::m_schedule_lock</ItemText>
+          <ItemText>kernel::context::m_lock</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>

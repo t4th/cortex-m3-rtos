@@ -26,7 +26,7 @@ namespace kernel::internal::timer
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data;
+        volatile kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data{};
     };
 
     bool create(
