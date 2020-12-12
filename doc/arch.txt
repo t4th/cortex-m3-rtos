@@ -18,8 +18,10 @@ class kernel::kernel{
 + start()
 + getTime()
 }
+
+kernel::kernel -d-> kernel::system_timer
+kernel::kernel -l-> kernel::lock
 kernel::kernel -> kernel::hardware::hardware
-kernel::kernel -> kernel::internal::task
 kernel::kernel -d-> kernel::task
 kernel::kernel -d-> kernel::critical_section
 kernel::kernel -d-> kernel::event
@@ -28,6 +30,22 @@ kernel::kernel -d-> kernel::sync
 
 kernel::kernel -d-> kernel::internal::scheduler
 kernel::kernel -d-> kernel::internal::handle
+
+class kernel::config
+{
+}
+
+class kernel::system_timer {
++get()
++increment()
++isIntervalElapsed()
+}
+
+class kernel::lock {
++isLocked()
++enter()
++leave()
+}
 
 class kernel::task {
  +create()
@@ -49,9 +67,11 @@ class kernel::critical_section {
 
 class kernel::sync {
 +waitForSingleObject()
++waitForMultipleObjects()
 }
 
 kernel::sync -d-> kernel::internal::task
+kernel::kernel -> kernel::internal::task
 
 class kernel::event {
 +create()
@@ -90,7 +110,7 @@ class kernel::internal::scheduler {
 - wait_list
 + addReadyTask()
 + addSuspendedTask()
-+ setTaskToReady()
++ resumeSuspendedTask()
 + setTaskToSuspended()
 + setTaskToWait()
 + removeTask()

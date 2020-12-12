@@ -7,27 +7,33 @@ programming paradigms/architect decisons.
 
 No fancy build system set - simple Keil Uvision Lite project due to free simulator. (it should be easy enough to setup this project with any other compiler/system)
 
-Check out prove of concept branches for technical stuff.  
+Check out prove of concept branches for technical stuff.
+
 Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
 ## Notes
-11/13/2020 - after doing this project in spare time it finally reached version 0.1! It is possible to create and remove tasks statically and in runtime. Stability is good, but I am still experimenting with optimal stack size and until stack overflow detection is done one must be careful with number of function entries in task routine!
+12/12/2020 - initial version of waitForMultipleObject.
 
 12/03/2020 - initial version of timers, events, sleep, critical section and waitForSingleObject are now pushed and working
+
+11/13/2020 - after doing this project in spare time it finally reached version 0.1! It is possible to create and remove tasks statically and in runtime. Stability is good, but I am still experimenting with optimal stack size and until stack overflow detection is done one must be careful with number of function entries in task routine!
 
 ## Goals
 
 ### 1.0 Features (requirements)
 - [x] task: create, delete
-- [x] software timers: create, remove
+- [x] software timers: create, delete
 - [x] sleep function
-- [x] events: create, remove
-- [x] function WaitForSingleObject
+- [x] events: create, delete
+- [x] function WaitForSingleObject, WaitForMultipleObject
 - [x] Critical section: enter, leave
 - [ ] way to map HW interrupts to events
 
-### Not implemented (for now)
-- tasks always run in Privileged Mode - code is prepared but it is not needed for now
+### 1.0+ Features
+- [ ] stack over/underflow detection in Idle task
+- [ ] implement privilege levels
+- [ ] setup gcc project with cmake
+- [ ] adapt HW layer for Cortex-M4
 
 ### Other
 * build and simulated via keil uvision
@@ -82,10 +88,6 @@ https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 * HANDLE system like in windows (generlized handle to system objects for easier user API) - better than raw pointers
 * ~~API function will use win32 function names - since c++ will be used this is no longer valid~~
 * task queue circular linked list ~~or b-tree~~ - make it work, not CS degree viable
-
-## ToDo never
-- setup gcc project with cmake
-- adapt HW layer to Cortex-M4
 
 ## Keil Uvision simulator preview
 ![Alt arch](/doc/sim.png?raw=true)
