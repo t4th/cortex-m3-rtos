@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <kernel.hpp>
 
 // This is kernel configuration file, where number of
 // options can be changed depending of specific project
@@ -18,6 +18,12 @@ namespace kernel::internal::task
 {
     // Define maximum number of tasks.
     constexpr uint32_t MAX_NUMBER = 16U;
+}
+
+namespace kernel::internal::system_timer
+{
+    // Round-robin context switch intervals in miliseconds.
+    constexpr Time_ms CONTEXT_SWITCH_INTERVAL_MS = 10U;
 }
 
 namespace kernel::internal::event

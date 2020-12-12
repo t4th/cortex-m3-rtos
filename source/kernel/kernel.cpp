@@ -3,8 +3,11 @@
 #include <hardware.hpp>
 
 #include <system_timer.hpp>
-#include <lock.hpp>
+#include <task.hpp>
 #include <scheduler.hpp>
+#include <timer.hpp>
+#include <event.hpp>
+#include <lock.hpp>
 
 namespace kernel::context
 {

@@ -1,12 +1,7 @@
-#include <kernel.hpp>
-
-#include <atomic>
+#include <config.hpp>
 
 namespace kernel::internal::system_timer
 {
-    // Round-robin context switch intervals in miliseconds.
-    constexpr Time_ms CONTEXT_SWITCH_INTERVAL_MS = 10U;
-
     struct Context
     {
         // Used to calculate round-robin context switch intervals.
