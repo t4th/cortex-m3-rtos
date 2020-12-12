@@ -19,10 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\kernel\event\event.cpp" />
-    <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp" />
-    <ClCompile Include="..\..\source\kernel\task\task.cpp" />
-    <ClCompile Include="..\..\source\kernel\timer\timer.cpp" />
     <ClCompile Include="..\source\catch.cpp" />
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />
     <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp" />
@@ -33,6 +29,10 @@
   <ItemGroup>
     <ClInclude Include="..\..\source\kernel\common\circular_list.hpp" />
     <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp" />
+    <ClInclude Include="..\..\source\kernel\event\event.hpp" />
+    <ClInclude Include="..\..\source\kernel\scheduler\scheduler.hpp" />
+    <ClInclude Include="..\..\source\kernel\task\task.hpp" />
+    <ClInclude Include="..\..\source\kernel\timer\timer.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
     <ClInclude Include="..\stubs\stm32f10x.h" />
   </ItemGroup>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\external;..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\..\source\kernel\timer;..\..\source\kernel\event;..\..\source\kernel\handle;..\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external;..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\..\source\kernel\timer;..\..\source\kernel\event;..\..\source\kernel\lock;..\..\source\kernel\handle;..\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" /D "always_inline=" /D "weak=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>

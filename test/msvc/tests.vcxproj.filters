@@ -63,23 +63,11 @@
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp">
       <Filter>tests\kernel\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\kernel\scheduler\scheduler.cpp">
-      <Filter>tested files\kernel\scheduler</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\task\task_test.cpp">
       <Filter>tests\kernel\task</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\kernel\task\task.cpp">
-      <Filter>tested files\kernel\task</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
       <Filter>tests\kernel\handle</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\kernel\event\event.cpp">
-      <Filter>tested files\kernel\event</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\kernel\timer\timer.cpp">
-      <Filter>tested files\kernel\timer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -94,6 +82,18 @@
     </ClInclude>
     <ClInclude Include="..\stubs\stm32f10x.h">
       <Filter>stubs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\scheduler\scheduler.hpp">
+      <Filter>tested files\kernel\scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\task\task.hpp">
+      <Filter>tested files\kernel\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\timer\timer.hpp">
+      <Filter>tested files\kernel\timer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\kernel\event\event.hpp">
+      <Filter>tested files\kernel\event</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,5 +1,3 @@
-#pragma once
-
 #include <kernel.hpp>
 
 #include <atomic>

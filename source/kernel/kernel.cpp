@@ -2,33 +2,9 @@
 
 #include <hardware.hpp>
 
-#include <scheduler.hpp>
-#include <handle.hpp>
-#include <timer.hpp>
-#include <event.hpp>
 #include <system_timer.hpp>
-
-// Kernel level critical section between thread and handler modes.
-namespace kernel::internal::lock
-{
-    struct Context
-    {
-        volatile std::atomic<uint32_t> m_interlock = 0U;
-    };
-
-    inline bool isLocked( Context & a_context)
-    {
-        return (0U == a_context.m_interlock);
-    }
-    inline void enter( Context & a_context)
-    {
-        ++a_context.m_interlock;
-    }
-    inline void leave( Context & a_context)
-    {
-        --a_context.m_interlock;
-    }
-}
+#include <lock.hpp>
+#include <scheduler.hpp>
 
 namespace kernel::context
 {
@@ -606,8 +582,14 @@ namespace kernel::critical_section
     {
         kernel::internal::lock::enter(context::m_lock);
         {
-            bool initialized = event::create(a_context.m_event);
-            if (false == initialized)
+            kernel::internal::event::Id new_event_id;
+
+            bool event_created = internal::event::create(
+                context::m_events,
+                new_event_id,
+                false
+            );
+            if (false == event_created)
             {
                 kernel::internal::lock::leave(context::m_lock);
                 return false;

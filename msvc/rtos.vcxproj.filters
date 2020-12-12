@@ -18,14 +18,8 @@
     <Filter Include="Header Files\scheduler">
       <UniqueIdentifier>{1d65a30c-1821-4d3d-85fa-e77e3460b812}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\scheduler">
-      <UniqueIdentifier>{3d6e8f73-4af4-4719-afa2-84a48602f8ee}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\kernel\task\task.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\kernel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -35,20 +29,8 @@
     <ClCompile Include="..\source\main\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\timer\timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\kernel\event\event.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\kernel\internal\internal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\kernel\common\assert.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\kernel\scheduler\scheduler.cpp">
-      <Filter>Source Files\scheduler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +59,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\kernel\event\event.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\kernel\internal\internal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\source\kernel\scheduler\ready_list.hpp">
