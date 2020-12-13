@@ -29,4 +29,47 @@ namespace kernel::internal::handle
     {
         return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
     }
+
+    // Return value indicate if Handle type was valid for condition check.
+    inline bool testCondition(
+        internal::timer::Context &  a_timer_context,
+        internal::event::Context &  a_event_context,
+        volatile kernel::Handle &   a_handle,
+        bool &                      a_condition_fulfilled
+    )
+    {
+        const auto objectType = internal::handle::getObjectType(a_handle);
+
+        a_condition_fulfilled = false;
+
+        switch (objectType)
+        {
+        case internal::handle::ObjectType::Event:
+        {
+            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            auto evState = internal::event::state::get(a_event_context, event_id);
+            if (internal::event::State::Set == evState)
+            {
+                a_condition_fulfilled = true;
+            }
+            break;
+        }
+        case internal::handle::ObjectType::Timer:
+        {
+            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            auto timerState = internal::timer::getState(a_timer_context, timer_id);
+            if (internal::timer::State::Finished == timerState)
+            {
+                a_condition_fulfilled = true;
+            }
+            break;
+        }
+        default:
+        {
+            return false;
+        }
+        };
+
+        return true;
+    }
 }

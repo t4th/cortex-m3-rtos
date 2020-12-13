@@ -133,15 +133,15 @@ namespace kernel::sync
     // Can wait for system objects of type: Event, Timer.
     // For event it is SET state, for Timer it is FINISHED state.
     // If used with invalid handle, error is returned.
-    //
+
     // The moment function is called, and prowivded signals are not set
     // task will stop execution and enter Waiting state until conditions
     // are not met.
-    //
+
     // If a_wait_forver is true, then a_timeout is not used.
-    //
+
     // Function return ObjectSet if signal condittion is met.
-    //
+
     // NOTE: Destroying system objects used by this function will result
     //       in undefined behaviour
     WaitResult waitForSingleObject(
@@ -151,7 +151,7 @@ namespace kernel::sync
     );
 
     // Wait for multiple system objects provided as an array.
-    //
+
     // If a_wait_for_all is set, task will wait until ALL signals are set.
     // If a_wait_for_all is not set, optional argument a_signaled_item_index,
     // will return first signaled handle index.

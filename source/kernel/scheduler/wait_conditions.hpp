@@ -78,47 +78,77 @@ namespace kernel::internal::scheduler::wait
         return true;
     }
 
-    // TODO: this is code dublicate of kernel::sync::testHandleCondition.
-    inline bool testSignalCondition(
+    inline bool testWaitSignals(
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
-        volatile kernel::Handle &   a_handle,
-        bool &                      a_condition_fulfilled
+        kernel::sync::WaitResult &  a_result,
+        volatile kernel::Handle *   a_wait_signals,
+        uint32_t                    a_number_of_signals,
+        volatile bool &             a_wait_for_all_signals,
+        uint32_t &                  a_signaled_item_index
     )
     {
-        const auto objectType = internal::handle::getObjectType(a_handle);
+        bool condition_fulfilled = true;
 
-        a_condition_fulfilled = false;
+        // TODO: seperate late-decision bools from loop.
+        for (uint32_t i = 0; i < a_number_of_signals; ++i)
+        {
+            const bool valid_handle = handle::testCondition(
+                a_timer_context,
+                a_event_context,
+                a_wait_signals[i],
+                condition_fulfilled
+            );
 
-        switch (objectType)
-        {
-        case internal::handle::ObjectType::Event:
-        {
-            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            auto evState = internal::event::state::get(a_event_context, event_id);
-            if (internal::event::State::Set == evState)
+            if (false == valid_handle)
             {
-                a_condition_fulfilled = true;
+                a_result = kernel::sync::WaitResult::InvalidHandle;
+                return true;
             }
-            break;
-        }
-        case internal::handle::ObjectType::Timer:
-        {
-            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-            auto timerState = internal::timer::getState(a_timer_context, timer_id);
-            if (internal::timer::State::Finished == timerState)
-            {
-                a_condition_fulfilled = true;
-            }
-            break;
-        }
-        default:
-        {
-            return false; // Handle is pointing to unsupported system object type
-        }
-        };
 
-        return true; // Handle is pointing to supported system object type
+            condition_fulfilled &= condition_fulfilled;
+
+            // When not waiting for all signals to be set,
+            // return on first condition fulfilled.
+            if (false == a_wait_for_all_signals)
+            {
+                if (true == condition_fulfilled)
+                {
+                    internal::event::state::updateAll(a_event_context);
+                    a_signaled_item_index = i;
+                    a_result = kernel::sync::WaitResult::ObjectSet;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (false == condition_fulfilled)
+                {
+                    return false;
+                }
+                else
+                {
+                    // Continue checking other events.
+                }
+            }
+        }
+
+        // Check if all provided signals are set.
+        if (true == a_wait_for_all_signals)
+        {
+            if (true == condition_fulfilled)
+            {
+                internal::event::state::updateAll(a_event_context);
+                a_result = kernel::sync::WaitResult::ObjectSet;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     inline bool check(
@@ -142,8 +172,6 @@ namespace kernel::internal::scheduler::wait
         break;
         case Type::WaitForObj:
         {
-            bool condition_fulfilled = true;
-
             a_signaled_item_index = 0U;
 
             if (false == a_conditions.m_waitForver)
@@ -155,63 +183,15 @@ namespace kernel::internal::scheduler::wait
                 }
             }
 
-            // TODO: seperate late-decision bools from loop.
-            for (uint32_t i = 0; i < a_conditions.m_numberOfSignals; ++i)
-            {
-                bool valid_handle = testSignalCondition(
-                    a_timer_context,
-                    a_event_context,
-                    a_conditions.m_waitSignals[i],
-                    condition_fulfilled
-                );
-
-                if (false == valid_handle)
-                {
-                    a_result = kernel::sync::WaitResult::InvalidHandle;
-                    return true;
-                }
-
-                condition_fulfilled &= condition_fulfilled;
-
-                // When not waiting for all signals to be set,
-                // return on first condition fulfilled.
-                if (false == a_conditions.m_waitForAllSignals)
-                {
-                    if (true == condition_fulfilled)
-                    {
-                        internal::event::state::updateAll(a_event_context);
-                        a_signaled_item_index = i;
-                        a_result = kernel::sync::WaitResult::ObjectSet;
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (false == condition_fulfilled)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        // Continue checking other events.
-                    }
-                }
-            }
-
-            // Check if all provided signals are set.
-            if (true == a_conditions.m_waitForAllSignals)
-            {
-                if (true == condition_fulfilled)
-                {
-                    internal::event::state::updateAll(a_event_context);
-                    a_result = kernel::sync::WaitResult::ObjectSet;
-                    return true;
-                }
-            }
+            return testWaitSignals(
+                a_timer_context,
+                a_event_context,
+                a_result,
+                a_conditions.m_waitSignals,
+                a_conditions.m_numberOfSignals,
+                a_conditions.m_waitForAllSignals,
+                a_signaled_item_index
+            );
         }
         break;
         default:
