@@ -97,7 +97,7 @@ namespace kernel::internal::scheduler::wait_list
 
         if (false == init_succesful)
         {
-            hardware::debug::setBreakpoint();
+            assert(1);
         }
 
         return true;

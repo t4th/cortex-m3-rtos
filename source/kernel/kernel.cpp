@@ -52,7 +52,7 @@ namespace kernel
 
             if (false == idle_task_created)
             {
-                hardware::debug::setBreakpoint();
+                assert(1);
             }
         }
     }
@@ -548,7 +548,7 @@ namespace kernel::sync
 
             if (false == operation_result)
             {
-                hardware::debug::setBreakpoint();
+                assert(1);
             }
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
@@ -661,7 +661,7 @@ namespace kernel::critical_section
 
                 if (sync::WaitResult::ObjectSet != result)
                 {
-                    hardware::debug::setBreakpoint();
+                    assert(1);
                 }
             }
             else

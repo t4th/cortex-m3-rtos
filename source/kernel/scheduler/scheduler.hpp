@@ -415,7 +415,7 @@ namespace kernel::internal::scheduler
                     }
                     else
                     {
-                        hardware::debug::setBreakpoint();
+                        assert(1);
                     }
                 }
             }
