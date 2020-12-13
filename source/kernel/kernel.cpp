@@ -45,8 +45,6 @@ namespace kernel
         hardware::init();
         
         {
-            internal::task::Id idle_task_handle;
-
             bool idle_task_created = kernel::task::create(
                 idle_routine,
                 task::Priority::Idle
