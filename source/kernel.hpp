@@ -21,7 +21,7 @@ namespace kernel
     // Start kernel. If no user tasks were created, jumps to IDLE task.
     void start();
 
-    // Get time elapsed since kernel started in miliseconds.
+    // Return time in miliseconds since kernel started.
     Time_ms getTime();
 }
 
@@ -48,7 +48,7 @@ namespace kernel::task
         Running
     };
 
-    // Create new task. Can be create statically (before calling kernel::start()),
+    // Create new task. Can be created statically (before calling kernel::start()),
     // and in run-time, by other tasks.
     bool create(
         kernel::task::Routine   a_routine,
@@ -58,7 +58,7 @@ namespace kernel::task
         bool                    a_create_suspended = false
     );
 
-    // Get Handle to currently running task.
+    // Return Handle to currently running task.
     kernel::Handle getCurrent();
 
     // Brute force terminate task. Can cause UB if task is system object owner, or
@@ -110,12 +110,12 @@ namespace kernel::critical_section
     };
 
     // Spinlock argument define number of ticks used to check critical section
-    // condition. Experiment with its value can improve performance, since it
-    // is reducing number of context switches.
+    // condition. Experimenting with its value can improve performance, because
+    // it can reduce number of context switches.
     bool init( Context & a_context, uint32_t a_spinLock = 100U);
     void deinit( Context & a_context);
 
-    // Calling enter/leave without calling init first will cause errors.
+    // Calling enter/leave without calling init first will cause UB.
     void enter( Context & a_context);
     void leave( Context & a_context);
 }
@@ -131,12 +131,12 @@ namespace kernel::sync
     };
 
     // Can wait for system objects of type: Event, Timer.
-    // For event it is SET state, for Timer it is FINISHED state.
-    // If used with invalid handle, error is returned.
+    // Wait is successful when event object is in SET state and Timer
+    // is in FINISHED state. If used with invalid handle, error is returned.
 
-    // The moment function is called, and prowivded signals are not set
-    // task will stop execution and enter Waiting state until conditions
-    // are not met.
+    // The moment function is called, and provided signals are not signaled,
+    // task will enter Waiting state until they do, or optional timeout is
+    // reached.
 
     // If a_wait_forver is true, then a_timeout is not used.
 
@@ -150,9 +150,10 @@ namespace kernel::sync
         Time_ms             a_timeout = 0U
     );
 
-    // Wait for multiple system objects provided as an array.
+    // Wait for multiple system objects provided as an array of handles.
 
-    // If a_wait_for_all is set, task will wait until ALL signals are set.
+    // If a_wait_for_all is set, task will wait until ALL signals are signaled.
+
     // If a_wait_for_all is not set, optional argument a_signaled_item_index,
     // will return first signaled handle index.
     WaitResult waitForMultipleObjects(
