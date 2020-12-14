@@ -101,7 +101,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;STM32F10X_HD;__ARMCC_VERSION=6010050;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\system_timer;..\source\kernel\hardware;..\source\kernel\lock;..\source\kernel\config</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\;..\source\common;..\source\event;..\source\handle;..\source\scheduler;..\source\task;..\source\timer;..\source\system_timer;..\source\hardware;..\source\lock;..\source\config</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()="  /D " __BKPT(a)=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -155,24 +155,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\kernel\common\assert.cpp" />
-    <ClCompile Include="..\source\kernel\hardware\armv7m\hardware.cpp" />
-    <ClCompile Include="..\source\kernel\kernel.cpp" />
-    <ClCompile Include="..\source\main\main.cpp" />
+    <ClCompile Include="..\source\hardware\armv7m\hardware.cpp" />
+    <ClCompile Include="..\source\kernel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\source\kernel\common\circular_list.hpp" />
-    <ClInclude Include="..\source\kernel\common\memory_buffer.hpp" />
-    <ClInclude Include="..\source\kernel\event\event.hpp" />
-    <ClInclude Include="..\source\kernel\handle\handle.hpp" />
-    <ClInclude Include="..\source\kernel\hardware\hardware.hpp" />
-    <ClInclude Include="..\source\kernel\kernel.hpp" />
-    <ClInclude Include="..\source\kernel\scheduler\ready_list.hpp" />
-    <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp" />
-    <ClInclude Include="..\source\kernel\scheduler\wait_conditions.hpp" />
-    <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp" />
-    <ClInclude Include="..\source\kernel\task\task.hpp" />
-    <ClInclude Include="..\source\kernel\timer\timer.hpp" />
+    <ClInclude Include="..\source\common\circular_list.hpp" />
+    <ClInclude Include="..\source\common\memory_buffer.hpp" />
+    <ClInclude Include="..\source\event\event.hpp" />
+    <ClInclude Include="..\source\handle\handle.hpp" />
+    <ClInclude Include="..\source\hardware\hardware.hpp" />
+    <ClInclude Include="..\source\kernel.hpp" />
+    <ClInclude Include="..\source\scheduler\ready_list.hpp" />
+    <ClInclude Include="..\source\scheduler\scheduler.hpp" />
+    <ClInclude Include="..\source\scheduler\wait_conditions.hpp" />
+    <ClInclude Include="..\source\scheduler\wait_list.hpp" />
+    <ClInclude Include="..\source\task\task.hpp" />
+    <ClInclude Include="..\source\timer\timer.hpp" />
     <ClInclude Include="arm_compat.h" />
   </ItemGroup>
   <ItemGroup>

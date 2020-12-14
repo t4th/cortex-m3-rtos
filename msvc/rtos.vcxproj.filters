@@ -20,16 +20,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\source\kernel\kernel.cpp">
+    <ClCompile Include="..\source\kernel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\kernel\hardware\armv7m\hardware.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\main\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\kernel\common\assert.cpp">
+    <ClCompile Include="..\source\hardware\armv7m\hardware.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -37,40 +31,40 @@
     <ClInclude Include="arm_compat.h">
       <Filter>arm_cc_stubs</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\task\task.hpp">
+    <ClInclude Include="..\source\timer\timer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\kernel.hpp">
+    <ClInclude Include="..\source\task\task.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\common\memory_buffer.hpp">
+    <ClInclude Include="..\source\common\memory_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\common\circular_list.hpp">
+    <ClInclude Include="..\source\kernel.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\timer\timer.hpp">
+    <ClInclude Include="..\source\hardware\hardware.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\hardware\hardware.hpp">
+    <ClInclude Include="..\source\handle\handle.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\handle\handle.hpp">
+    <ClInclude Include="..\source\event\event.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\event\event.hpp">
+    <ClInclude Include="..\source\common\circular_list.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\scheduler\ready_list.hpp">
+    <ClInclude Include="..\source\scheduler\wait_list.hpp">
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\scheduler\scheduler.hpp">
+    <ClInclude Include="..\source\scheduler\wait_conditions.hpp">
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\scheduler\wait_list.hpp">
+    <ClInclude Include="..\source\scheduler\scheduler.hpp">
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\kernel\scheduler\wait_conditions.hpp">
+    <ClInclude Include="..\source\scheduler\ready_list.hpp">
       <Filter>Header Files\scheduler</Filter>
     </ClInclude>
   </ItemGroup>
