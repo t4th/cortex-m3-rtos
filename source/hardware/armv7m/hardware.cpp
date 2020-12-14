@@ -145,6 +145,15 @@ namespace kernel::hardware::task
 
 extern "C"
 {
+    void __aeabi_assert(
+        const char * expr,
+        const char * file,
+        int line
+    )
+    {
+        kernel::hardware::debug::setBreakpoint();
+    }
+    
     inline __attribute__ (( naked )) void LoadTask(void)
     {
         __ASM("CPSID I\n");

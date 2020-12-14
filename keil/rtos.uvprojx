@@ -48,10 +48,10 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\Objects\</OutputDirectory>
+          <OutputDirectory>..\output\</OutputDirectory>
           <OutputName>rtos</OutputName>
-          <CreateExecutable>1</CreateExecutable>
-          <CreateLib>0</CreateLib>
+          <CreateExecutable>0</CreateExecutable>
+          <CreateLib>1</CreateLib>
           <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
@@ -338,7 +338,7 @@
               <MiscControls>-fno-exceptions</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\external\arm;..\external\st\STM32F10x;..\source\kernel;..\source\kernel\common;..\source\kernel\event;..\source\kernel\handle;..\source\kernel\scheduler;..\source\kernel\task;..\source\kernel\timer;..\source\kernel\hardware;..\source\kernel\system_timer;..\source\kernel\lock;..\source\kernel\config</IncludePath>
+              <IncludePath>..\source\;..\source\common;..\source\event;..\source\handle;..\source\scheduler;..\source\task;..\source\timer;..\source\hardware;..\source\system_timer;..\source\lock;..\source\config</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -380,57 +380,12 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>main</GroupName>
-          <Files>
-            <File>
-              <FileName>main.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\main\main.cpp</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>kernel</GroupName>
           <Files>
             <File>
               <FileName>kernel.cpp</FileName>
               <FileType>8</FileType>
-              <FilePath>..\source\kernel\kernel.cpp</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>hardware</GroupName>
-          <Files>
-            <File>
-              <FileName>hardware.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\kernel\hardware\armv7m\hardware.cpp</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>startup</GroupName>
-          <Files>
-            <File>
-              <FileName>startup_stm32f10x_hd.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\external\st\STM32F10x\startup_stm32f10x_hd.s</FilePath>
-            </File>
-            <File>
-              <FileName>system_stm32f10x.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\external\st\STM32F10x\system_stm32f10x.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>common</GroupName>
-          <Files>
-            <File>
-              <FileName>assert.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\source\kernel\common\assert.cpp</FilePath>
+              <FilePath>..\source\kernel.cpp</FilePath>
             </File>
           </Files>
         </Group>
