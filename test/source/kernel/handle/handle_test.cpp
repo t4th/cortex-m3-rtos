@@ -12,10 +12,9 @@ TEST_CASE("Handle")
     {
         using namespace kernel::internal;
         
-        kernel::Handle new_handle;
-        uint32_t new_index = 0xdeadbeef;
+        uint32_t new_index = 0xdeadbeefU;
 
-        new_handle = handle::create(handle::ObjectType::Task, new_index);
+        kernel::Handle new_handle = handle::create(handle::ObjectType::Task, new_index);
 
         REQUIRE(reinterpret_cast<kernel::Handle>(0x0000beefU) == new_handle);
 
@@ -41,6 +40,119 @@ TEST_CASE("Handle")
             REQUIRE(0xbeefU == task);
             REQUIRE(0xbeefU == event);
             REQUIRE(0xbeefU == timer);
+        }
+    }
+
+    SECTION ("Verify testCondition")
+    {
+        using namespace kernel::internal;
+        SECTION ("Handle point to event.")
+        {
+            std::unique_ptr<timer::Context> timer_context(new timer::Context);
+            std::unique_ptr<event::Context> event_context(new event::Context);
+
+            // Prepare event object and handle.
+            event::Id new_index;
+            bool event_created = event::create(*event_context, new_index, false);
+
+            REQUIRE(true == event_created);
+
+            // Create handle.
+            kernel::Handle new_handle = handle::create(handle::ObjectType::Event, new_index);
+
+            // Test the handle.
+            // Expected: event is in Reset state, so check result should be false.
+            bool condition_check_result = false;
+            bool valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE(true == valid_handle);
+            REQUIRE(false == condition_check_result);
+
+            // Set event.
+            event::set(*event_context, new_index);
+
+            // Test the handle.
+            // Expected: event is in SET state, so check result should be true.
+            valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE(true == valid_handle);
+            REQUIRE(true == condition_check_result);
+        }
+
+        SECTION ("Handle point to timer.")
+        {
+            std::unique_ptr<timer::Context> timer_context(new timer::Context);
+            std::unique_ptr<event::Context> event_context(new event::Context);
+
+            // Prepare event object and handle.
+            timer::Id new_index;
+            kernel::Time_ms start = 0U;
+            kernel::Time_ms interval = 100U;
+            bool timer_created = timer::create(*timer_context, new_index, start, interval);
+
+            REQUIRE(true == timer_created);
+
+            // Create handle.
+            kernel::Handle new_handle = handle::create(handle::ObjectType::Timer, new_index);
+
+            // Test the handle.
+            // Expected: Timer is in Started state and condition should be false.
+            bool condition_check_result = false;
+            bool valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE(true == valid_handle);
+            REQUIRE(false == condition_check_result);
+
+            // Finish timer.
+            kernel::Time_ms current_time = start + interval + 1;
+            timer::tick(*timer_context, current_time);
+
+            // Test the handle.
+            // Expected: Timer is in Finished state and condition should be true.
+            valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE(true == valid_handle);
+            REQUIRE(true == condition_check_result);
+        }
+
+        SECTION ("Handle point to unsupported system object.")
+        {
+            std::unique_ptr<timer::Context> timer_context(new timer::Context);
+            std::unique_ptr<event::Context> event_context(new event::Context);
+
+            kernel::Handle invalid_handle = (kernel::Handle) 0xaf23123U;
+
+            // Invalid handle should result in funtion returning false.
+            bool condition_check_result = false;
+            bool valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                invalid_handle,
+                condition_check_result
+            );
+
+            REQUIRE(false == valid_handle);
+            REQUIRE(false == condition_check_result);
         }
     }
 }
