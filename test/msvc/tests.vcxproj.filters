@@ -74,26 +74,26 @@
     <ClInclude Include="..\external\catch.hpp">
       <Filter>external</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\kernel\common\circular_list.hpp">
-      <Filter>tested files\kernel\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp">
-      <Filter>tested files\kernel\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\stubs\stm32f10x.h">
       <Filter>stubs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\kernel\scheduler\scheduler.hpp">
-      <Filter>tested files\kernel\scheduler</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\kernel\task\task.hpp">
-      <Filter>tested files\kernel\task</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\kernel\timer\timer.hpp">
+    <ClInclude Include="..\..\source\timer\timer.hpp">
       <Filter>tested files\kernel\timer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\kernel\event\event.hpp">
+    <ClInclude Include="..\..\source\task\task.hpp">
+      <Filter>tested files\kernel\task</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\scheduler\scheduler.hpp">
+      <Filter>tested files\kernel\scheduler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\event\event.hpp">
       <Filter>tested files\kernel\event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\common\memory_buffer.hpp">
+      <Filter>tested files\kernel\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\common\circular_list.hpp">
+      <Filter>tested files\kernel\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

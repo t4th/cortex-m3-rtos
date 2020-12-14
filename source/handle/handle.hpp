@@ -2,6 +2,9 @@
 
 #include <kernel.hpp>
 
+#include <timer.hpp>
+#include <event.hpp>
+
 namespace kernel::internal::handle
 {
     enum class ObjectType

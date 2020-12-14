@@ -27,12 +27,12 @@
     <ClCompile Include="..\source\kernel\task\task_test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\kernel\common\circular_list.hpp" />
-    <ClInclude Include="..\..\source\kernel\common\memory_buffer.hpp" />
-    <ClInclude Include="..\..\source\kernel\event\event.hpp" />
-    <ClInclude Include="..\..\source\kernel\scheduler\scheduler.hpp" />
-    <ClInclude Include="..\..\source\kernel\task\task.hpp" />
-    <ClInclude Include="..\..\source\kernel\timer\timer.hpp" />
+    <ClInclude Include="..\..\source\common\circular_list.hpp" />
+    <ClInclude Include="..\..\source\common\memory_buffer.hpp" />
+    <ClInclude Include="..\..\source\event\event.hpp" />
+    <ClInclude Include="..\..\source\scheduler\scheduler.hpp" />
+    <ClInclude Include="..\..\source\task\task.hpp" />
+    <ClInclude Include="..\..\source\timer\timer.hpp" />
     <ClInclude Include="..\external\catch.hpp" />
     <ClInclude Include="..\stubs\stm32f10x.h" />
   </ItemGroup>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\external;..\..\source\kernel;..\..\source\kernel\task;..\..\source\kernel\scheduler;..\..\source\kernel\common;..\..\source\kernel\hardware;..\..\source\kernel\timer;..\..\source\kernel\event;..\..\source\kernel\lock;..\..\source\kernel\config;..\..\source\kernel\handle;..\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external;..\..\source\;..\..\source\task;..\..\source\scheduler;..\..\source\common;..\..\source\hardware;..\..\source\timer;..\..\source\event;..\..\source\lock;..\..\source\config;..\..\source\handle;..\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" /D "always_inline=" /D "weak=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
