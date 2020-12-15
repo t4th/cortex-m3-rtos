@@ -166,6 +166,7 @@ namespace kernel::internal::scheduler::wait
         {
             if (a_current - a_conditions.m_start > a_conditions.m_interval)
             {
+                a_result = kernel::sync::WaitResult::ObjectSet;
                 return true;
             }
         }

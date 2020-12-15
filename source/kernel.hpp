@@ -90,7 +90,7 @@ namespace kernel::timer
 namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
-    // function completes. In other cause, you have to manualy call reset.
+    // function completes. In other case, you have to manualy call reset.
     bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
