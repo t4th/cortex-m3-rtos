@@ -4,7 +4,7 @@
 
 #include <task.hpp>
 
-// Wait List keep task ID of tasks in Wait state and their waking up
+// Wait List keep Identifiers of tasks in Wait state and their waking up
 // conditions.
 
 // Note: I tried keeping those information within internal::task,
@@ -39,11 +39,11 @@ namespace kernel::internal::scheduler::wait_list
     )
     {
         uint32_t    item_index;
-        bool        allocated = a_context.m_list.allocate(item_index);
+        bool        allocated = a_context.m_list.allocate( item_index);
 
-        if (true == allocated)
+        if ( true == allocated)
         {
-            a_context. m_list.at(item_index).m_id = a_task_id;
+            a_context. m_list.at( item_index).m_id = a_task_id;
         }
         else
         {
@@ -51,9 +51,9 @@ namespace kernel::internal::scheduler::wait_list
         }
 
         volatile wait::Conditions & conditions =
-            a_context.m_list.at(item_index).m_conditions;
+            a_context.m_list.at( item_index).m_conditions;
 
-        wait::initSleep(conditions, a_interval, a_current);
+        wait::initSleep( conditions, a_interval, a_current);
 
         return true;
     }
@@ -71,11 +71,11 @@ namespace kernel::internal::scheduler::wait_list
     {
         // Note: function allocate without checking for dublicates in m_list.
         uint32_t    item_index;
-        bool        allocated = a_context.m_list.allocate(item_index);
+        bool        allocated = a_context.m_list.allocate( item_index);
 
-        if (true == allocated)
+        if ( true == allocated)
         {
-            a_context. m_list.at(item_index).m_id = a_task_id;
+            a_context. m_list.at( item_index).m_id = a_task_id;
         }
         else
         {
@@ -83,7 +83,7 @@ namespace kernel::internal::scheduler::wait_list
         }
 
         volatile wait::Conditions & conditions =
-            a_context.m_list.at(item_index).m_conditions;
+            a_context.m_list.at( item_index).m_conditions;
 
         bool init_succesful = wait::initWaitForObj(
             conditions,
@@ -95,9 +95,9 @@ namespace kernel::internal::scheduler::wait_list
             a_current
         );
 
-        if (false == init_succesful)
+        if ( false == init_succesful)
         {
-            assert(1);
+            assert( true);
         }
 
         return true;
@@ -108,14 +108,14 @@ namespace kernel::internal::scheduler::wait_list
         task::Id & a_task_id
     )
     {
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
         {
             // TODO: it doesn't matter if memmory is allocated or not. Consider removing.
-            if (true == a_context.m_list.isAllocated(i))
+            if ( true == a_context.m_list.isAllocated( i))
             {
-                if (a_context.m_list.at(i).m_id == a_task_id)
+                if ( a_context.m_list.at( i).m_id == a_task_id)
                 {
-                    a_context.m_list.free(i);
+                    a_context.m_list.free( i);
                     break;
                 }
             }

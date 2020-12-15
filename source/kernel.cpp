@@ -25,19 +25,19 @@ namespace kernel::internal::context
 
 namespace kernel::internal
 {
-    inline void storeContext( kernel::internal::task::Id a_task);
-    inline void loadContext( kernel::internal::task::Id a_task);
+    inline void storeContext( task::Id a_task);
+    inline void loadContext( task::Id a_task);
 
     void task_routine();
     void idle_routine( void * a_parameter);
-    void terminateTask( kernel::internal::task::Id a_id);
+    void terminateTask( task::Id a_id);
 }
 
 namespace kernel
 {
     void init()
     {
-        if (internal::context::m_started)
+        if ( true == internal::context::m_started)
         {
             return;
         }
@@ -50,16 +50,16 @@ namespace kernel
                 task::Priority::Idle
             );
 
-            if (false == idle_task_created)
+            if ( false == idle_task_created)
             {
-                assert(1);
+                assert( true);
             }
         }
     }
     
     void start()
     {
-        if (internal::context::m_started)
+        if ( true == internal::context::m_started)
         {
             return;
         }
@@ -101,7 +101,7 @@ namespace kernel::task
                 a_create_suspended
             );
         
-            if (false == task_created)
+            if ( false == task_created)
             {
                 internal::lock::leave( internal::context::m_lock);
                 return false;
@@ -109,7 +109,7 @@ namespace kernel::task
 
             bool task_added = false;
 
-            if (a_create_suspended)
+            if ( a_create_suspended)
             {
                 task_added = internal::scheduler::addSuspendedTask(
                     internal::context::m_scheduler,
@@ -126,7 +126,7 @@ namespace kernel::task
                 );
             }
 
-            if (false == task_added)
+            if ( false == task_added)
             {
                 internal::task::destroy(
                     internal::context::m_tasks,
@@ -148,7 +148,7 @@ namespace kernel::task
                 current_task_id
             );
 
-            if (a_handle)
+            if ( a_handle)
             {
                 *a_handle = internal::handle::create(
                     internal::handle::ObjectType::Task,
@@ -184,14 +184,16 @@ namespace kernel::task
                 created_task_id
             );
         }
-        kernel::internal::lock::leave( internal::context::m_lock);
+        internal::lock::leave( internal::context::m_lock);
 
         return new_handle;
     }
 
     void terminate( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Task != internal::handle::getObjectType( a_handle))
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Task != objectType)
         {
             return;
         }
@@ -202,19 +204,21 @@ namespace kernel::task
 
     void suspend( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Task != internal::handle::getObjectType( a_handle))
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Task != objectType)
         {
             return;
         }
 
-        if (false == internal::context::m_started)
+        if ( false == internal::context::m_started)
         {
             return;
         }
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto suspended_task_id = internal::handle::getId<internal::task::Id>(a_handle);
+            auto suspended_task_id = internal::handle::getId< internal::task::Id>( a_handle);
 
             internal::scheduler::setTaskToSuspended(
                 internal::context::m_scheduler,
@@ -225,9 +229,9 @@ namespace kernel::task
             // Reschedule in case task is suspending itself.
             const auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
-            if (current_task_id == suspended_task_id)
+            if ( current_task_id == suspended_task_id)
             {
-                hardware::syscall(hardware::SyscallId::ExecuteContextSwitch);
+                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -242,19 +246,21 @@ namespace kernel::task
     // - if task is not suspended - do nothing.
     void resume( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Task != internal::handle::getObjectType(a_handle))
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Task != objectType)
         {
             return;
         }
 
-        if (false == internal::context::m_started)
+        if ( false == internal::context::m_started)
         {
             return;
         }
 
         kernel::internal::lock::enter( internal::context::m_lock);
         {
-            auto resumedTaskId = internal::handle::getId<internal::task::Id>(a_handle);
+            auto resumedTaskId = internal::handle::getId< internal::task::Id>( a_handle);
             auto currentTaskId = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
             if (resumedTaskId == currentTaskId)
@@ -301,7 +307,7 @@ namespace kernel::task
     {
         // Note: Skip sleeping if provided time is smaller or equal
         //       to single context switch interval.
-        if (a_time <= internal::system_timer::CONTEXT_SWITCH_INTERVAL_MS)
+        if ( a_time <= internal::system_timer::CONTEXT_SWITCH_INTERVAL_MS)
         {
             return;
         }
@@ -363,14 +369,13 @@ namespace kernel::timer
 
     void destroy( kernel::Handle & a_handle)
     {
-        if ( internal::handle::ObjectType::Timer == internal::handle::getObjectType(a_handle))
-        {
-            return;
-        }
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Timer != objectType)
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
             internal::timer::destroy( internal::context::m_timers, timer_id);
         }
         internal::lock::leave( internal::context::m_lock);
@@ -378,14 +383,16 @@ namespace kernel::timer
 
     void start( kernel::Handle & a_handle)
     {
-        if ( internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_handle))
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Timer != objectType)
         {
             return;
         }
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
             internal::timer::start( internal::context::m_timers, timer_id);
         }
         internal::lock::leave( internal::context::m_lock);
@@ -393,14 +400,16 @@ namespace kernel::timer
 
     void stop( kernel::Handle & a_handle)
     {
-        if (internal::handle::ObjectType::Timer != internal::handle::getObjectType(a_handle))
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Timer != objectType)
         {
             return;
         }
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
             internal::timer::stop( internal::context::m_timers, timer_id);
         }
         internal::lock::leave( internal::context::m_lock);
@@ -420,7 +429,7 @@ namespace kernel::event
                 a_manual_reset
             );
 
-            if (false == event_created)
+            if ( false == event_created)
             {
                 internal::lock::leave( internal::context::m_lock);
                 return false;
@@ -437,41 +446,7 @@ namespace kernel::event
     }
     void destroy( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType(a_handle);
-
-        if (internal::handle::ObjectType::Event != objectType)
-        {
-            return;
-        }
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::destroy( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
-    }
-
-    void set( kernel::Handle & a_handle)
-    {
-        const auto objectType = internal::handle::getObjectType(a_handle);
-
-        if (internal::handle::ObjectType::Event != objectType)
-        {
-            return;
-        }
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            internal::event::set( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
-    }
-
-    void reset( kernel::Handle & a_handle)
-    {
-        const internal::handle::ObjectType objectType = internal::handle::getObjectType(a_handle);
+        const auto objectType = internal::handle::getObjectType( a_handle);
 
         if ( internal::handle::ObjectType::Event != objectType)
         {
@@ -480,7 +455,41 @@ namespace kernel::event
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
+            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+            internal::event::destroy( internal::context::m_events, event_id);
+        }
+        internal::lock::leave( internal::context::m_lock);
+    }
+
+    void set( kernel::Handle & a_handle)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Event != objectType)
+        {
+            return;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+            internal::event::set( internal::context::m_events, event_id);
+        }
+        internal::lock::leave( internal::context::m_lock);
+    }
+
+    void reset( kernel::Handle & a_handle)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Event != objectType)
+        {
+            return;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
             internal::event::reset( internal::context::m_events, event_id);
         }
         internal::lock::leave( internal::context::m_lock);
@@ -552,7 +561,7 @@ namespace kernel::sync
 
             if ( false == operation_result)
             {
-                assert(1);
+                assert( true);
             }
         }
         hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
@@ -645,7 +654,7 @@ namespace kernel::critical_section
         //       waking from waitForSingleObject is big enough for context switches to occur
         //       and modify m_lockCount even if m_event was set. So after waking up task,
         //       m_lockCount test should be done again.
-        while (1)
+        while ( true)
         {
             internal::lock::enter( internal::context::m_lock);
             {
@@ -665,7 +674,7 @@ namespace kernel::critical_section
 
                 if ( sync::WaitResult::ObjectSet != result)
                 {
-                    assert(1);
+                    assert( true);
                 }
             }
             else
@@ -682,7 +691,7 @@ namespace kernel::critical_section
             --a_context.m_lockCount;
             if (0U == a_context.m_lockCount)
             {
-                auto event_id = internal::handle::getId<internal::event::Id>(a_context.m_event);
+                auto event_id = internal::handle::getId< internal::event::Id>( a_context.m_event);
                 internal::event::set( internal::context::m_events, event_id);
             }
         }
@@ -693,7 +702,7 @@ namespace kernel::critical_section
 namespace kernel::internal
 {
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    void storeContext( internal::task::Id a_task)
+    inline void storeContext( internal::task::Id a_task)
     {
         const uint32_t sp = hardware::sp::get();
         internal::task::sp::set( internal::context::m_tasks, a_task, sp);
@@ -703,7 +712,7 @@ namespace kernel::internal
     }
 
     // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    void loadContext( kernel::internal::task::Id a_task)
+    inline void loadContext( kernel::internal::task::Id a_task)
     {
         auto next_task_context = internal::task::context::get( internal::context::m_tasks, a_task);
         hardware::context::next::set( next_task_context);
@@ -728,7 +737,7 @@ namespace kernel::internal
 
             internal::task::destroy( internal::context::m_tasks, a_id);
 
-            if (currentTask == a_id)
+            if ( currentTask == a_id)
             {
                 if ( true == internal::context::m_started)
                 {
@@ -766,10 +775,10 @@ namespace kernel::internal
         terminateTask( currentTask); // Cleanup task data.
     }
 
-    __attribute__((weak)) void idle_routine( void * a_parameter)
+    __attribute__(( weak)) void idle_routine( void * a_parameter)
     {
         volatile int i = 0;
-        while(1)
+        while( true)
         {
             kernel::hardware::debug::print("idle\r\n");
             for (i = 0; i < 100000; i++);

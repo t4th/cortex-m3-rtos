@@ -52,10 +52,10 @@ namespace kernel::internal::scheduler::wait
         Time_ms &               a_current
     )
     {
-        assert(a_wait_signals);
-        assert(a_number_of_signals > 0U);
+        assert( a_wait_signals);
+        assert( a_number_of_signals > 0U);
 
-        if (a_number_of_signals < MAX_INPUT_SIGNALS)
+        if ( a_number_of_signals < MAX_INPUT_SIGNALS)
         {
             a_conditions.m_numberOfSignals = a_number_of_signals;
         }
@@ -64,9 +64,9 @@ namespace kernel::internal::scheduler::wait
             return false;
         }
 
-        for (uint32_t i = 0U; i < a_conditions.m_numberOfSignals; ++i)
+        for ( uint32_t i = 0U; i < a_conditions.m_numberOfSignals; ++i)
         {
-            a_conditions.m_waitSignals[i] = a_wait_signals[i];
+            a_conditions.m_waitSignals[ i] = a_wait_signals[ i];
         }
 
         a_conditions.m_waitForAllSignals = a_wait_for_all_signals;
@@ -91,16 +91,16 @@ namespace kernel::internal::scheduler::wait
         bool condition_fulfilled = true;
 
         // TODO: seperate late-decision bools from loop.
-        for (uint32_t i = 0; i < a_number_of_signals; ++i)
+        for ( uint32_t i = 0U; i < a_number_of_signals; ++i)
         {
             const bool valid_handle = handle::testCondition(
                 a_timer_context,
                 a_event_context,
-                a_wait_signals[i],
+                a_wait_signals[ i],
                 condition_fulfilled
             );
 
-            if (false == valid_handle)
+            if ( false == valid_handle)
             {
                 a_result = kernel::sync::WaitResult::InvalidHandle;
                 return true;
@@ -110,9 +110,9 @@ namespace kernel::internal::scheduler::wait
 
             // When not waiting for all signals to be set,
             // return on first condition fulfilled.
-            if (false == a_wait_for_all_signals)
+            if ( false == a_wait_for_all_signals)
             {
-                if (true == condition_fulfilled)
+                if ( true == condition_fulfilled)
                 {
                     internal::event::state::updateAll(a_event_context);
                     a_signaled_item_index = i;
@@ -126,7 +126,7 @@ namespace kernel::internal::scheduler::wait
             }
             else
             {
-                if (false == condition_fulfilled)
+                if ( false == condition_fulfilled)
                 {
                     return false;
                 }
@@ -138,9 +138,9 @@ namespace kernel::internal::scheduler::wait
         }
 
         // Check if all provided signals are set.
-        if (true == a_wait_for_all_signals)
+        if ( true == a_wait_for_all_signals)
         {
-            if (true == condition_fulfilled)
+            if ( true == condition_fulfilled)
             {
                 internal::event::state::updateAll(a_event_context);
                 a_result = kernel::sync::WaitResult::ObjectSet;
@@ -160,11 +160,11 @@ namespace kernel::internal::scheduler::wait
         uint32_t &                  a_signaled_item_index
         )
     {
-        switch(a_conditions.m_type)
+        switch( a_conditions.m_type)
         {
         case Type::Sleep:
         {
-            if (a_current - a_conditions.m_start > a_conditions.m_interval)
+            if ( a_current - a_conditions.m_start > a_conditions.m_interval)
             {
                 a_result = kernel::sync::WaitResult::ObjectSet;
                 return true;
@@ -175,9 +175,9 @@ namespace kernel::internal::scheduler::wait
         {
             a_signaled_item_index = 0U;
 
-            if (false == a_conditions.m_waitForver)
+            if ( false == a_conditions.m_waitForver)
             {
-                if (a_current - a_conditions.m_start > a_conditions.m_interval)
+                if ( a_current - a_conditions.m_start > a_conditions.m_interval)
                 {
                     a_result = kernel::sync::WaitResult::TimeoutOccurred;
                     return true;

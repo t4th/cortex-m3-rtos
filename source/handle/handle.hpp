@@ -14,26 +14,27 @@ namespace kernel::internal::handle
         Event
     };
     
-    inline kernel::Handle create(ObjectType a_type, uint32_t a_index)
+    inline kernel::Handle create( ObjectType a_type, uint32_t a_index)
     {
-        return reinterpret_cast<kernel::Handle>((static_cast<uint32_t>(a_type) << 16U) | (a_index & 0xFFFFU));
+        return reinterpret_cast< kernel::Handle>(( static_cast< uint32_t>( a_type) << 16U) | ( a_index & 0xFFFFU));
     }
 
     inline ObjectType getObjectType(volatile kernel::Handle & a_handle)
     {
-        uint32_t object_type = (reinterpret_cast<uint32_t>(a_handle) >> 16U) & 0xFFFFU;
+        uint32_t object_type = ( reinterpret_cast< uint32_t>( a_handle) >> 16U) & 0xFFFFU;
 
-        return static_cast<ObjectType>(object_type);
+        return static_cast< ObjectType>( object_type);
     }
 
     // Strong typed version of getIndex.
-    template<typename TId>
-    inline TId getId(volatile Handle & a_handle)
+    template< typename TId>
+    inline TId getId( volatile Handle & a_handle)
     {
-        return reinterpret_cast<uint32_t>(a_handle) & 0xFFFFU;
+        return reinterpret_cast< uint32_t>( a_handle) & 0xFFFFU;
     }
 
-    // Return value indicate if Handle type was valid for condition check.
+    // Test if system object pointed by handle is in signaled state.
+    // Return value indicate if Handle type is supported.
     inline bool testCondition(
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
@@ -41,17 +42,17 @@ namespace kernel::internal::handle
         bool &                      a_condition_fulfilled
     )
     {
-        const auto objectType = internal::handle::getObjectType(a_handle);
+        const auto objectType = internal::handle::getObjectType( a_handle);
 
         a_condition_fulfilled = false;
 
-        switch (objectType)
+        switch ( objectType)
         {
         case internal::handle::ObjectType::Event:
         {
-            auto event_id = internal::handle::getId<internal::event::Id>(a_handle);
-            auto evState = internal::event::state::get(a_event_context, event_id);
-            if (internal::event::State::Set == evState)
+            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+            auto evState = internal::event::state::get( a_event_context, event_id);
+            if ( internal::event::State::Set == evState)
             {
                 a_condition_fulfilled = true;
             }
@@ -59,9 +60,9 @@ namespace kernel::internal::handle
         }
         case internal::handle::ObjectType::Timer:
         {
-            auto timer_id = internal::handle::getId<internal::timer::Id>(a_handle);
-            auto timerState = internal::timer::getState(a_timer_context, timer_id);
-            if (internal::timer::State::Finished == timerState)
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
+            auto timerState = internal::timer::getState( a_timer_context, timer_id);
+            if ( internal::timer::State::Finished == timerState)
             {
                 a_condition_fulfilled = true;
             }

@@ -26,7 +26,7 @@ namespace kernel::internal::timer
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer<Timer, MAX_NUMBER> m_data{};
+        volatile kernel::internal::common::MemoryBuffer< Timer, MAX_NUMBER> m_data{};
     };
 
     inline bool create(
@@ -39,7 +39,7 @@ namespace kernel::internal::timer
         // Create new Timer object.
         uint32_t new_item_id;
 
-        if (false == a_context.m_data.allocate(new_item_id))
+        if ( false == a_context.m_data.allocate( new_item_id))
         {
             return false;
         }
@@ -47,7 +47,7 @@ namespace kernel::internal::timer
         a_id = new_item_id;
 
         // Initialize new Timer object.
-        volatile Timer & new_timer = a_context.m_data.at(new_item_id);
+        volatile Timer & new_timer = a_context.m_data.at( new_item_id);
 
         new_timer.m_start = a_start;
         new_timer.m_interval = a_interval;
@@ -59,22 +59,22 @@ namespace kernel::internal::timer
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        a_context.m_data.free(a_id);
+        a_context.m_data.free( a_id);
     }
 
     inline void start( Context & a_context, Id & a_id)
     {
-        a_context.m_data.at(a_id).m_state = State::Started;
+        a_context.m_data.at( a_id).m_state = State::Started;
     }
 
     inline void stop( Context & a_context, Id & a_id)
     {
-        a_context.m_data.at(a_id).m_state = State::Stopped;
+        a_context.m_data.at( a_id).m_state = State::Stopped;
     }
 
     inline State getState( Context & a_context, Id & a_id)
     {
-        return a_context.m_data.at(a_id).m_state;
+        return a_context.m_data.at( a_id).m_state;
     }
 
     inline void tick( Context & a_context, Time_ms & a_current)
@@ -86,15 +86,15 @@ namespace kernel::internal::timer
         //       Limiting branches should be more effective that
         //       late decision trees (and more cache friendly if
         //       applicable).
-        for (uint32_t i = 0U; i < MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < MAX_NUMBER; ++i)
         {
             // Note: For now this check stays due to memory buffer
             //       assert isAllocated when 'at' dereference is used.
-            if (true == a_context.m_data.isAllocated(i))
+            if ( true == a_context.m_data.isAllocated( i))
             {
-                volatile Timer & timer = a_context.m_data.at(i);
+                volatile Timer & timer = a_context.m_data.at( i);
 
-                if ((a_current - timer.m_start) > timer.m_interval)
+                if ( ( a_current - timer.m_start) > timer.m_interval)
                 {
                     // TODO: It would be more effective to make 2
                     //       buffers for each timer state.

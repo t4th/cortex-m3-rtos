@@ -22,16 +22,16 @@ namespace kernel::hardware
             ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
             ITM->TER = 1UL;                  // ITM Port #0 enable
         }
-        void putChar(char c)
+        void putChar( char c)
         {
-            ITM_SendChar(c);
+            ITM_SendChar( c);
         }
 
-        void print(const char * s)
+        void print( const char * s)
         {
-            while (*s != '\0')
+            while ( '\0' != *s)
             {
-                kernel::hardware::debug::putChar(*s);
+                kernel::hardware::debug::putChar( *s);
                 ++s;
             }
         }
@@ -42,7 +42,7 @@ namespace kernel::hardware
         }
     }
 
-    void syscall(SyscallId a_id)
+    void syscall( SyscallId a_id)
     {
         __ASM("DMB"); // Complete all explicit memory transfers
         
@@ -59,23 +59,23 @@ namespace kernel::hardware
 
     void init()
     {
-        SysTick_Config(SYSTICK_PRESCALER - 1U);
+        SysTick_Config( SYSTICK_PRESCALER - 1U);
 
         debug::init();
 
         // Setup interrupts.
         // Set priorities - lower number is higher priority
-        NVIC_SetPriority(SVCall_IRQn, 0U);
-        NVIC_SetPriority(SysTick_IRQn, 1U);
-        NVIC_SetPriority(PendSV_IRQn, 2U);
+        NVIC_SetPriority( SVCall_IRQn, 0U);
+        NVIC_SetPriority( SysTick_IRQn, 1U);
+        NVIC_SetPriority( PendSV_IRQn, 2U);
     }
     
     void start()
     {
         // Enable interrupts
-        NVIC_EnableIRQ(SVCall_IRQn);
-        NVIC_EnableIRQ(SysTick_IRQn);
-        NVIC_EnableIRQ(PendSV_IRQn);
+        NVIC_EnableIRQ( SVCall_IRQn);
+        NVIC_EnableIRQ( SysTick_IRQn);
+        NVIC_EnableIRQ( PendSV_IRQn);
     }
 
     namespace sp
@@ -89,13 +89,13 @@ namespace kernel::hardware
         void set(uint32_t a_new_sp)
         {
             // TODO: Thread mode should be used in final version
-            __set_PSP(a_new_sp);
+            __set_PSP( a_new_sp);
         }
     }
 
     namespace context::current
     {
-        void set(volatile kernel::hardware::task::Context * a_context)
+        void set( volatile kernel::hardware::task::Context * a_context)
         {
             current_task_context = a_context;
         }
@@ -103,7 +103,7 @@ namespace kernel::hardware
 
     namespace context::next
     {
-        void set(volatile kernel::hardware::task::Context * a_context)
+        void set( volatile kernel::hardware::task::Context * a_context)
         {
             next_task_context = a_context;
         }
@@ -127,19 +127,19 @@ namespace kernel::hardware::task
     void Stack::init(uint32_t a_routine) volatile
     {
         // TODO: Do something with magic numbers.
-        m_data[TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
-        m_data[TASK_STACK_SIZE - 7U] = 0xCD'CD'CD'CDU; // R1
-        m_data[TASK_STACK_SIZE - 6U] = 0xCD'CD'CD'CDU; // R2
-        m_data[TASK_STACK_SIZE - 5U] = 0xCD'CD'CD'CDU; // R3
-        m_data[TASK_STACK_SIZE - 4U] = 0U; // R12
-        m_data[TASK_STACK_SIZE - 3U] = 0U; // LR R14
-        m_data[TASK_STACK_SIZE - 2U] = a_routine;
-        m_data[TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
+        m_data[ TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
+        m_data[ TASK_STACK_SIZE - 7U] = 0xCD'CD'CD'CDU; // R1
+        m_data[ TASK_STACK_SIZE - 6U] = 0xCD'CD'CD'CDU; // R2
+        m_data[ TASK_STACK_SIZE - 5U] = 0xCD'CD'CD'CDU; // R3
+        m_data[ TASK_STACK_SIZE - 4U] = 0U; // R12
+        m_data[ TASK_STACK_SIZE - 3U] = 0U; // LR R14
+        m_data[ TASK_STACK_SIZE - 2U] = a_routine;
+        m_data[ TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
     }
     
     uint32_t Stack::getStackPointer() volatile
     {
-        return reinterpret_cast<uint32_t>(&m_data[TASK_STACK_SIZE - 8]);
+        return reinterpret_cast< uint32_t>( &m_data[ TASK_STACK_SIZE - 8]);
     }
 }
 
@@ -176,7 +176,7 @@ extern "C"
         __ASM("bx r0");
     }
 
-    void SVC_Handler_Main(unsigned int * svc_args)
+    void SVC_Handler_Main( unsigned int * svc_args)
     {
         // This handler implementation is taken from official reference manual.
         // svc_args points to context stored when SVC interrupt was activated.

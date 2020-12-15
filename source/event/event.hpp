@@ -31,7 +31,7 @@ namespace kernel::internal::event
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer<Event, MAX_NUMBER> m_data{};
+        volatile kernel::internal::common::MemoryBuffer< Event, MAX_NUMBER> m_data{};
     };
 
     inline bool create(
@@ -43,7 +43,7 @@ namespace kernel::internal::event
         // Create new Event object.
         uint32_t new_item_id;
 
-        if (false == a_context.m_data.allocate(new_item_id))
+        if ( false == a_context.m_data.allocate( new_item_id))
         {
             return false;
         }
@@ -51,7 +51,7 @@ namespace kernel::internal::event
         a_id = new_item_id;
 
         // Initialize new object.
-        volatile Event & new_event = a_context.m_data.at(new_item_id);
+        volatile Event & new_event = a_context.m_data.at( new_item_id);
 
         new_event.m_manual_reset = a_manual_reset;
         new_event.m_state = State::Reset;
@@ -61,17 +61,17 @@ namespace kernel::internal::event
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        a_context.m_data.free(a_id);
+        a_context.m_data.free( a_id);
     }
 
     inline void set( Context & a_context, Id & a_id)
     {
-        a_context.m_data.at(a_id).m_state = State::Set;
+        a_context.m_data.at( a_id).m_state = State::Set;
     }
 
     inline void reset( Context & a_context, Id & a_id)
     {
-        a_context.m_data.at(a_id).m_state = State::Reset;
+        a_context.m_data.at( a_id).m_state = State::Reset;
     }
 
     namespace state
@@ -81,15 +81,15 @@ namespace kernel::internal::event
         // WaitForObject functions.
         inline void updateAll( Context & a_context)
         {
-            for (Id i = 0U; i < MAX_NUMBER; ++i)
+            for ( Id i = 0U; i < MAX_NUMBER; ++i)
             {
-                if (true == a_context.m_data.isAllocated(i))
+                if ( true == a_context.m_data.isAllocated( i))
                 {
-                    if (false == a_context.m_data.at(i).m_manual_reset)
+                    if ( false == a_context.m_data.at( i).m_manual_reset)
                     {
-                        if (State::SetUpdateLater == a_context.m_data.at(i).m_state)
+                        if ( State::SetUpdateLater == a_context.m_data.at( i).m_state)
                         {
-                            reset(a_context, i);
+                            reset( a_context, i);
                         }
                     }
                 }
@@ -98,19 +98,19 @@ namespace kernel::internal::event
 
         inline State get( Context & a_context, Id & a_id)
         {
-            State state = a_context.m_data.at(a_id).m_state;
+            State state = a_context.m_data.at( a_id).m_state;
 
             // TODO: possible memory barrier here
 
-            if (false == a_context.m_data.at(a_id).m_manual_reset)
+            if ( false == a_context.m_data.at( a_id).m_manual_reset)
             {
-                if (State::Set == state)
+                if ( State::Set == state)
                 {
-                    a_context.m_data.at(a_id).m_state = State::SetUpdateLater;
+                    a_context.m_data.at( a_id).m_state = State::SetUpdateLater;
                 }
             }
 
-            if (State::Reset != state)
+            if ( State::Reset != state)
             {
                 state = State::Set;
             }

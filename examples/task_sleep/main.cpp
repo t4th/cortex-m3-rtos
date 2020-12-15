@@ -12,12 +12,12 @@ struct timer
     kernel::Time_ms time2;
 };
 
-void printTask(const char * a_text)
+void printTask( const char * a_text)
 {
-    kernel::hardware::debug::print(a_text);
+    kernel::hardware::debug::print( a_text);
 }
 
-void task0(void * a_parameter);
+void task0( void * a_parameter);
 
 int main()
 {
@@ -28,9 +28,9 @@ int main()
 
     kernel::init();
 
-    kernel::task::create(task0, kernel::task::Priority::Low, nullptr, &timer.time0);
-    kernel::task::create(task0, kernel::task::Priority::Low, nullptr, &timer.time1);
-    kernel::task::create(task0, kernel::task::Priority::Low, nullptr, &timer.time2);
+    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time0);
+    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time1);
+    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time2);
 
     kernel::start();
 
@@ -38,24 +38,24 @@ int main()
 }
 
 // Delayed ping.
-void task0(void * a_parameter)
+void task0( void * a_parameter)
 {
-    kernel::Time_ms * timer = (kernel::Time_ms*)a_parameter;
-    printTask("task - start\r\n");
+    kernel::Time_ms * timer = ( kernel::Time_ms*) a_parameter;
+    printTask( "task - start\r\n");
 
-    while (true)
+    while ( true)
     {
-        kernel::task::sleep(*timer);
-        switch(*timer)
+        kernel::task::sleep( *timer);
+        switch( *timer)
         {
         case 100:
-            printTask("task 0 - ping\r\n");
+            printTask( "task 0 - ping\r\n");
             break;
         case 500:
-            printTask("task 1 - ping\r\n");
+            printTask( "task 1 - ping\r\n");
             break;
         case 1000:
-            printTask("task 2 - ping\r\n");
+            printTask( "task 2 - ping\r\n");
             break;
         }
     }

@@ -6,9 +6,9 @@
 #include <kernel.hpp>
 #include <hardware.hpp>
 
-void printTask(const char * a_text)
+void printTask( const char * a_text)
 {
-    kernel::hardware::debug::print(a_text);
+    kernel::hardware::debug::print( a_text);
 }
 
 struct Events
@@ -16,8 +16,8 @@ struct Events
     kernel::Handle event0;
 };
 
-void task0(void * a_parameter);
-void task1(void * a_parameter);
+void task0( void * a_parameter);
+void task1( void * a_parameter);
 
 int main()
 {
@@ -25,73 +25,78 @@ int main()
 
     kernel::init();
 
-    kernel::task::create(task0, kernel::task::Priority::Low, nullptr, &events);
+    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &events);
 
     kernel::start();
 
     for(;;);
 }
 
-void task0(void * a_parameter)
+void task0( void * a_parameter)
 {
-    Events * events = (Events*)a_parameter;
+    Events * events = ( Events*) a_parameter;
 
-    printTask("task 0 - start\r\n");
+    printTask( "task 0 - start\r\n");
 
     kernel::Handle hTask1;
 
-    if (kernel::task::create(
+    bool task_create = kernel::task::create(
         task1,
         kernel::task::Priority::Medium,
         &hTask1,
         events,
         true
-    ))
+    );
+        
+    if ( true == task_create)
     {
-        printTask("task 0 - created Medium suspended task 1\r\n");
+        printTask( "task 0 - created Medium suspended task 1\r\n");
     }
 
-    if (kernel::event::create(events->event0))
+    bool event_created = kernel::event::create( events->event0);
+    
+    if ( event_created)
     {
-        printTask("task 0 - created event 0\r\n");
+        printTask( "task 0 - created event 0\r\n");
     }
     else
     {
-        printTask("task 0 - create event failed\r\n");
+        printTask( "task 0 - create event failed\r\n");
     }
 
-    printTask("task 0 - resuming task 1\r\n");
-    kernel::task::resume(hTask1);
+    printTask( "task 0 - resuming task 1\r\n");
+    
+    kernel::task::resume( hTask1);
 
-    while (true)
+    while ( true)
     {
-        kernel::task::sleep(500);
-        printTask("task 0 - set event 0\r\n");
-        kernel::event::set(events->event0);
+        kernel::task::sleep( 500U);
+        printTask( "task 0 - set event 0\r\n");
+        kernel::event::set( events->event0);
     }
 }
 
-void task1(void * a_parameter)
+void task1( void * a_parameter)
 {
-    Events * events = (Events*)a_parameter;
+    Events * events = ( Events*) a_parameter;
 
-    printTask("task 1 - start\r\n");
+    printTask( "task 1 - start\r\n");
 
-    while (true)
+    while ( true)
     {
-        printTask("task 1 - wait forever for event 0\r\n");
+        printTask( "task 1 - wait forever for event 0\r\n");
 
-        kernel::sync::WaitResult waitResult = kernel::sync::waitForSingleObject(events->event0);
+        kernel::sync::WaitResult waitResult = kernel::sync::waitForSingleObject( events->event0);
 
-        if (kernel::sync::WaitResult::ObjectSet == waitResult)
+        if ( kernel::sync::WaitResult::ObjectSet == waitResult)
         {
-            printTask("task 1 - wake up with object set\r\n");
+            printTask( "task 1 - wake up with object set\r\n");
         }
         else
         {
-            printTask("task 1 - wake up failed\r\n");
+            printTask( "task 1 - wake up failed\r\n");
         }
 
-        kernel::task::sleep(100);
+        kernel::task::sleep( 100U);
     }
 }

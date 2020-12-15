@@ -24,11 +24,11 @@ namespace kernel::hardware
         class Stack
         {
             public:
-                void        init(uint32_t a_routine) volatile;
+                void        init( uint32_t a_routine) volatile;
                 uint32_t    getStackPointer() volatile;
             private:
                 // TODO: Add sanity magic numbers.
-                volatile uint32_t    m_data[TASK_STACK_SIZE];
+                volatile uint32_t    m_data[ TASK_STACK_SIZE];
         };
     }
     
@@ -39,7 +39,7 @@ namespace kernel::hardware
     };
 
     // When called while interrupts are disabled will cause HardFault exception.
-    void syscall(SyscallId a_id);
+    void syscall( SyscallId a_id);
 
     void init();
     void start();
@@ -47,17 +47,17 @@ namespace kernel::hardware
     namespace sp
     {
         uint32_t get();
-        void set(uint32_t);
+        void set( uint32_t);
     }
 
     namespace context::current
     {
-        void set(volatile kernel::hardware::task::Context * a_context);
+        void set( volatile kernel::hardware::task::Context * a_context);
     }
 
     namespace context::next
     {
-        void set(volatile kernel::hardware::task::Context * a_context);
+        void set( volatile kernel::hardware::task::Context * a_context);
     }
 
     namespace interrupt
@@ -68,8 +68,8 @@ namespace kernel::hardware
 
     namespace debug
     {
-        void putChar(char c);
-        void print(const char * s);
+        void putChar( char c);
+        void print( const char * s);
         void setBreakpoint();
     }
 }
