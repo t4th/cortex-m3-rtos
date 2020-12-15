@@ -5,7 +5,7 @@
 
 #include <handle.hpp>
 
-// Scheduler is used to order wihch task is to be served next.
+// Scheduler is used to order which task is to be served next.
 // It is state machine using m_current and m_next to evaluate
 // arbitration queues.
 
@@ -20,9 +20,9 @@ namespace kernel::internal::scheduler
     struct Context
     {
         // Note: by design, Idle task must always be available
-        //       and has Id = 0 and Idle priority.
-        volatile kernel::internal::task::Id m_current{0U};
-        volatile kernel::internal::task::Id m_next{0U};
+        //       ,has Id = 0 and Idle priority. Otherwise UB.
+        volatile kernel::internal::task::Id m_current{ 0U};
+        volatile kernel::internal::task::Id m_next{ 0U};
 
         // Ready list.
         ready_list::Context m_ready_list{};
@@ -38,7 +38,7 @@ namespace kernel::internal::scheduler
     )
     {
         kernel::task::Priority priority = 
-            task::priority::get(a_task_context, a_task_id);
+            task::priority::get( a_task_context, a_task_id);
 
         bool task_added = ready_list::addTask(
             a_context.m_ready_list,
@@ -46,7 +46,7 @@ namespace kernel::internal::scheduler
             a_task_id
         );
 
-        if (!task_added)
+        if ( false == task_added)
         {
             return false;
         }
@@ -81,7 +81,7 @@ namespace kernel::internal::scheduler
             a_task_id
         );
 
-        if (kernel::task::State::Suspended != resumed_task_state)
+        if ( kernel::task::State::Suspended != resumed_task_state)
         {
             return false;
         }
@@ -93,7 +93,7 @@ namespace kernel::internal::scheduler
 
         bool task_added = addReadyTask(a_context, a_task_context, a_task_id);
 
-        if (task_added)
+        if ( true == task_added)
         {
             kernel::internal::task::state::set(
                 a_task_context,
@@ -149,7 +149,7 @@ namespace kernel::internal::scheduler
             a_current
             );
 
-        if (false == task_added)
+        if ( false == task_added)
         {
             return false;
         }
@@ -199,7 +199,7 @@ namespace kernel::internal::scheduler
             a_current
         );
 
-        if (false == task_added)
+        if ( false == task_added)
         {
             return false;
         }
@@ -255,11 +255,11 @@ namespace kernel::internal::scheduler
     {
         bool next_task_found = false;
 
-        for (uint32_t prio = static_cast<uint32_t>(kernel::task::Priority::High);
+        for ( uint32_t prio = static_cast<uint32_t>( kernel::task::Priority::High);
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {
-            kernel::task::Priority priority = static_cast<kernel::task::Priority>(prio);
+            kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
 
             next_task_found = ready_list::findNextTask(
                 a_context.m_ready_list,
@@ -267,14 +267,14 @@ namespace kernel::internal::scheduler
                 a_next_task_id
             );
 
-            if (next_task_found)
+            if ( next_task_found)
             {
                 a_context.m_next = a_next_task_id;
                 break;
             }
         }
 
-        if (next_task_found)
+        if ( next_task_found)
         {
             kernel::internal::task::state::set(
                 a_task_context,
@@ -302,11 +302,11 @@ namespace kernel::internal::scheduler
     {
         bool next_task_found = false;
 
-        for (uint32_t prio = static_cast<uint32_t>(kernel::task::Priority::High);
+        for ( uint32_t prio = static_cast< uint32_t>( kernel::task::Priority::High);
             prio < kernel::internal::task::PRIORITIES_COUNT;
             ++prio)
         {
-            kernel::task::Priority priority = static_cast<kernel::task::Priority>(prio);
+            kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
 
             next_task_found = ready_list::findCurrentTask(
                 a_context.m_ready_list,
@@ -314,14 +314,14 @@ namespace kernel::internal::scheduler
                 a_next_task_id
             );
 
-            if (next_task_found)
+            if ( next_task_found)
             {
                 a_context.m_next = a_next_task_id;
                 break;
             }
         }
 
-        if (next_task_found)
+        if ( next_task_found)
         {
             kernel::internal::task::state::set(
                 a_task_context,
@@ -345,7 +345,7 @@ namespace kernel::internal::scheduler
     //       not be obfuscated by too many interfaces. Previous implementation
     //       included passing lambda with multitude of arguments ignoring 
     //       top-down architecture principle.
-    //
+
     //       Now Wait list data is accessed directly skipping Wait list interface
     //       in between.
     inline void checkWaitConditions(
@@ -358,16 +358,16 @@ namespace kernel::internal::scheduler
     {
         // Iterate over WaitItem which hold conditions used to wake up
         // waiting task.
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
         {
             auto & current_wait_item = a_context.m_wait_list.m_list;
 
-            if (true == current_wait_item.isAllocated(i))
+            if ( true == current_wait_item.isAllocated( i))
             {
                 uint32_t signaled_item_index = 0U;
 
                 kernel::sync::WaitResult a_wait_result;
-                auto & conditions = current_wait_item.at(i).m_conditions;
+                auto & conditions = current_wait_item.at( i).m_conditions;
 
                 bool is_condition_fulfilled =
                     wait::check(
@@ -379,9 +379,9 @@ namespace kernel::internal::scheduler
                         signaled_item_index
                     );
 
-                if (true == is_condition_fulfilled)
+                if ( true == is_condition_fulfilled)
                 {
-                    task::Id ready_task = current_wait_item.at(i).m_id;
+                    task::Id ready_task = current_wait_item.at( i).m_id;
 
                     bool task_added = addReadyTask(
                         a_context,
@@ -389,7 +389,7 @@ namespace kernel::internal::scheduler
                         ready_task
                     );
 
-                    if (task_added)
+                    if ( task_added)
                     {
                         kernel::internal::task::state::set(
                             a_task_context,
@@ -411,11 +411,11 @@ namespace kernel::internal::scheduler
                             signaled_item_index
                         );
 
-                        current_wait_item.free(i);
+                        current_wait_item.free( i);
                     }
                     else
                     {
-                        assert(1);
+                        assert( true);
                     }
                 }
             }
