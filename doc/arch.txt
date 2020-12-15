@@ -8,43 +8,31 @@ class kernel::kernel{
 -internal::timer::Context
 -internal::event::Context
 
--storeContext()
--loadContext()
--loadNextTask()
--switchContext()
--tick()
+-internal::storeContext()
+-internal::loadContext()
+-internal::loadNextTask()
+-internal::switchContext()
+-internal::tick()
 
 + init()
 + start()
 + getTime()
 }
 
-kernel::kernel -d-> kernel::system_timer
-kernel::kernel -l-> kernel::lock
-kernel::kernel -> kernel::hardware::hardware
+kernel::kernel -d-> kernel::internal::system_timer
+kernel::kernel -d-> kernel::internal::lock
 kernel::kernel -d-> kernel::task
 kernel::kernel -d-> kernel::critical_section
 kernel::kernel -d-> kernel::event
 kernel::kernel -d-> kernel::timer
 kernel::kernel -d-> kernel::sync
+kernel::kernel -> kernel::hardware::hardware
 
 kernel::kernel -d-> kernel::internal::scheduler
 kernel::kernel -d-> kernel::internal::handle
 
 class kernel::config
 {
-}
-
-class kernel::system_timer {
-+get()
-+increment()
-+isIntervalElapsed()
-}
-
-class kernel::lock {
-+isLocked()
-+enter()
-+leave()
 }
 
 class kernel::task {
@@ -120,7 +108,6 @@ class kernel::internal::scheduler {
 + checkWaitConditions()
 }
 
-
 class kernel::internal::event {
 + create()
 + destroy()
@@ -143,6 +130,19 @@ class kernel::internal::handle {
 + getIndex()
 + getObjectType()
 + getId()
+}
+
+
+class kernel::internal::system_timer {
++get()
++increment()
++isIntervalElapsed()
+}
+
+class kernel::internal::lock {
++isLocked()
++enter()
++leave()
 }
 
 class kernel::hardware::hardware {
