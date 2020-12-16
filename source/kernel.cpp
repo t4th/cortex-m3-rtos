@@ -25,8 +25,8 @@ namespace kernel::internal::context
 
 namespace kernel::internal
 {
-    inline void storeContext( task::Id a_task);
-    inline void loadContext( task::Id a_task);
+    // inline void storeContext( task::Id a_task);
+    // inline void loadContext( task::Id a_task);
 
     void task_routine();
     void idle_routine( void * a_parameter);
@@ -199,7 +199,7 @@ namespace kernel::task
         }
 
         auto terminated_task_id = internal::handle::getId<internal::task::Id>(a_handle);
-        internal::terminateTask(terminated_task_id);
+        internal::terminateTask( terminated_task_id);
     }
 
     void suspend( kernel::Handle & a_handle)
@@ -701,32 +701,12 @@ namespace kernel::critical_section
 
 namespace kernel::internal
 {
-    // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    inline void storeContext( internal::task::Id a_task)
-    {
-        const uint32_t sp = hardware::sp::get();
-        internal::task::sp::set( internal::context::m_tasks, a_task, sp);
-
-        auto current_task_context = internal::task::context::get( internal::context::m_tasks, a_task);
-        hardware::context::current::set( current_task_context);
-    }
-
-    // Must only be called from handler mode (MSP stack) since it is modifying psp.
-    inline void loadContext( kernel::internal::task::Id a_task)
-    {
-        auto next_task_context = internal::task::context::get( internal::context::m_tasks, a_task);
-        hardware::context::next::set( next_task_context);
-
-        const uint32_t next_sp = internal::task::sp::get( internal::context::m_tasks, a_task);
-        hardware::sp::set(next_sp);
-    }
-
-    void terminateTask( kernel::internal::task::Id a_id)
+    // Remove task from scheduler and internal::task.
+    void terminateTask( task::Id a_id)
     {
         internal::lock::enter( internal::context::m_lock);
         {
-            // Reschedule in case task is killing itself.
-            internal::task::Id currentTask =
+            const auto current_task =
                 internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
             internal::scheduler::removeTask(
@@ -737,7 +717,8 @@ namespace kernel::internal
 
             internal::task::destroy( internal::context::m_tasks, a_id);
 
-            if ( currentTask == a_id)
+            // Reschedule in case task is killing itself.
+            if ( current_task == a_id)
             {
                 if ( true == internal::context::m_started)
                 {
@@ -758,23 +739,27 @@ namespace kernel::internal
     // Task routine wrapper used by kernel.
     void task_routine()
     {
-        internal::task::Id currentTask;
+        internal::task::Id current_task;
         kernel::task::Routine routine;
         void * parameter;
 
         internal::lock::enter( internal::context::m_lock);
         {
-            currentTask = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
-            routine = internal::task::routine::get( internal::context::m_tasks, currentTask);
-            parameter = internal::task::parameter::get( internal::context::m_tasks, currentTask);
+            current_task = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+            routine = internal::task::routine::get( internal::context::m_tasks, current_task);
+            parameter = internal::task::parameter::get( internal::context::m_tasks, current_task);
         }
         internal::lock::leave( internal::context::m_lock);
 
         routine( parameter); // Call the actual task routine.
 
-        terminateTask( currentTask); // Cleanup task data.
+        terminateTask( current_task); // Cleanup task data.
     }
 
+    // Default Idle routine. Idle task MUST always be available or UB will happen.
+    // TODO: calculate CPU load
+    // TODO: consider creating callback instead of 'weak' attribute, where kernel API
+    //       functions won't work (Terminate on Idle task is a bad idea - UB).
     __attribute__(( weak)) void idle_routine( void * a_parameter)
     {
         volatile int i = 0;
@@ -782,45 +767,79 @@ namespace kernel::internal
         {
             kernel::hardware::debug::print("idle\r\n");
             for (i = 0; i < 100000; i++);
-            // TODO: calculate CPU load
         }
     }
 }
 
 namespace kernel::internal
 {
+    // This function is bridge between kernel::hardware and kernel::internal implementations.
+    // It stores hardware stack pointer in internal::task descriptor and provide memory location
+    // where kernel::hardware will store current context.
+    // NOTE: Must only be called from handler mode (MSP stack) since it is modifying psp.
+    inline void storeContext(
+        task::Context &   a_task_context,
+        task::Id &        a_task
+    )
+    {
+        const uint32_t sp = hardware::sp::get();
+        internal::task::sp::set( a_task_context, a_task, sp);
+
+        auto current_task_context = internal::task::context::get( a_task_context, a_task);
+        hardware::context::current::set( current_task_context);
+    }
+
+    // This function is bridge between kernel::hardware and kernel::internal implementations.
+    // It provide kernel::hardware layer with previously stored task context and stack pointer
+    // from kernel::internal::task descriptor.
+    // NOTE: Must only be called from handler mode (MSP stack) since it is modifying psp.
+    inline void loadContext( 
+        task::Context &     a_task_context,
+        task::Id &          a_task
+    )
+    {
+        auto next_task_context = task::context::get( a_task_context, a_task);
+        hardware::context::next::set( next_task_context);
+
+        const uint32_t next_sp = internal::task::sp::get( a_task_context, a_task);
+        hardware::sp::set( next_sp);
+    }
+
+    // This is function used by kernel::hardware to load and get next task sp and context. 
     void loadNextTask()
     {
-        internal::task::Id nextTask;
+        internal::task::Id next_task;
 
         bool task_available = scheduler::getCurrentTask(
             context::m_scheduler,
             context::m_tasks,
-            nextTask
+            next_task
         );
 
         assert( true == task_available);
 
-        loadContext( nextTask);
+        loadContext( context::m_tasks, next_task);
 
         internal::lock::leave( context::m_lock);
     }
 
+    // This is function used by kernel::hardware to get information, where to store current
+    // context and from where get next context.
     void switchContext()
     {
-        task::Id currentTask = scheduler::getCurrentTaskId( context::m_scheduler);
-        task::Id nextTask;
+        task::Id current_task = scheduler::getCurrentTaskId( context::m_scheduler);
+        task::Id next_task;
 
         bool task_available = scheduler::getCurrentTask(
             context::m_scheduler,
             context::m_tasks,
-            nextTask
+            next_task
         );
 
         assert( true == task_available);
 
-        storeContext( currentTask);
-        loadContext( nextTask);
+        storeContext( context::m_tasks, current_task);
+        loadContext( context::m_tasks, next_task);
 
         lock::leave( context::m_lock);
     }
@@ -853,15 +872,16 @@ namespace kernel::internal
 
             if ( interval_elapsed)
             {
-                task::Id currentTask =
+                task::Id current_task =
                     scheduler::getCurrentTaskId( context::m_scheduler);
 
                 // Find next task in priority group.
-                internal::task::Id nextTask;
+                internal::task::Id next_task;
+
                 bool task_found = scheduler::getNextTask(
                     context::m_scheduler,
                     context::m_tasks,
-                    nextTask
+                    next_task
                 );
 
                 if( task_found)
@@ -869,10 +889,10 @@ namespace kernel::internal
                     // TODO: move this check to scheduler
                     //       and integrate result to getNextTask
                     //       return value.
-                    if ( currentTask != nextTask)
+                    if ( current_task != next_task)
                     {
-                        storeContext( currentTask);
-                        loadContext( nextTask);
+                        storeContext( context::m_tasks, current_task);
+                        loadContext( context::m_tasks, next_task);
 
                         execute_context_switch = true;
                     }

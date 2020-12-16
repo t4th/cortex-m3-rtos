@@ -175,6 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\external\st\STM32F10x\startup_stm32f10x_hd.s" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

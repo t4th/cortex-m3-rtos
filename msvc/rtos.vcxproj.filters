@@ -18,6 +18,9 @@
     <Filter Include="Header Files\scheduler">
       <UniqueIdentifier>{1d65a30c-1821-4d3d-85fa-e77e3460b812}</UniqueIdentifier>
     </Filter>
+    <Filter Include="other">
+      <UniqueIdentifier>{c4b17228-d027-44ba-b45b-cbe6339c9fd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel.cpp">
@@ -71,6 +74,9 @@
   <ItemGroup>
     <None Include="..\external\st\STM32F10x\startup_stm32f10x_hd.s">
       <Filter>external</Filter>
+    </None>
+    <None Include="..\README.md">
+      <Filter>other</Filter>
     </None>
   </ItemGroup>
 </Project>
