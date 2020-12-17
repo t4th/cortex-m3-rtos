@@ -762,11 +762,8 @@ namespace kernel::internal
     //       functions won't work (Terminate on Idle task is a bad idea - UB).
     __attribute__(( weak)) void idle_routine( void * a_parameter)
     {
-        volatile int i = 0;
         while( true)
         {
-            kernel::hardware::debug::print("idle\r\n");
-            for (i = 0; i < 100000; i++);
         }
     }
 }
