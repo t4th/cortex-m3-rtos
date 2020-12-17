@@ -6,13 +6,21 @@ but elegant and easy to navigate version for education purpose. That's why I use
 programming paradigms/architect decisons.
 
 No fancy build system set - simple Keil Uvision Lite project due to free simulator. (it should be easy enough to setup this project with any other compiler/system)
+90% of development time was spent using simulator. Examples are avilable in the repository.
 
 Check out prove of concept branches for technical stuff (link below).
 
-Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
-
 Main source of information is official ARMv7-M Architecture Reference Manual
 https://developer.arm.com/documentation/ddi0403/latest/
+
+Task tracking via github:
+https://github.com/t4th/cortex-m3-rtos/projects/1
+
+On target template project:
+https://github.com/t4th/cortex-m3-rtos-project-template
+
+On target example projects:
+https://github.com/t4th/cortex-m3-rtos-blinky-example
 
 ## Notes
 12/12/2020 - initial version of waitForMultipleObject.
