@@ -127,7 +127,7 @@ namespace kernel::hardware
     {
         // TODO: Current implementation is naive.
         //       Disabling interrupts is never good solution.
-        //       Implement priority 3 groups: kernel, user_hi, user_lo
+        //       Implement priority 3 groups: kernel, user_high, user_low
         void lock( Context & a_context)
         {
             // Store local context.
