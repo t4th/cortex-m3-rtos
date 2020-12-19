@@ -16,6 +16,7 @@ namespace kernel::hardware
     {
         struct Context
         {
+            // TODO: Hide. This is HW specific implementation detail.
             volatile uint32_t   r4, r5, r6, r7,
                                 r8, r9, r10, r11;
         };
@@ -26,8 +27,8 @@ namespace kernel::hardware
             public:
                 void        init( uint32_t a_routine) volatile;
                 uint32_t    getStackPointer() volatile;
+
             private:
-                // TODO: Add sanity magic numbers.
                 volatile uint32_t    m_data[ TASK_STACK_SIZE];
         };
     }
@@ -43,6 +44,8 @@ namespace kernel::hardware
 
     void init();
     void start();
+
+    void waitForInterrupt();
 
     namespace sp
     {
@@ -60,10 +63,15 @@ namespace kernel::hardware
         void set( volatile kernel::hardware::task::Context * a_context);
     }
 
-    namespace interrupt
+    namespace critical_section
     {
-        void enableAll();
-        void disableAll();
+        struct Context
+        {
+            uint32_t m_local_data;
+        };
+
+        void lock( Context & a_context);
+        void unlock( Context & a_context);
     }
 
     namespace debug

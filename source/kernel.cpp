@@ -25,9 +25,6 @@ namespace kernel::internal::context
 
 namespace kernel::internal
 {
-    // inline void storeContext( task::Id a_task);
-    // inline void loadContext( task::Id a_task);
-
     void task_routine();
     void idle_routine( void * a_parameter);
     void terminateTask( task::Id a_id);
@@ -764,6 +761,7 @@ namespace kernel::internal
     {
         while( true)
         {
+            // TODO: consider using hardware::waitForInterrupt();
         }
     }
 }

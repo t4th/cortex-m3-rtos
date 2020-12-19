@@ -28,7 +28,7 @@ namespace kernel
 // User API for controling tasks.
 namespace kernel::task
 {
-    typedef void(*Routine)(void * a_parameter);
+    typedef void( *Routine)( void * a_parameter);
 
     // Task priority. Idle task MUST always be available and MUST
     // always be last in Priority enum. Otherwise UB.

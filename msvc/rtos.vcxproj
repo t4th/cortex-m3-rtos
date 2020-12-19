@@ -103,7 +103,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir);..\external\arm;..\external\st\STM32F10x;..\source\;..\source\common;..\source\event;..\source\handle;..\source\scheduler;..\source\task;..\source\timer;..\source\system_timer;..\source\hardware;..\source\lock;..\source\config</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()="  /D " __BKPT(a)=" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()="  /D " __BKPT(a)="  /D " __builtin_arm_wfi(a)=" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,6 +155,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\examples\create_task\main.cpp" />
+    <ClCompile Include="..\examples\critical_section\main.cpp" />
+    <ClCompile Include="..\examples\task_sleep\main.cpp" />
+    <ClCompile Include="..\examples\using_interrupt\main.cpp" />
+    <ClCompile Include="..\examples\waitForMultipleObjects\main.cpp" />
+    <ClCompile Include="..\examples\waitForSingleObject\main.cpp" />
     <ClCompile Include="..\source\hardware\armv7m\hardware.cpp" />
     <ClCompile Include="..\source\kernel.cpp" />
   </ItemGroup>

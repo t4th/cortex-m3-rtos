@@ -21,6 +21,27 @@
     <Filter Include="other">
       <UniqueIdentifier>{c4b17228-d027-44ba-b45b-cbe6339c9fd8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="examples">
+      <UniqueIdentifier>{8b03f7f4-9dcb-4e14-9edc-7725a239c485}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\create_task">
+      <UniqueIdentifier>{79e136a5-071e-4e2e-8c73-0e9cdad220ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\critical_section">
+      <UniqueIdentifier>{1468586a-34d8-4a30-9243-4bb1e4394bf4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\task_sleep">
+      <UniqueIdentifier>{375d9db3-5595-4934-a05a-bd5615319abd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\waitForMultipleObjects">
+      <UniqueIdentifier>{fa358beb-9e86-468f-8fa9-8078ff90d533}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\waitForSingleObject">
+      <UniqueIdentifier>{816a1089-33b9-4634-9314-b08b88b286ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\using_interrupt">
+      <UniqueIdentifier>{ee4d830d-f091-41d7-b889-884a49379312}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel.cpp">
@@ -28,6 +49,24 @@
     </ClCompile>
     <ClCompile Include="..\source\hardware\armv7m\hardware.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\create_task\main.cpp">
+      <Filter>examples\create_task</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\critical_section\main.cpp">
+      <Filter>examples\critical_section</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\task_sleep\main.cpp">
+      <Filter>examples\task_sleep</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\waitForMultipleObjects\main.cpp">
+      <Filter>examples\waitForMultipleObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\waitForSingleObject\main.cpp">
+      <Filter>examples\waitForSingleObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\using_interrupt\main.cpp">
+      <Filter>examples\using_interrupt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -38,7 +38,7 @@ https://github.com/t4th/cortex-m3-rtos-blinky-example
 - [x] events: create, delete
 - [x] function WaitForSingleObject, WaitForMultipleObject
 - [x] Critical section: enter, leave
-- [ ] way to map HW interrupts to events
+- [ ] HW vendor interrupts interface for kernel ~~way to map HW interrupts to events~~
 
 ### 1.0+ Features
 - [ ] stack over/underflow detection in Idle task

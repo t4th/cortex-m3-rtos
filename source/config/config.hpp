@@ -8,6 +8,9 @@
 
 namespace kernel::hardware
 {
+    // Core clock frequency used to drive SysTick (kernel timer).
+    constexpr uint32_t CORE_CLOCK_FREQ_HZ{ 72'000'000U};
+
     // Define maximum stack size for each task.
     // Setting this too low or decreasing compiler optimization levels
     // can easly cause undefined behaviour due to stack over/under-flow.

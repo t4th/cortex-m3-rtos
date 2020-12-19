@@ -11,9 +11,12 @@ volatile kernel::hardware::task::Context * next_task_context;
 // In current case its stm32f103ze clocked at 72MHz.
 namespace kernel::hardware
 {
-    constexpr uint32_t CORE_CLOCK_FREQ_HZ{72'000'000U};
-    constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_US{1000U};
-    constexpr uint32_t SYSTICK_PRESCALER{CORE_CLOCK_FREQ_HZ/TARGET_SYSTICK_TIMESTAMP_US};
+    // Variables used to calculate SysTick prescaler used to reach 1 ms timestamp.
+    // This is derived from formula:
+    // TARGET_SYSTICK_TIMESTAMP_HZ = CORE_CLOCK_FREQ_HZ / SYSTICK_PRESCALER,
+    // where SYSTICK_PRESCALER is searched value.
+    constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_HZ{ 1000U};
+    constexpr uint32_t SYSTICK_PRESCALER{ CORE_CLOCK_FREQ_HZ / TARGET_SYSTICK_TIMESTAMP_HZ};
     
     namespace debug
     {
@@ -38,21 +41,21 @@ namespace kernel::hardware
 
         void setBreakpoint()
         {
-            __ASM("BKPT 0\n");
+            __ASM(" BKPT 0\n");
         }
     }
 
     void syscall( SyscallId a_id)
     {
-        __ASM("DMB"); // Complete all explicit memory transfers
+        __ASM(" DMB"); // Complete all explicit memory transfers
         
-        switch(a_id)
+        switch( a_id)
         {
         case SyscallId::LoadNextTask:
-            __ASM("SVC #0");
+            __ASM(" SVC #0");
             break;
         case SyscallId::ExecuteContextSwitch:
-            __ASM("SVC #1");
+            __ASM(" SVC #1");
             break;
         }
     }
@@ -65,17 +68,28 @@ namespace kernel::hardware
 
         // Setup interrupts.
         // Set priorities - lower number is higher priority
+
+        // Note: SysTick and PendSV interrupts use the same priority,
+        //       to remove the need of critical section for use of shared
+        //       kernel data. It is actually recommended in ARM reference manual.
         NVIC_SetPriority( SVCall_IRQn, 0U);
+        NVIC_SetPriority( PendSV_IRQn, 1U);
         NVIC_SetPriority( SysTick_IRQn, 1U);
-        NVIC_SetPriority( PendSV_IRQn, 2U);
     }
     
     void start()
     {
         // Enable interrupts
+
+        // Note: Enable SysTick last, since it is the only PendSV trigger.
         NVIC_EnableIRQ( SVCall_IRQn);
-        NVIC_EnableIRQ( SysTick_IRQn);
         NVIC_EnableIRQ( PendSV_IRQn);
+        NVIC_EnableIRQ( SysTick_IRQn);
+    }
+
+    void waitForInterrupt()
+    {
+        __WFI();
     }
 
     namespace sp
@@ -109,22 +123,30 @@ namespace kernel::hardware
         }
     }
 
-    namespace interrupt
+    namespace critical_section
     {
-        void enableAll()
+        // TODO: Current implementation is naive.
+        //       Disabling interrupts is never good solution.
+        //       Implement priority 3 groups: kernel, user_hi, user_lo
+        void lock( Context & a_context)
         {
-            __enable_irq();
+            // Store local context.
+            a_context.m_local_data = __get_PRIMASK();
+            // Mask all maskable interrupts.
+            __disable_irq(); // __set_PRIMASK( 0U);
         }
-        void disableAll()
+
+        void unlock( Context & a_context)
         {
-            __disable_irq();
+            // Re-store primask to local context.
+            __set_PRIMASK( a_context.m_local_data);
         }
     }
 }
 
 namespace kernel::hardware::task
 {
-    void Stack::init(uint32_t a_routine) volatile
+    void Stack::init( uint32_t a_routine) volatile
     {
         // TODO: Do something with magic numbers.
         m_data[ TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
@@ -156,24 +178,24 @@ extern "C"
     
     inline __attribute__ (( naked )) void LoadTask(void)
     {
-        __ASM("CPSID I\n");
+        __ASM(" CPSID I\n");
 
         // Load task context
-        __ASM("ldr r0, =next_task_context\n");
-        __ASM("ldr r1, [r0]\n");
-        __ASM("ldm r1, {r4-r11}\n");
+        __ASM(" ldr r0, =next_task_context\n");
+        __ASM(" ldr r1, [r0]\n");
+        __ASM(" ldm r1, {r4-r11}\n");
 
         // 0xFFFFFFFD in r0 means 'return to thread mode' (use PSP).
         // TODO: first task should be initialized to Thread Mode
-        __ASM("ldr r0, =0xFFFFFFFD \n");
-        __ASM("CPSIE I \n");
+        __ASM(" ldr r0, =0xFFFFFFFD \n");
+        __ASM(" CPSIE I \n");
         
         // This is not needed in this case, due to write buffer being cleared on interrupt exit,
         // but it is nice to have explicit information that memory write delay is taken into account.
-        __ASM("DSB"); // Complete all explicit memory transfers
-        __ASM("ISB"); // flush instruction pipeline
+        __ASM(" DSB"); // Complete all explicit memory transfers
+        __ASM(" ISB"); // flush instruction pipeline
         
-        __ASM("bx r0");
+        __ASM(" bx r0");
     }
 
     void SVC_Handler_Main( unsigned int * svc_args)
@@ -190,14 +212,15 @@ extern "C"
             case 0U:       // SyscallId::LoadNextTask:
             {
                 kernel::internal::loadNextTask();
-                __DSB(); // Complete all explicit memory transfers
+                __DSB(); // Complete unfinished memory transfers from loadNextTask.
                 LoadTask();
                 break;
             }
             case 1U:       // SyscallId::ExecuteContextSwitch
             {
                 kernel::internal::switchContext();
-                __DSB(); // Complete all explicit memory transfers
+                __DSB(); // Complete unfinished memory transfers from switchContext.
+                __ISB(); // Flush instructions in pipeline before entering PendSV.
                 SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV_Handler to pending state so it can tail chain from SVC.
                 break;
             }
@@ -210,11 +233,11 @@ extern "C"
     {
         // This handler implementation is taken from official reference manual. Since SVC assembly instruction store argument in opcode itself,
         // code bellow track instruction address that invoked SVC interrupt via context stored when interrupt was activated.
-        __ASM("TST lr, #4\n");  // lr AND #4 - Test if masked bits are set. 
-        __ASM("ITE EQ\n"        // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
-        "MRSEQ r0, MSP\n"       // Move the contents of a special register to a general-purpose register. It block with EQ.
-        "MRSNE r0, PSP\n");     // It block with NE -> z == 0 Not equal
-        __ASM("B SVC_Handler_Main\n");
+        __ASM(" TST lr, #4\n");  // lr AND #4 - Test if masked bits are set. 
+        __ASM(" ITE EQ\n"        // Next 2 instructions are conditional. EQ - equal - Z(zero) flag == 1. Check if result is 0.
+        " MRSEQ r0, MSP\n"       // Move the contents of a special register to a general-purpose register. It block with EQ.
+        " MRSNE r0, PSP\n");     // It block with NE -> z == 0 Not equal
+        __ASM(" B SVC_Handler_Main\n");
     }
 
     void SysTick_Handler(void)
@@ -222,9 +245,9 @@ extern "C"
         // TODO: Make this function explicitly inline.
         bool execute_context_switch = kernel::internal::tick();
 
-        __DSB(); // Complete all explicit memory transfers
+        __DSB(); // Complete unfinished memory transfers from tick function.
 
-        if (execute_context_switch)
+        if ( execute_context_switch)
         {
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk; // Set PendSV interrupt to pending state.
         }
@@ -232,29 +255,29 @@ extern "C"
     
     __attribute__ (( naked )) void PendSV_Handler(void) // Use 'naked' attribute to remove C ABI, because return from interrupt must be set manually.
     {
-        __ASM("CPSID I\n");
+        __ASM(" CPSID I\n");
         
         // Store current task at address provided by current_task_context.
-        __ASM("ldr r0, =current_task_context\n");
-        __ASM("ldr r1, [r0]\n");
-        __ASM("stm r1, {r4-r11}\n");
+        __ASM(" ldr r0, =current_task_context\n");
+        __ASM(" ldr r1, [r0]\n");
+        __ASM(" stm r1, {r4-r11}\n");
         
         // Load task context from address provided by next_task_context.
-        __ASM("ldr r0, =next_task_context\n");
-        __ASM("ldr r1, [r0]\n");
-        __ASM("ldm r1, {r4-r11}\n");
+        __ASM(" ldr r0, =next_task_context\n");
+        __ASM(" ldr r1, [r0]\n");
+        __ASM(" ldm r1, {r4-r11}\n");
         
         // 0xFFFFFFFD in r0 means 'return to thread mode' (use PSP).
         // Without this PendSV would return to SysTick
         // losing current thread state along the way.
-        __ASM("ldr r0, =0xFFFFFFFD \n");
-        __ASM("CPSIE I \n");
+        __ASM(" ldr r0, =0xFFFFFFFD \n");
+        __ASM(" CPSIE I \n");
         
         // This is not needed in this case, due to write buffer being cleared on interrupt exit,
         // but it is nice to have explicit information that memory write delay is taken into account.
-        __ASM("DSB"); // Complete all explicit memory transfers
-        __ASM("ISB"); // flush instruction pipeline
+        __ASM(" DSB"); // Complete all explicit memory transfers
+        __ASM(" ISB"); // Flush instruction pipeline before branching to next task.
         
-        __ASM("bx r0");
+        __ASM(" bx r0");
     }
 }
