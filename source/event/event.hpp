@@ -13,13 +13,7 @@ namespace kernel::internal::event
     enum class State
     {
         Reset,
-        Set,
-        // Note: this special state is used for 
-        //       WaitForMultipleObjects, where
-        //       all events that are being check
-        //       are cleared when ALL events are
-        //       set and then Updated.
-        SetUpdateLater
+        Set
     };
 
     struct Event
@@ -31,6 +25,10 @@ namespace kernel::internal::event
 
     struct Context
     {
+        // Note: I considered createing two lists: for manual and non-manual reset.
+        //       It would reduce late decision bools, but it would require creating
+        //       generalized internal::event adding specialized internal::auto_reset_event.
+        //       For current project state it is unnecessary complexity.
         volatile kernel::internal::common::MemoryBuffer< Event, MAX_NUMBER> m_data{};
     };
 
@@ -74,48 +72,19 @@ namespace kernel::internal::event
         a_context.m_data.at( a_id).m_state = State::Reset;
     }
 
+    namespace manual_reset
+    {
+        inline bool get( Context & a_context, Id & a_id)
+        {
+            return a_context.m_data.at( a_id).m_manual_reset;
+        }
+    }
+
     namespace state
     {
-        // Reset all events than have manual reset disabled.
-        // This function should be called after all events were signaled via
-        // WaitForObject functions.
-        inline void updateAll( Context & a_context)
-        {
-            for ( Id i = 0U; i < MAX_NUMBER; ++i)
-            {
-                if ( true == a_context.m_data.isAllocated( i))
-                {
-                    if ( false == a_context.m_data.at( i).m_manual_reset)
-                    {
-                        if ( State::SetUpdateLater == a_context.m_data.at( i).m_state)
-                        {
-                            reset( a_context, i);
-                        }
-                    }
-                }
-            }
-        }
-
         inline State get( Context & a_context, Id & a_id)
         {
-            State state = a_context.m_data.at( a_id).m_state;
-
-            // TODO: possible memory barrier here
-
-            if ( false == a_context.m_data.at( a_id).m_manual_reset)
-            {
-                if ( State::Set == state)
-                {
-                    a_context.m_data.at( a_id).m_state = State::SetUpdateLater;
-                }
-            }
-
-            if ( State::Reset != state)
-            {
-                state = State::Set;
-            }
-
-            return state;
+            return a_context.m_data.at( a_id).m_state;
         }
     }
 }

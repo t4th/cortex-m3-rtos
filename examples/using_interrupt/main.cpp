@@ -30,15 +30,16 @@ void print( const char * a_text)
 
 extern "C"
 {
-    // On my board, button is connected to port PA8, which use Exti3.
+    // On my board, button is connected to port PA8, which use EXTI line 8.
     void EXTI9_5_IRQHandler()
     {
         kernel::hardware::critical_section::Context context;
-        kernel::hardware::critical_section::lock(context);
+        kernel::hardware::critical_section::lock( context);
         
+        // todo: create setFromInterrupt function
         kernel::event::set( shared_data.m_event);
 
-        kernel::hardware::critical_section::unlock(context);
+        kernel::hardware::critical_section::unlock( context);
 
         // clear pending bit
         EXTI->PR |= EXTI_PR_PR8;
@@ -48,7 +49,7 @@ extern "C"
 // Setup hardware and resume worker task when done.
 void startup_task( void * a_parameter)
 {
-    Shared & shared_data = *( (Shared*) a_parameter);
+    Shared & shared_data = *( ( Shared*) a_parameter);
 
     // create kernel object to sync actions
     kernel::event::create( shared_data.m_event);
@@ -83,12 +84,12 @@ void worker_task( void * a_parameter)
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
-            kernel::hardware::debug::print("Button pressed\n");
+            kernel::hardware::debug::print( "Button pressed\n");
             // todo: add some form of debounce.
         }
         else
         {
-            kernel::hardware::debug::print("Wait failed\n");
+            kernel::hardware::debug::print( "Wait failed\n");
         }
     }
 }

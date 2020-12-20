@@ -6,6 +6,12 @@
 #include <event.hpp>
 #include <handle.hpp>
 
+// This is data structure holding task wait conditions.
+// Before, I kept this data attached to each internal::task,
+// and I might consider that again in the future. Why I did
+// split it from internal::task in the first place, was that
+// I didn't want to complicate POd-style internal::task:Context
+// and internal::task API.
 namespace kernel::internal::scheduler::wait
 {
     enum class Type
@@ -18,7 +24,7 @@ namespace kernel::internal::scheduler::wait
     {
         Type        m_type;
 
-        Handle      m_waitSignals[MAX_INPUT_SIGNALS];
+        Handle      m_waitSignals[ MAX_INPUT_SIGNALS];
         uint32_t    m_numberOfSignals;
 
         // Indicate if all m_waitSignals signals must be set to fulfil wake up condition.
@@ -27,6 +33,7 @@ namespace kernel::internal::scheduler::wait
         // Indicate if there is timeout when waiting for m_waitSignals signals.
         bool        m_waitForver;
 
+        // TODO: consider using internal::timer for wait states.
         Time_ms     m_interval;
         Time_ms     m_start;
     };
@@ -91,6 +98,7 @@ namespace kernel::internal::scheduler::wait
         bool condition_fulfilled = true;
 
         // TODO: seperate late-decision bools from loop.
+        //       Especially a_wait_for_all_signals.
         for ( uint32_t i = 0U; i < a_number_of_signals; ++i)
         {
             const bool valid_handle = handle::testCondition(
@@ -114,7 +122,8 @@ namespace kernel::internal::scheduler::wait
             {
                 if ( true == condition_fulfilled)
                 {
-                    internal::event::state::updateAll(a_event_context);
+                    handle::resetState( a_event_context, a_wait_signals[ i]);
+                    
                     a_signaled_item_index = i;
                     a_result = kernel::sync::WaitResult::ObjectSet;
                     return true;
@@ -126,6 +135,8 @@ namespace kernel::internal::scheduler::wait
             }
             else
             {
+                // When waiting for all signals to be set,
+                // return on first unfulfilled condition.
                 if ( false == condition_fulfilled)
                 {
                     return false;
@@ -142,7 +153,11 @@ namespace kernel::internal::scheduler::wait
         {
             if ( true == condition_fulfilled)
             {
-                internal::event::state::updateAll(a_event_context);
+                // Reset all system objects pointed by a_wait_signals.
+                for ( uint32_t i = 0U; i < a_number_of_signals; ++i)
+                {
+                    handle::resetState( a_event_context, a_wait_signals[ i]);
+                }
                 a_result = kernel::sync::WaitResult::ObjectSet;
                 return true;
             }
@@ -177,6 +192,7 @@ namespace kernel::internal::scheduler::wait
 
             if ( false == a_conditions.m_waitForver)
             {
+                // Check timeout before wait signals.
                 if ( a_current - a_conditions.m_start > a_conditions.m_interval)
                 {
                     a_result = kernel::sync::WaitResult::TimeoutOccurred;

@@ -76,4 +76,34 @@ namespace kernel::internal::handle
 
         return true;
     }
+
+    // Reset state of system object pointed by provided handle.
+    inline void resetState(
+        internal::event::Context &  a_event_context,
+        volatile kernel::Handle &   a_handle
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        switch ( objectType)
+        {
+        case internal::handle::ObjectType::Event:
+        {
+            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+            bool manual_reset_enabled = internal::event::manual_reset::get(
+                a_event_context,
+                event_id
+            );
+
+            if ( false == manual_reset_enabled)
+            {
+                internal::event::reset( a_event_context, event_id);
+            }
+
+            break;
+        }
+        default:
+            break;
+        };
+    }
 }
