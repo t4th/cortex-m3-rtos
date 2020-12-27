@@ -10,7 +10,7 @@
 // Before, I kept this data attached to each internal::task,
 // and I might consider that again in the future. Why I did
 // split it from internal::task in the first place, was that
-// I didn't want to complicate POd-style internal::task:Context
+// I didn't want to complicate POD-style internal::task:Context
 // and internal::task API.
 namespace kernel::internal::scheduler::wait
 {
