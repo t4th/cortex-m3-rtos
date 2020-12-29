@@ -128,7 +128,7 @@ namespace kernel::hardware
         // TODO: Current implementation is naive.
         //       Disabling interrupts is never good solution.
         //       Implement priority 3 groups: kernel, user_high, user_low
-        void lock( Context & a_context)
+        void lock( volatile Context & a_context)
         {
             // Store local context.
             a_context.m_local_data = __get_PRIMASK();
@@ -136,7 +136,7 @@ namespace kernel::hardware
             __disable_irq(); // __set_PRIMASK( 0U);
         }
 
-        void unlock( Context & a_context)
+        void unlock( volatile Context & a_context)
         {
             // Re-store primask to local context.
             __set_PRIMASK( a_context.m_local_data);

@@ -90,15 +90,8 @@ namespace kernel::internal::handle
         case internal::handle::ObjectType::Event:
         {
             auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            bool manual_reset_enabled = internal::event::manual_reset::get(
-                a_event_context,
-                event_id
-            );
-
-            if ( false == manual_reset_enabled)
-            {
-                internal::event::reset( a_event_context, event_id);
-            }
+            
+            internal::event::manualReset( a_event_context, event_id);
 
             break;
         }

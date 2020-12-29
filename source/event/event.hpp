@@ -18,7 +18,7 @@ namespace kernel::internal::event
 
     struct Event
     {
-        // todo: this needs to be interlocked
+        hardware::critical_section::Context m_cs_context;
         State m_state;
         bool  m_manual_reset;
     };
@@ -68,16 +68,30 @@ namespace kernel::internal::event
         a_context.m_data.at( a_id).m_state = State::Set;
     }
 
+    inline void setFromInterrupt( Context & a_context, Id & a_id)
+    {
+        auto & event = a_context.m_data.at( a_id);
+
+        hardware::critical_section::lock( event.m_cs_context);
+        {
+            a_context.m_data.at( a_id).m_state = State::Set;
+        }
+        hardware::critical_section::unlock( event.m_cs_context);
+    }
+
     inline void reset( Context & a_context, Id & a_id)
     {
         a_context.m_data.at( a_id).m_state = State::Reset;
     }
 
-    namespace manual_reset
+    // Reset event state if manual reset is disabled.
+    inline void manualReset( Context & a_context, Id & a_id)
     {
-        inline bool get( Context & a_context, Id & a_id)
+        auto & event = a_context.m_data.at( a_id);
+
+        if ( false == event.m_manual_reset)
         {
-            return a_context.m_data.at( a_id).m_manual_reset;
+            event.m_state = State::Reset;
         }
     }
 

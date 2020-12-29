@@ -475,6 +475,19 @@ namespace kernel::event
         internal::lock::leave( internal::context::m_lock);
     }
 
+    void setFromInterrupt( kernel::Handle & a_handle)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Event != objectType)
+        {
+            return;
+        }
+
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+        internal::event::setFromInterrupt( internal::context::m_events, event_id);
+    }
+
     void reset( kernel::Handle & a_handle)
     {
         const auto objectType = internal::handle::getObjectType( a_handle);

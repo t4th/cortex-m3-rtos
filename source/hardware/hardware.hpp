@@ -70,8 +70,8 @@ namespace kernel::hardware
             uint32_t m_local_data;
         };
 
-        void lock( Context & a_context);
-        void unlock( Context & a_context);
+        void lock( volatile Context & a_context);
+        void unlock( volatile Context & a_context);
     }
 
     namespace debug
