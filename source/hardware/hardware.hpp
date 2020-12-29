@@ -45,8 +45,6 @@ namespace kernel::hardware
     void init();
     void start();
 
-    void waitForInterrupt();
-
     namespace sp
     {
         uint32_t get();
@@ -61,6 +59,46 @@ namespace kernel::hardware
     namespace context::next
     {
         void set( volatile kernel::hardware::task::Context * a_context);
+    }
+
+    namespace interrupt
+    {
+        namespace priority
+        {
+            // Main priority group.
+            enum class Preemption
+            {
+                Critical = 0U,
+                Kernel = 1U,
+                High = 2U,
+                Low = 3U
+            };
+
+            enum class Sub
+            {
+                High = 0U,
+                Medium = 1U,
+                Low = 2U
+                // Note: 4th value is possible, but not needed.
+            };
+
+            // a_vendor_interrupt_id must be set according to vendor data sheet.
+            // Vendor interrupts always starts from 0.
+            // Using invalid interrupt ID value will result in Undefined Behaviour.
+            void set(
+                uint32_t    a_vendor_interrupt_id,
+                Preemption  a_preemption_priority,
+                Sub         a_sub_priority
+            );
+        }
+
+        // a_vendor_interrupt_id must be set according to vendor data sheet.
+        // Vendor interrupts always starts from 0.
+        // Using invalid interrupt ID value will result in Undefined Behaviour.
+        void enable( uint32_t a_vendor_interrupt_id);
+
+        // Stop core until interrupt occur.
+        void wait();
     }
 
     namespace critical_section

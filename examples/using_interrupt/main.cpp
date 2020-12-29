@@ -33,13 +33,7 @@ extern "C"
     // On my board, button is connected to port PA8, which use EXTI line 8.
     void EXTI9_5_IRQHandler()
     {
-        kernel::hardware::critical_section::Context context;
-        kernel::hardware::critical_section::lock( context);
-        
-        // todo: create setFromInterrupt function
-        kernel::event::set( shared_data.m_event);
-
-        kernel::hardware::critical_section::unlock( context);
+        kernel::event::setFromInterrupt( shared_data.m_event);
 
         // clear pending bit
         EXTI->PR |= EXTI_PR_PR8;
@@ -63,7 +57,15 @@ void startup_task( void * a_parameter)
     EXTI->FTSR |= EXTI_FTSR_TR8;
 
     // interrupts
-    NVIC_EnableIRQ( EXTI9_5_IRQn);
+    constexpr uint32_t exti_9_5_interrupt_number = 23U;
+
+    kernel::hardware::interrupt::priority::set(
+        exti_9_5_interrupt_number,
+        kernel::hardware::interrupt::priority::Preemption::Low,
+        kernel::hardware::interrupt::priority::Sub::Low
+    );
+
+    kernel::hardware::interrupt::enable( exti_9_5_interrupt_number);
 
     // gpio
     // PA8 is input pulled up to 3.3V

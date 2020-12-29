@@ -17,7 +17,107 @@ namespace kernel::hardware
     // where SYSTICK_PRESCALER is searched value.
     constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_HZ{ 1000U};
     constexpr uint32_t SYSTICK_PRESCALER{ CORE_CLOCK_FREQ_HZ / TARGET_SYSTICK_TIMESTAMP_HZ};
-    
+
+    namespace interrupt
+    {
+        constexpr uint32_t maximum_number = 240U;
+
+        // Hardware priority config.
+        namespace priority
+        {
+            constexpr uint32_t number_of_preemption_priority_bits = 2U;
+            constexpr uint32_t number_of_sub_priority_bits = 2U;
+            constexpr uint32_t number_of_total_priority_bits = __NVIC_PRIO_BITS;
+
+            // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
+            constexpr void set(
+                IRQn_Type   a_interrupt_number,
+                Preemption  a_preemption_priority,
+                Sub         a_sub_priority
+            )
+            {
+                uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+                uint32_t sub_priority = static_cast< uint32_t> ( a_sub_priority);
+
+                // Note: For a processor configured with less than eight bits of priority,
+                //       the lower bits of the register are always 0.
+
+                //       In this case, STM32 uses 4 bits, so result in 8 bit register would be
+                //       xx.yy0000, where xx is pre-emption priority, and yy is sub-priority.
+                uint8_t new_value = static_cast< uint8_t>(
+                    ( preemption_priority << ( 8U - number_of_preemption_priority_bits)) |
+                    ( sub_priority << ( 8U - number_of_total_priority_bits))
+                    ) & 0xFFUL;
+
+                // Note: signed integer is used, because core interrupts use negative priorities.
+                int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
+
+                if ( priority_number >= static_cast< int32_t>( 0))
+                {
+                    // Configure vendor interrupts.
+                    NVIC->IP[ priority_number] = new_value;
+                }
+                else
+                {
+                    // Configure core interrupts.
+                    uint32_t system_priority_number = ( priority_number & 0xFUL) - 4UL;
+                    SCB->SHP[ system_priority_number] = new_value;
+                }
+            }
+
+            void set(
+                uint32_t    a_vendor_interrupt_id,
+                Preemption  a_preemption_priority,
+                Sub         a_sub_priority
+            )
+            {
+                if ( a_vendor_interrupt_id < interrupt::maximum_number)
+                {
+                    IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
+
+                    set( interrupt_number, a_preemption_priority, a_sub_priority);
+                }
+            }
+        }
+
+        void init()
+        {
+            // This value indicate shift number needed to set binary point position in
+            // Interrupt priority level field, PRI_N[7:0].
+
+            // Since number of bits used for pre-emption priority is 4, binary point should
+            // result as follows: xx.yyyyyy, where xx are number of bits used by pre-emption priority
+            // and yyyyyy are bits used by sub-priority.
+            constexpr uint32_t binary_point_shift =
+                7U - priority::number_of_preemption_priority_bits; 
+
+            NVIC_SetPriorityGrouping( binary_point_shift);
+        }
+
+        void start()
+        {
+            // Note: Enable SysTick last, since it is the only PendSV trigger.
+            NVIC_EnableIRQ( SVCall_IRQn);
+            NVIC_EnableIRQ( PendSV_IRQn);
+            NVIC_EnableIRQ( SysTick_IRQn);
+        }
+
+        void enable( uint32_t a_vendor_interrupt_id)
+        {
+            if ( a_vendor_interrupt_id < interrupt::maximum_number)
+            {
+                IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
+
+                NVIC_EnableIRQ( interrupt_number);
+            }
+        }
+
+        void wait()
+        {
+            __WFI();
+        }
+    }
+
     namespace debug
     {
         void init()
@@ -66,30 +166,19 @@ namespace kernel::hardware
 
         debug::init();
 
-        // Setup interrupts.
-        // Set priorities - lower number is higher priority
+        interrupt::init();
 
         // Note: SysTick and PendSV interrupts use the same priority,
         //       to remove the need of critical section for use of shared
         //       kernel data. It is actually recommended in ARM reference manual.
-        NVIC_SetPriority( SVCall_IRQn, 0U);
-        NVIC_SetPriority( PendSV_IRQn, 1U);
-        NVIC_SetPriority( SysTick_IRQn, 1U);
+        interrupt::priority::set( SVCall_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
+        interrupt::priority::set( PendSV_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
+        interrupt::priority::set( SysTick_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
     }
     
     void start()
     {
-        // Enable interrupts
-
-        // Note: Enable SysTick last, since it is the only PendSV trigger.
-        NVIC_EnableIRQ( SVCall_IRQn);
-        NVIC_EnableIRQ( PendSV_IRQn);
-        NVIC_EnableIRQ( SysTick_IRQn);
-    }
-
-    void waitForInterrupt()
-    {
-        __WFI();
+        interrupt::start();
     }
 
     namespace sp
