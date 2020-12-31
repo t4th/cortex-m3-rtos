@@ -485,7 +485,16 @@ namespace kernel::event
         }
 
         auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-        internal::event::setFromInterrupt( internal::context::m_events, event_id);
+
+        hardware::critical_section::Context cs_context;
+        hardware::critical_section::enter(
+            cs_context,
+            hardware::interrupt::priority::Preemption::Critical
+        );
+        {
+            internal::event::set( internal::context::m_events, event_id);
+        }
+        hardware::critical_section::leave( cs_context);
     }
 
     void reset( kernel::Handle & a_handle)

@@ -2,6 +2,8 @@
 
 #include <stm32f10x.h>
 
+#include <cassert>
+
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
 volatile kernel::hardware::task::Context * current_task_context;
@@ -214,21 +216,29 @@ namespace kernel::hardware
 
     namespace critical_section
     {
-        // TODO: Current implementation is naive.
-        //       Disabling interrupts is never good solution.
-        //       Implement priority 3 groups: kernel, user_high, user_low
-        void lock( volatile Context & a_context)
+        // TODO: test if compiler is not re-ordering this functions.
+        void enter( volatile Context & a_context, interrupt::priority::Preemption a_preemption_priority)
         {
-            // Store local context.
-            a_context.m_local_data = __get_PRIMASK();
-            // Mask all maskable interrupts.
-            __disable_irq(); // __set_PRIMASK( 0U);
+            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+            uint32_t new_value = 
+                preemption_priority << ( 8U - interrupt::priority::number_of_preemption_priority_bits);
+
+            // Setting NASEPRI to 0 has no effect, so it is most likely bug.
+            assert( 0U != new_value);
+
+            // Store previous priority;
+            a_context.m_local_data = __get_BASEPRI();
+
+            // Use BASEPRI register value as critical section for provided pre-emption priority.
+            __set_BASEPRI( new_value);
+
+            __DSB(); // Used as compiler re-order barrer and forces that m_local_data is not cached.
         }
 
-        void unlock( volatile Context & a_context)
+        void leave( volatile Context & a_context)
         {
-            // Re-store primask to local context.
-            __set_PRIMASK( a_context.m_local_data);
+            __DSB(); // Used as compiler re-order barrer
+            __set_BASEPRI( a_context.m_local_data);
         }
     }
 }
@@ -256,13 +266,15 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-    void __aeabi_assert(
+        // TOOD: print nice error log in case of failed run-time assert.
+    __attribute ((nothrow)) void __aeabi_assert(
         const char * expr,
         const char * file,
         int line
     )
     {
         kernel::hardware::debug::setBreakpoint();
+        while( true); // Used to silence the NO-RETURN warning.
     }
     
     inline __attribute__ (( naked )) void LoadTask(void)

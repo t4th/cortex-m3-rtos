@@ -18,14 +18,13 @@ namespace kernel::internal::event
 
     struct Event
     {
-        hardware::critical_section::Context m_cs_context;
         State m_state;
         bool  m_manual_reset;
     };
 
     struct Context
     {
-        // Note: I considered createing two lists: for manual and non-manual reset.
+        // Note: I considered creating two lists: for manual and non-manual reset.
         //       It would reduce late decision bools, but it would require creating
         //       generalized internal::event or adding new specialized
         //       internal::auto_reset_event. For current project state it is unnecessary
@@ -66,17 +65,6 @@ namespace kernel::internal::event
     inline void set( Context & a_context, Id & a_id)
     {
         a_context.m_data.at( a_id).m_state = State::Set;
-    }
-
-    inline void setFromInterrupt( Context & a_context, Id & a_id)
-    {
-        auto & event = a_context.m_data.at( a_id);
-
-        hardware::critical_section::lock( event.m_cs_context);
-        {
-            a_context.m_data.at( a_id).m_state = State::Set;
-        }
-        hardware::critical_section::unlock( event.m_cs_context);
     }
 
     inline void reset( Context & a_context, Id & a_id)

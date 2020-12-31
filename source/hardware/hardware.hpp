@@ -65,21 +65,21 @@ namespace kernel::hardware
     {
         namespace priority
         {
-            // Main priority group.
+            // Priority groups. Smaller value is higher priority.
             enum class Preemption
             {
-                Critical = 0U,
-                Kernel = 1U,
-                High = 2U,
-                Low = 3U
+                Critical = 1U,
+                Kernel = 2U,
+                User = 3U
             };
 
+            // Sub-priorities of Priority groups.
+            // Smaller value is higher priority within group.
             enum class Sub
             {
                 High = 0U,
                 Medium = 1U,
                 Low = 2U
-                // Note: 4th value is possible, but not needed.
             };
 
             // a_vendor_interrupt_id must be set according to vendor data sheet.
@@ -101,6 +101,7 @@ namespace kernel::hardware
         void wait();
     }
 
+    // Hardware level critical section used for protecting data between interrupts.
     namespace critical_section
     {
         struct Context
@@ -108,8 +109,12 @@ namespace kernel::hardware
             uint32_t m_local_data;
         };
 
-        void lock( volatile Context & a_context);
-        void unlock( volatile Context & a_context);
+        void enter(
+            volatile Context &                  a_context,
+            interrupt::priority::Preemption     a_preemption_priority
+        );
+
+        void leave( volatile Context & a_context);
     }
 
     namespace debug
