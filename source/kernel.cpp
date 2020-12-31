@@ -475,6 +475,28 @@ namespace kernel::event
         internal::lock::leave( internal::context::m_lock);
     }
 
+    void setFromInterrupt( kernel::Handle & a_handle)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Event != objectType)
+        {
+            return;
+        }
+
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+
+        hardware::critical_section::Context cs_context;
+        hardware::critical_section::enter(
+            cs_context,
+            hardware::interrupt::priority::Preemption::Critical
+        );
+        {
+            internal::event::set( internal::context::m_events, event_id);
+        }
+        hardware::critical_section::leave( cs_context);
+    }
+
     void reset( kernel::Handle & a_handle)
     {
         const auto objectType = internal::handle::getObjectType( a_handle);
@@ -816,6 +838,13 @@ namespace kernel::internal
         loadContext( context::m_tasks, next_task);
 
         internal::lock::leave( context::m_lock);
+
+        // TODO: there is corner case when:
+        //       - task call syscall, which switch task to another
+        //       - after switching to another task, sysTick is called and want to switch
+        //       - next task in priority queue.
+        //       Consider other corner cases and solve this. Probably round-robin time
+        //       should be reset when syscall is used by user.
     }
 
     // This is function used by kernel::hardware to get information, where to store current
@@ -837,6 +866,13 @@ namespace kernel::internal
         loadContext( context::m_tasks, next_task);
 
         lock::leave( context::m_lock);
+
+        // TODO: there is corner case when:
+        //       - task call syscall, which switch task to another
+        //       - after switching to another task, sysTick is called and want to switch
+        //       - next task in priority queue.
+        //       Consider other corner cases and solve this. Probably round-robin time
+        //       should be reset when syscall is used by user.
     }
 
     bool tick() 
@@ -879,7 +915,7 @@ namespace kernel::internal
                     next_task
                 );
 
-                if( task_found)
+                if ( task_found)
                 {
                     // TODO: move this check to scheduler
                     //       and integrate result to getNextTask

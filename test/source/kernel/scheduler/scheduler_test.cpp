@@ -5,6 +5,8 @@
 #include <event.hpp>
 #include <timer.hpp>
 
+#include <array>
+
 // This unit test validate scheduler module. It is implicit kernel::internal namespace
 // feature, so all used context is exposed and need to be pre-allocated for propher test.
 

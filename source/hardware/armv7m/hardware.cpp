@@ -2,6 +2,8 @@
 
 #include <stm32f10x.h>
 
+#include <cassert>
+
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
 volatile kernel::hardware::task::Context * current_task_context;
@@ -17,7 +19,107 @@ namespace kernel::hardware
     // where SYSTICK_PRESCALER is searched value.
     constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_HZ{ 1000U};
     constexpr uint32_t SYSTICK_PRESCALER{ CORE_CLOCK_FREQ_HZ / TARGET_SYSTICK_TIMESTAMP_HZ};
-    
+
+    namespace interrupt
+    {
+        constexpr uint32_t maximum_number = 240U;
+
+        // Hardware priority config.
+        namespace priority
+        {
+            constexpr uint32_t number_of_preemption_priority_bits = 2U;
+            constexpr uint32_t number_of_sub_priority_bits = 2U;
+            constexpr uint32_t number_of_total_priority_bits = __NVIC_PRIO_BITS;
+
+            // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
+            constexpr void set(
+                IRQn_Type   a_interrupt_number,
+                Preemption  a_preemption_priority,
+                Sub         a_sub_priority
+            )
+            {
+                uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+                uint32_t sub_priority = static_cast< uint32_t> ( a_sub_priority);
+
+                // Note: For a processor configured with less than eight bits of priority,
+                //       the lower bits of the register are always 0.
+
+                //       In this case, STM32 uses 4 bits, so result in 8 bit register would be
+                //       xx.yy0000, where xx is pre-emption priority, and yy is sub-priority.
+                uint8_t new_value = static_cast< uint8_t>(
+                    ( preemption_priority << ( 8U - number_of_preemption_priority_bits)) |
+                    ( sub_priority << ( 8U - number_of_total_priority_bits))
+                    ) & 0xFFUL;
+
+                // Note: signed integer is used, because core interrupts use negative priorities.
+                int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
+
+                if ( priority_number >= static_cast< int32_t>( 0))
+                {
+                    // Configure vendor interrupts.
+                    NVIC->IP[ priority_number] = new_value;
+                }
+                else
+                {
+                    // Configure core interrupts.
+                    uint32_t system_priority_number = ( priority_number & 0xFUL) - 4UL;
+                    SCB->SHP[ system_priority_number] = new_value;
+                }
+            }
+
+            void set(
+                uint32_t    a_vendor_interrupt_id,
+                Preemption  a_preemption_priority,
+                Sub         a_sub_priority
+            )
+            {
+                if ( a_vendor_interrupt_id < interrupt::maximum_number)
+                {
+                    IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
+
+                    set( interrupt_number, a_preemption_priority, a_sub_priority);
+                }
+            }
+        }
+
+        void init()
+        {
+            // This value indicate shift number needed to set binary point position in
+            // Interrupt priority level field, PRI_N[7:0].
+
+            // Since number of bits used for pre-emption priority is 4, binary point should
+            // result as follows: xx.yyyyyy, where xx are number of bits used by pre-emption priority
+            // and yyyyyy are bits used by sub-priority.
+            constexpr uint32_t binary_point_shift =
+                7U - priority::number_of_preemption_priority_bits; 
+
+            NVIC_SetPriorityGrouping( binary_point_shift);
+        }
+
+        void start()
+        {
+            // Note: Enable SysTick last, since it is the only PendSV trigger.
+            NVIC_EnableIRQ( SVCall_IRQn);
+            NVIC_EnableIRQ( PendSV_IRQn);
+            NVIC_EnableIRQ( SysTick_IRQn);
+        }
+
+        void enable( uint32_t a_vendor_interrupt_id)
+        {
+            if ( a_vendor_interrupt_id < interrupt::maximum_number)
+            {
+                IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
+
+                NVIC_EnableIRQ( interrupt_number);
+            }
+        }
+
+        void wait()
+        {
+            __WFI();
+        }
+    }
+
     namespace debug
     {
         void init()
@@ -66,30 +168,19 @@ namespace kernel::hardware
 
         debug::init();
 
-        // Setup interrupts.
-        // Set priorities - lower number is higher priority
+        interrupt::init();
 
         // Note: SysTick and PendSV interrupts use the same priority,
         //       to remove the need of critical section for use of shared
         //       kernel data. It is actually recommended in ARM reference manual.
-        NVIC_SetPriority( SVCall_IRQn, 0U);
-        NVIC_SetPriority( PendSV_IRQn, 1U);
-        NVIC_SetPriority( SysTick_IRQn, 1U);
+        interrupt::priority::set( SVCall_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
+        interrupt::priority::set( PendSV_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
+        interrupt::priority::set( SysTick_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
     }
     
     void start()
     {
-        // Enable interrupts
-
-        // Note: Enable SysTick last, since it is the only PendSV trigger.
-        NVIC_EnableIRQ( SVCall_IRQn);
-        NVIC_EnableIRQ( PendSV_IRQn);
-        NVIC_EnableIRQ( SysTick_IRQn);
-    }
-
-    void waitForInterrupt()
-    {
-        __WFI();
+        interrupt::start();
     }
 
     namespace sp
@@ -125,21 +216,29 @@ namespace kernel::hardware
 
     namespace critical_section
     {
-        // TODO: Current implementation is naive.
-        //       Disabling interrupts is never good solution.
-        //       Implement priority 3 groups: kernel, user_high, user_low
-        void lock( Context & a_context)
+        // TODO: test if compiler is not re-ordering this functions.
+        void enter( volatile Context & a_context, interrupt::priority::Preemption a_preemption_priority)
         {
-            // Store local context.
-            a_context.m_local_data = __get_PRIMASK();
-            // Mask all maskable interrupts.
-            __disable_irq(); // __set_PRIMASK( 0U);
+            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+            uint32_t new_value = 
+                preemption_priority << ( 8U - interrupt::priority::number_of_preemption_priority_bits);
+
+            // Setting NASEPRI to 0 has no effect, so it is most likely bug.
+            assert( 0U != new_value);
+
+            // Store previous priority;
+            a_context.m_local_data = __get_BASEPRI();
+
+            // Use BASEPRI register value as critical section for provided pre-emption priority.
+            __set_BASEPRI( new_value);
+
+            __DSB(); // Used as compiler re-order barrer and forces that m_local_data is not cached.
         }
 
-        void unlock( Context & a_context)
+        void leave( volatile Context & a_context)
         {
-            // Re-store primask to local context.
-            __set_PRIMASK( a_context.m_local_data);
+            __DSB(); // Used as compiler re-order barrer
+            __set_BASEPRI( a_context.m_local_data);
         }
     }
 }
@@ -167,13 +266,15 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-    void __aeabi_assert(
+        // TOOD: print nice error log in case of failed run-time assert.
+    __attribute ((nothrow)) void __aeabi_assert(
         const char * expr,
         const char * file,
         int line
     )
     {
         kernel::hardware::debug::setBreakpoint();
+        while( true); // Used to silence the NO-RETURN warning.
     }
     
     inline __attribute__ (( naked )) void LoadTask(void)

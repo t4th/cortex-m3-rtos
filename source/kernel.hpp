@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <atomic>
 
+// Calling any of below functions from within hardware interrupt routine
+// will cause undefined behaviour, unless specified otherwise.
+
 // User API.
 namespace kernel
 {
@@ -94,13 +97,17 @@ namespace kernel::event
     bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
+
+    // Must only be used from within Interrupt Routine.
+    void setFromInterrupt( kernel::Handle & a_handle);
+
     void reset( kernel::Handle & a_handle);
 }
 
 // User API for controling critical section.
 namespace kernel::critical_section
 {
-    // Modyfing this outsice critical_section API is UB.
+    // Modyfing this outside critical_section API is UB.
     struct Context
     {
         volatile std::atomic<uint32_t> m_lockCount;

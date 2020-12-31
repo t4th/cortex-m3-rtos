@@ -18,14 +18,13 @@ namespace kernel::internal::event
 
     struct Event
     {
-        // todo: this needs to be interlocked
         State m_state;
         bool  m_manual_reset;
     };
 
     struct Context
     {
-        // Note: I considered createing two lists: for manual and non-manual reset.
+        // Note: I considered creating two lists: for manual and non-manual reset.
         //       It would reduce late decision bools, but it would require creating
         //       generalized internal::event or adding new specialized
         //       internal::auto_reset_event. For current project state it is unnecessary
@@ -73,11 +72,14 @@ namespace kernel::internal::event
         a_context.m_data.at( a_id).m_state = State::Reset;
     }
 
-    namespace manual_reset
+    // Reset event state if manual reset is disabled.
+    inline void manualReset( Context & a_context, Id & a_id)
     {
-        inline bool get( Context & a_context, Id & a_id)
+        auto & event = a_context.m_data.at( a_id);
+
+        if ( false == event.m_manual_reset)
         {
-            return a_context.m_data.at( a_id).m_manual_reset;
+            event.m_state = State::Reset;
         }
     }
 
