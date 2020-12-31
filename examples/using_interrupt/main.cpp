@@ -61,7 +61,7 @@ void startup_task( void * a_parameter)
 
     kernel::hardware::interrupt::priority::set(
         exti_9_5_interrupt_number,
-        kernel::hardware::interrupt::priority::Preemption::Low,
+        kernel::hardware::interrupt::priority::Preemption::User,
         kernel::hardware::interrupt::priority::Sub::Low
     );
 
