@@ -2,7 +2,6 @@
 
 #include "common/memory_buffer.hpp"
 
-// TODO: inline functions
 namespace kernel::internal::common
 {
     // TDataType must be of primitive type.
@@ -12,15 +11,12 @@ namespace kernel::internal::common
         private:
             struct Node
             {
-                uint32_t  m_next;
-                uint32_t  m_prev;   // although prev is not used for scheduling having it makes removing an item simple
-                TDataType m_data;   // NOTE: only primitive data
+                uint32_t  m_next{ 0U};
+                uint32_t  m_prev{ 0U};  // although prev is not used for scheduling having it makes removing an item simple
+                TDataType m_data{};     // NOTE: only primitive data
             };
        
         public:
-
-            CircularList() : m_first{ 0U}, m_last{ 0U}, m_count{ 0U}, m_buffer{} {}
-            
             bool add( TDataType a_new_data, uint32_t & a_new_node_index) volatile
             {
                 uint32_t new_node_index;
@@ -94,17 +90,16 @@ namespace kernel::internal::common
                 }
             }
 
-            // TODO: Check if function is used only by POD. If yes -> remove a_compare.
             bool find(
                 TDataType & a_key,
-                uint32_t &  a_found_index,
-                bool        a_compare( TDataType &, volatile TDataType &)) volatile
+                uint32_t &  a_found_index
+            ) volatile
             {
                 uint32_t node_index = m_first;
 
                 for ( uint32_t i = 0U; i < m_count; ++i)
                 {
-                    if ( a_compare( a_key, m_buffer.at( node_index).m_data))
+                    if ( a_key == m_buffer.at( node_index).m_data)
                     {
                         a_found_index = node_index;
                         return true;
@@ -139,9 +134,9 @@ namespace kernel::internal::common
             }
 
     private:
-        MemoryBuffer< Node, MaxSize> m_buffer;
-        uint32_t m_first;
-        uint32_t m_last;
-        uint32_t m_count;
+        MemoryBuffer< Node, MaxSize> m_buffer{};
+        uint32_t m_first{ 0U};
+        uint32_t m_last{ 0U};
+        uint32_t m_count{ 0U};
     };
 }
