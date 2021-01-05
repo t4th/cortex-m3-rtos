@@ -1,13 +1,13 @@
 #include <kernel.hpp>
 
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
-#include <system_timer.hpp>
-#include <task.hpp>
-#include <scheduler.hpp>
-#include <timer.hpp>
-#include <event.hpp>
-#include <lock.hpp>
+#include "system_timer/system_timer.hpp"
+#include "task/task.hpp"
+#include "scheduler/scheduler.hpp"
+#include "timer/timer.hpp"
+#include "event/event.hpp"
+#include "lock/lock.hpp"
 
 namespace kernel::internal::context
 {
@@ -708,7 +708,7 @@ namespace kernel::critical_section
         internal::lock::enter( internal::context::m_lock);
         {
             --a_context.m_lockCount;
-            if (0U == a_context.m_lockCount)
+            if ( 0U == a_context.m_lockCount)
             {
                 auto event_id = internal::handle::getId< internal::event::Id>( a_context.m_event);
                 internal::event::set( internal::context::m_events, event_id);

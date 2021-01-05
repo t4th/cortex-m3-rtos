@@ -22,10 +22,27 @@ namespace
     }
 }
 
-namespace kernel::hardware::debug
+namespace kernel::hardware
 {
-    void setBreakpoint()
+    namespace debug
     {
+        void setBreakpoint()
+        {
+        }
+    }
+
+    namespace critical_section
+    {
+        void enter(
+            volatile Context &                  a_context,
+            interrupt::priority::Preemption     a_preemption_priority
+        )
+        {
+        }
+
+        void leave( volatile Context & a_context)
+        {
+        }
     }
 }
 

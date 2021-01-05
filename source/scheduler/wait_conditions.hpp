@@ -1,10 +1,10 @@
 #pragma once
 
-#include <config.hpp>
+#include "config/config.hpp"
 
-#include <timer.hpp>
-#include <event.hpp>
-#include <handle.hpp>
+#include "timer/timer.hpp"
+#include "event/event.hpp"
+#include "handle/handle.hpp"
 
 // This is data structure holding task wait conditions.
 // Before, I kept this data attached to each internal::task,

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <config.hpp>
+#include "config/config.hpp"
+#include "common/memory_buffer.hpp"
 
 #include <kernel.hpp>
-#include <memory_buffer.hpp>
 
 namespace kernel::internal::event
 {

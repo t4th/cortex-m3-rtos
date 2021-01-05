@@ -7,7 +7,7 @@
 // reset.
 
 #include <kernel.hpp>
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
 void printText( const char * a_text)
 {

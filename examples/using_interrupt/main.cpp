@@ -1,8 +1,9 @@
-// This is on target example, because it is using MCU vendor defined interrupt.
+// This is on target example, but you can still use Keil simulator and set
+// Exti9_5 interrupt manually to pending state from within NVIC peripheral.
 
 #include <kernel.hpp>
 
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
 #include "gpio.hpp"
 
@@ -77,7 +78,7 @@ void startup_task( void * a_parameter)
 
 void worker_task( void * a_parameter)
 {
-    Shared & shared_data = *( (Shared*) a_parameter);
+    Shared & shared_data = *( ( Shared*) a_parameter);
 
     while( true)
     {

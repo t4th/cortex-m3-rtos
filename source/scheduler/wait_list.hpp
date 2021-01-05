@@ -1,8 +1,8 @@
 #pragma once
 
-#include <wait_conditions.hpp>
+#include "scheduler/wait_conditions.hpp"
 
-#include <task.hpp>
+#include "task/task.hpp"
 
 // Wait List keep Identifiers of tasks in Wait state and their waking up
 // conditions.

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
+#include "common/memory_buffer.hpp"
+
 #include <kernel.hpp>
-#include <memory_buffer.hpp>
 
 namespace kernel::internal::task
 {

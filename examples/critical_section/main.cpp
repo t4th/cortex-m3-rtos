@@ -2,8 +2,11 @@
 // Test: Create two tasks trying to access shared data with
 // and without critical section.
 
+// Expected: Without critical section enabled, artifacts should be
+//           visible in output window.
+
 #include <kernel.hpp>
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
 #include <cctype>
 #include <cstring>
@@ -11,10 +14,6 @@
 // Example options:
 // true - enable use of critical section
 // false - disable use of critical section
-
-// Expected: Without critical section enabled, artifacts should be
-//           visible in output window.
-
 constexpr bool use_critical_section = true;
 
 void printText( const char * a_text)

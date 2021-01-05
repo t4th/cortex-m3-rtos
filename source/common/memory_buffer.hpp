@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cassert>
-#include <hardware.hpp>
 
 namespace kernel::internal::common
 {

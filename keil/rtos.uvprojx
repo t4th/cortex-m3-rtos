@@ -338,7 +338,7 @@
               <MiscControls>-fno-exceptions</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\source\;..\source\common;..\source\event;..\source\handle;..\source\scheduler;..\source\task;..\source\timer;..\source\hardware;..\source\system_timer;..\source\lock;..\source\config</IncludePath>
+              <IncludePath>..\source\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

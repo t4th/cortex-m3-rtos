@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory_buffer.hpp>
+#include "common/memory_buffer.hpp"
 
 // TODO: inline functions
 namespace kernel::internal::common

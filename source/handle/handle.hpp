@@ -1,9 +1,9 @@
 #pragma once
 
-#include <kernel.hpp>
+#include "timer/timer.hpp"
+#include "event/event.hpp"
 
-#include <timer.hpp>
-#include <event.hpp>
+#include <kernel.hpp>
 
 namespace kernel::internal::handle
 {

@@ -1,4 +1,4 @@
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
 #include <stm32f10x.h>
 
@@ -22,6 +22,7 @@ namespace kernel::hardware
 
     namespace interrupt
     {
+        // Maxium number of vendor defined interrupts for ARMv7-m.
         constexpr uint32_t maximum_number = 240U;
 
         // Hardware priority config.
@@ -143,7 +144,7 @@ namespace kernel::hardware
 
         void setBreakpoint()
         {
-            __ASM(" BKPT 0\n");
+            __BKPT( 0);
         }
     }
 
@@ -223,7 +224,7 @@ namespace kernel::hardware
             uint32_t new_value = 
                 preemption_priority << ( 8U - interrupt::priority::number_of_preemption_priority_bits);
 
-            // Setting NASEPRI to 0 has no effect, so it is most likely bug.
+            // Setting BASEPRI to 0 has no effect, so it is most likely bug.
             assert( 0U != new_value);
 
             // Store previous priority;
@@ -245,17 +246,28 @@ namespace kernel::hardware
 
 namespace kernel::hardware::task
 {
-    void Stack::init( uint32_t a_routine) volatile
+    // This function initialize default stack frame for each task.
+    void Stack::init( uint32_t a_routine_address) volatile
     {
-        // TODO: Do something with magic numbers.
-        m_data[ TASK_STACK_SIZE - 8U] = 0xCD'CD'CD'CDU; // R0
-        m_data[ TASK_STACK_SIZE - 7U] = 0xCD'CD'CD'CDU; // R1
-        m_data[ TASK_STACK_SIZE - 6U] = 0xCD'CD'CD'CDU; // R2
-        m_data[ TASK_STACK_SIZE - 5U] = 0xCD'CD'CD'CDU; // R3
-        m_data[ TASK_STACK_SIZE - 4U] = 0U; // R12
-        m_data[ TASK_STACK_SIZE - 3U] = 0U; // LR R14
-        m_data[ TASK_STACK_SIZE - 2U] = a_routine;
-        m_data[ TASK_STACK_SIZE - 1U] = 0x01000000U; // xPSR
+        // This is magic number and does not hold any meaning. It help tracking stack overflows.
+        constexpr uint32_t default_general_purpose_register_value = 0xCDCD'CDCDU;
+
+        // This is default value set by CPU after reset.
+        // If interrupt return with this value set, it will cause fault error.
+        constexpr uint32_t default_link_register_value = 0xFFFF'FFFFU;
+
+        // Set Instruction set to Thumb.
+        constexpr uint32_t program_status_register_value = 0x01000'000U;
+
+        // CPU uses full descending stack, thats why starting stack frame is placed at the bodom.
+        m_data[ TASK_STACK_SIZE - 8U] = default_general_purpose_register_value; // R0
+        m_data[ TASK_STACK_SIZE - 7U] = default_general_purpose_register_value; // R1
+        m_data[ TASK_STACK_SIZE - 6U] = default_general_purpose_register_value; // R2
+        m_data[ TASK_STACK_SIZE - 5U] = default_general_purpose_register_value; // R3
+        m_data[ TASK_STACK_SIZE - 4U] = default_general_purpose_register_value; // R12
+        m_data[ TASK_STACK_SIZE - 3U] = default_link_register_value;            // R14 - Link register
+        m_data[ TASK_STACK_SIZE - 2U] = a_routine_address;                      // R15 - Program counter
+        m_data[ TASK_STACK_SIZE - 1U] = program_status_register_value;          // xPSR - Program Status Register
     }
     
     uint32_t Stack::getStackPointer() volatile
@@ -266,8 +278,8 @@ namespace kernel::hardware::task
 
 extern "C"
 {
-        // TOOD: print nice error log in case of failed run-time assert.
-    __attribute ((nothrow)) void __aeabi_assert(
+    // TOOD: print nice error log in case of failed run-time assert.
+    void __aeabi_assert(
         const char * expr,
         const char * file,
         int line

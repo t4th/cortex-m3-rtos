@@ -1,9 +1,9 @@
 #pragma once
 
-#include <ready_list.hpp>
-#include <wait_list.hpp>
+#include "scheduler/ready_list.hpp"
+#include "scheduler/wait_list.hpp"
 
-#include <handle.hpp>
+#include "handle/handle.hpp"
 
 // Scheduler is used to order which task is to be served next.
 // It is state machine using m_current and m_next to evaluate

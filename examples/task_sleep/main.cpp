@@ -3,7 +3,7 @@
 // - Sleep function
 
 #include <kernel.hpp>
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
 struct timer
 {
@@ -12,7 +12,7 @@ struct timer
     kernel::Time_ms time2;
 };
 
-void printTask( const char * a_text)
+void printText( const char * a_text)
 {
     kernel::hardware::debug::print( a_text);
 }
@@ -22,9 +22,9 @@ void task0( void * a_parameter);
 int main()
 {
     timer timer;
-    timer.time0 = 100;
-    timer.time1 = 500;
-    timer.time2 = 1000;
+    timer.time0 = 100U;
+    timer.time1 = 500U;
+    timer.time2 = 1000U;
 
     kernel::init();
 
@@ -41,21 +41,21 @@ int main()
 void task0( void * a_parameter)
 {
     kernel::Time_ms * timer = ( kernel::Time_ms*) a_parameter;
-    printTask( "task - start\r\n");
+    printText( "task - start\r\n");
 
     while ( true)
     {
         kernel::task::sleep( *timer);
         switch( *timer)
         {
-        case 100:
-            printTask( "task 0 - ping\r\n");
+        case 100U:
+            printText( "task 0 - ping\r\n");
             break;
-        case 500:
-            printTask( "task 1 - ping\r\n");
+        case 500U:
+            printText( "task 1 - ping\r\n");
             break;
-        case 1000:
-            printTask( "task 2 - ping\r\n");
+        case 1000U:
+            printText( "task 2 - ping\r\n");
             break;
         }
     }

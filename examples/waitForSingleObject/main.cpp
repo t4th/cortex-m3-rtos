@@ -4,9 +4,9 @@
 // - waitForSingleObject synchronization function
 
 #include <kernel.hpp>
-#include <hardware.hpp>
+#include "hardware/hardware.hpp"
 
-void printTask( const char * a_text)
+void printText( const char * a_text)
 {
     kernel::hardware::debug::print( a_text);
 }
@@ -36,7 +36,7 @@ void task0( void * a_parameter)
 {
     Events * events = ( Events*) a_parameter;
 
-    printTask( "task 0 - start\r\n");
+    printText( "task 0 - start\r\n");
 
     kernel::Handle hTask1;
 
@@ -50,28 +50,28 @@ void task0( void * a_parameter)
         
     if ( true == task_create)
     {
-        printTask( "task 0 - created Medium suspended task 1\r\n");
+        printText( "task 0 - created Medium suspended task 1\r\n");
     }
 
     bool event_created = kernel::event::create( events->event0);
     
     if ( event_created)
     {
-        printTask( "task 0 - created event 0\r\n");
+        printText( "task 0 - created event 0\r\n");
     }
     else
     {
-        printTask( "task 0 - create event failed\r\n");
+        printText( "task 0 - create event failed\r\n");
     }
 
-    printTask( "task 0 - resuming task 1\r\n");
+    printText( "task 0 - resuming task 1\r\n");
     
     kernel::task::resume( hTask1);
 
     while ( true)
     {
         kernel::task::sleep( 500U);
-        printTask( "task 0 - set event 0\r\n");
+        printText( "task 0 - set event 0\r\n");
         kernel::event::set( events->event0);
     }
 }
@@ -80,21 +80,21 @@ void task1( void * a_parameter)
 {
     Events * events = ( Events*) a_parameter;
 
-    printTask( "task 1 - start\r\n");
+    printText( "task 1 - start\r\n");
 
     while ( true)
     {
-        printTask( "task 1 - wait forever for event 0\r\n");
+        printText( "task 1 - wait forever for event 0\r\n");
 
         kernel::sync::WaitResult waitResult = kernel::sync::waitForSingleObject( events->event0);
 
         if ( kernel::sync::WaitResult::ObjectSet == waitResult)
         {
-            printTask( "task 1 - wake up with object set\r\n");
+            printText( "task 1 - wake up with object set\r\n");
         }
         else
         {
-            printTask( "task 1 - wake up failed\r\n");
+            printText( "task 1 - wake up failed\r\n");
         }
 
         kernel::task::sleep( 100U);

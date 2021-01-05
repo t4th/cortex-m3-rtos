@@ -1,4 +1,4 @@
-#include <config.hpp>
+#include "config/config.hpp"
 
 namespace kernel::internal::system_timer
 {
@@ -8,7 +8,7 @@ namespace kernel::internal::system_timer
         volatile Time_ms m_oldTime = 0U;
 
         // Time in miliseconds elapsed since kernel started.
-        volatile std::atomic<Time_ms> m_currentTime = 0U;
+        volatile std::atomic< Time_ms> m_currentTime = 0U;
     };
 
     inline Time_ms get( Context & a_context)

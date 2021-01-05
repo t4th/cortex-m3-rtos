@@ -1,6 +1,6 @@
 #pragma once
 
-#include <config.hpp>
+#include "config/config.hpp"
 
 namespace kernel::internal
 {
@@ -25,7 +25,7 @@ namespace kernel::hardware
         class Stack
         {
             public:
-                void        init( uint32_t a_routine) volatile;
+                void        init( uint32_t a_routine_address) volatile;
                 uint32_t    getStackPointer() volatile;
 
             private:
@@ -101,12 +101,12 @@ namespace kernel::hardware
         void wait();
     }
 
-    // Hardware level critical section used for protecting data between interrupts.
+    // Hardware level critical section used for protecting data accessed by different interrupts.
     namespace critical_section
     {
         struct Context
         {
-            uint32_t m_local_data;
+            uint32_t m_local_data{};
         };
 
         void enter(

@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <atomic>
 
+#include "containers/queue.hpp"
+
 // Calling any of below functions from within hardware interrupt routine
 // will cause undefined behaviour, unless specified otherwise.
 
@@ -110,7 +112,7 @@ namespace kernel::critical_section
     // Modyfing this outside critical_section API is UB.
     struct Context
     {
-        volatile std::atomic<uint32_t> m_lockCount;
+        volatile std::atomic< uint32_t> m_lockCount;
         volatile uint32_t m_spinLock;
         kernel::Handle m_event;
         kernel::Handle m_ownerTask; // debug information
@@ -172,3 +174,4 @@ namespace kernel::sync
         uint32_t *          a_signaled_item_index = nullptr
     );
 }
+
