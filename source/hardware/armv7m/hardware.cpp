@@ -80,6 +80,10 @@ namespace kernel::hardware
 
                     set( interrupt_number, a_preemption_priority, a_sub_priority);
                 }
+                else
+                {
+                    assert ( true);
+                }
             }
         }
 
@@ -112,6 +116,10 @@ namespace kernel::hardware
                 IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
 
                 NVIC_EnableIRQ( interrupt_number);
+            }
+            else
+            {
+                assert ( true);
             }
         }
 
@@ -272,13 +280,15 @@ namespace kernel::hardware::task
     
     uint32_t Stack::getStackPointer() volatile
     {
-        return reinterpret_cast< uint32_t>( &m_data[ TASK_STACK_SIZE - 8]);
+        return reinterpret_cast< uint32_t>( &m_data[ TASK_STACK_SIZE - 8U]);
     }
 }
 
 extern "C"
 {
     // TOOD: print nice error log in case of failed run-time assert.
+    // TODO: Silence NO-RETURN warning.
+    // Note: This function can return.
     void __aeabi_assert(
         const char * expr,
         const char * file,
@@ -286,14 +296,13 @@ extern "C"
     )
     {
         kernel::hardware::debug::setBreakpoint();
-        while( true); // Used to silence the NO-RETURN warning.
     }
     
     inline __attribute__ (( naked )) void LoadTask(void)
     {
         __ASM(" CPSID I\n");
 
-        // Load task context
+        // Load task context from address provided by next_task_context.
         __ASM(" ldr r0, =next_task_context\n");
         __ASM(" ldr r1, [r0]\n");
         __ASM(" ldm r1, {r4-r11}\n");

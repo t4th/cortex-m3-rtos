@@ -110,7 +110,7 @@ namespace kernel::internal::scheduler::wait_list
     {
         for ( uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
         {
-            // TODO: it doesn't matter if memmory is allocated or not. Consider removing.
+            // TODO: it doesn't matter if memory is allocated or not. Consider removing.
             if ( true == a_context.m_list.isAllocated( i))
             {
                 if ( a_context.m_list.at( i).m_id == a_task_id)
