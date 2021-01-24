@@ -39,7 +39,7 @@ namespace kernel
             return;
         }
 
-        hardware::init();
+        internal::hardware::init();
         
         {
             bool idle_task_created = task::create(
@@ -64,9 +64,9 @@ namespace kernel
         internal::lock::enter( internal::context::m_lock);
         internal::context::m_started = true;
         
-        hardware::start();
+        internal::hardware::start();
 
-        hardware::syscall( hardware::SyscallId::LoadNextTask);
+        internal::hardware::syscall( internal::hardware::SyscallId::LoadNextTask);
     }
 
     Time_ms getTime()
@@ -156,7 +156,7 @@ namespace kernel::task
             // If priority of task just created is higher than current task, issue context switch.
             if ( internal::context::m_started && (a_priority < current_task_priority))
             {
-                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+                internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -228,7 +228,7 @@ namespace kernel::task
 
             if ( current_task_id == suspended_task_id)
             {
-                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+                internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -260,7 +260,7 @@ namespace kernel::task
             auto resumedTaskId = internal::handle::getId< internal::task::Id>( a_handle);
             auto currentTaskId = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
-            if (resumedTaskId == currentTaskId)
+            if ( resumedTaskId == currentTaskId)
             {
                 internal::lock::leave( internal::context::m_lock);
                 return;
@@ -272,7 +272,7 @@ namespace kernel::task
                 resumedTaskId
             );
 
-            if (false == task_resumed)
+            if ( false == task_resumed)
             {
                 internal::lock::leave( internal::context::m_lock);
                 return;
@@ -291,7 +291,7 @@ namespace kernel::task
             // If resumed task is higher priority than current, issue context switch
             if ( resumedTaskPrio < currentTaskPrio)
             {
-                hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+                internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
             else
             {
@@ -304,7 +304,7 @@ namespace kernel::task
     {
         // Note: Skip sleeping if provided time is smaller or equal
         //       to single context switch interval.
-        if ( a_time <= internal::system_timer::CONTEXT_SWITCH_INTERVAL_MS)
+        if ( a_time <= internal::system_timer::context_switch_interval_ms)
         {
             return;
         }
@@ -324,7 +324,7 @@ namespace kernel::task
                 currentTime
             );
         }
-        hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
     }
 }
 
@@ -583,7 +583,8 @@ namespace kernel::sync
                 assert( true);
             }
         }
-        hardware::syscall( hardware::SyscallId::ExecuteContextSwitch);
+
+        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
 
         internal::lock::enter( internal::context::m_lock);
         {

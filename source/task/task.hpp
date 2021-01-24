@@ -7,7 +7,7 @@
 
 namespace kernel::internal::task
 {
-    constexpr uint32_t PRIORITIES_COUNT = 
+    constexpr uint32_t priorities_count = 
         static_cast< uint32_t>( kernel::task::Priority::Idle) + 1U;
 
     // todo: consider it type strong
@@ -16,8 +16,8 @@ namespace kernel::internal::task
     struct Task
     {
         uint32_t                        m_sp;
-        kernel::hardware::task::Context m_context;
-        kernel::hardware::task::Stack   m_stack;
+        hardware::task::Context         m_context;
+        hardware::task::Stack           m_stack;
         kernel::task::Priority          m_priority;
         kernel::task::State             m_state;
         void *                          m_parameter;
@@ -30,7 +30,7 @@ namespace kernel::internal::task
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer< Task, MAX_NUMBER> m_data{};
+        volatile kernel::internal::common::MemoryBuffer< Task, max_number> m_data{};
     };
 
     typedef void( *TaskRoutine)(void);
@@ -116,7 +116,7 @@ namespace kernel::internal::task
 
     namespace context
     {
-        inline volatile kernel::hardware::task::Context * get( Context & a_context, Id & a_id)
+        inline volatile hardware::task::Context * get( Context & a_context, Id & a_id)
         {
             return &a_context.m_data.at( a_id).m_context;
         }

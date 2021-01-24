@@ -24,7 +24,7 @@ namespace kernel::internal::scheduler::wait
     {
         Type        m_type;
 
-        Handle      m_waitSignals[ MAX_INPUT_SIGNALS];
+        Handle      m_waitSignals[ max_input_signals];
         uint32_t    m_numberOfSignals;
 
         // Indicate if all m_waitSignals signals must be set to fulfil wake up condition.
@@ -62,7 +62,7 @@ namespace kernel::internal::scheduler::wait
         assert( a_wait_signals);
         assert( a_number_of_signals > 0U);
 
-        if ( a_number_of_signals < MAX_INPUT_SIGNALS)
+        if ( a_number_of_signals < max_input_signals)
         {
             a_conditions.m_numberOfSignals = a_number_of_signals;
         }
@@ -202,14 +202,14 @@ namespace kernel::internal::scheduler::wait
             }
 
             bool condition_fulfilled = false;
-            hardware::critical_section::Context cs_context;
+            kernel::hardware::critical_section::Context cs_context;
 
             // testWaitSignals is testing waiting signals that can be set
             // from external interrupts and in some cases, update such signals.
             // That us why hardware-level critical section must be used.
-            hardware::critical_section::enter(
+            kernel::hardware::critical_section::enter(
                 cs_context,
-                hardware::interrupt::priority::Preemption::Critical
+                kernel::hardware::interrupt::priority::Preemption::Critical
             );
             {
                 condition_fulfilled = testWaitSignals(
@@ -222,7 +222,7 @@ namespace kernel::internal::scheduler::wait
                     a_signaled_item_index
                 );
             }
-            hardware::critical_section::leave( cs_context);
+            kernel::hardware::critical_section::leave( cs_context);
 
             return condition_fulfilled;
         }

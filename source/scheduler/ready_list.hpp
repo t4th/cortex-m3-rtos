@@ -12,7 +12,7 @@ namespace kernel::internal::scheduler::ready_list
     {
         kernel::internal::common::CircularList<
             kernel::internal::task::Id,
-            kernel::internal::task::MAX_NUMBER
+            kernel::internal::task::max_number
         > m_list{};
 
         uint32_t m_current{ 0U};
@@ -20,7 +20,7 @@ namespace kernel::internal::scheduler::ready_list
 
     struct Context
     {
-        volatile TaskList m_ready_list[ internal::task::PRIORITIES_COUNT]{};
+        volatile TaskList m_ready_list[ internal::task::priorities_count]{};
     };
 
     inline bool addTask(

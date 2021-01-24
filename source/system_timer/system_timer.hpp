@@ -23,7 +23,7 @@ namespace kernel::internal::system_timer
 
     inline bool isIntervalElapsed( Context & a_context)
     {
-        if (a_context.m_currentTime - a_context.m_oldTime > CONTEXT_SWITCH_INTERVAL_MS)
+        if (a_context.m_currentTime - a_context.m_oldTime > context_switch_interval_ms)
         {
             a_context.m_oldTime = a_context.m_currentTime;
             return true;

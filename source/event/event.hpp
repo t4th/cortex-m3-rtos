@@ -29,7 +29,7 @@ namespace kernel::internal::event
         //       generalized internal::event or adding new specialized
         //       internal::auto_reset_event. For current project state it is unnecessary
         //       complexity.
-        volatile kernel::internal::common::MemoryBuffer< Event, MAX_NUMBER> m_data{};
+        volatile kernel::internal::common::MemoryBuffer< Event, max_number> m_data{};
     };
 
     inline bool create(

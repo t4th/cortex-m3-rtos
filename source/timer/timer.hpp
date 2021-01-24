@@ -26,7 +26,7 @@ namespace kernel::internal::timer
 
     struct Context
     {
-        volatile kernel::internal::common::MemoryBuffer< Timer, MAX_NUMBER> m_data{};
+        volatile kernel::internal::common::MemoryBuffer< Timer, max_number> m_data{};
     };
 
     inline bool create(
@@ -86,7 +86,7 @@ namespace kernel::internal::timer
         //       Limiting branches should be more effective that
         //       late decision trees (and more cache friendly if
         //       applicable).
-        for ( uint32_t i = 0U; i < MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < max_number; ++i)
         {
             // Note: For now this check stays due to memory buffer
             //       assert isAllocated when 'at' dereference is used.

@@ -256,7 +256,7 @@ namespace kernel::internal::scheduler
         bool next_task_found = false;
 
         for ( uint32_t prio = static_cast<uint32_t>( kernel::task::Priority::High);
-            prio < kernel::internal::task::PRIORITIES_COUNT;
+            prio < kernel::internal::task::priorities_count;
             ++prio)
         {
             kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
@@ -303,7 +303,7 @@ namespace kernel::internal::scheduler
         bool next_task_found = false;
 
         for ( uint32_t prio = static_cast< uint32_t>( kernel::task::Priority::High);
-            prio < kernel::internal::task::PRIORITIES_COUNT;
+            prio < kernel::internal::task::priorities_count;
             ++prio)
         {
             kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
@@ -358,7 +358,7 @@ namespace kernel::internal::scheduler
     {
         // Iterate over WaitItem which hold conditions used to wake up
         // waiting task.
-        for ( uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < kernel::internal::task::max_number; ++i)
         {
             auto & current_wait_item = a_context.m_wait_list.m_list;
 

@@ -4,34 +4,40 @@
 
 #include <cassert>
 
+// This file contain hardware specific implementation.
+// In current case its stm32f103ze clocked at 72MHz.
+
 // TODO: Make this somehow private to kernel::hardware or nameless namespace.
 // This is workaround to use C++ variables symbols in inline assembly.
-volatile kernel::hardware::task::Context * current_task_context;
-volatile kernel::hardware::task::Context * next_task_context;
+volatile kernel::internal::hardware::task::Context * current_task_context;
+volatile kernel::internal::hardware::task::Context * next_task_context;
 
-// This containt hardware specific implementation.
-// In current case its stm32f103ze clocked at 72MHz.
-namespace kernel::hardware
+namespace
 {
     // Variables used to calculate SysTick prescaler used to reach 1 ms timestamp.
     // This is derived from formula:
     // TARGET_SYSTICK_TIMESTAMP_HZ = CORE_CLOCK_FREQ_HZ / SYSTICK_PRESCALER,
     // where SYSTICK_PRESCALER is searched value.
-    constexpr uint32_t TARGET_SYSTICK_TIMESTAMP_HZ{ 1000U};
-    constexpr uint32_t SYSTICK_PRESCALER{ CORE_CLOCK_FREQ_HZ / TARGET_SYSTICK_TIMESTAMP_HZ};
+    constexpr uint32_t target_systick_timestamp_hz{ 1000U};
+    constexpr uint32_t systick_prescaler{ kernel::internal::hardware::core_clock_freq_hz / target_systick_timestamp_hz};
 
+    // Maxium number of vendor defined interrupts for ARMv7-m.
+    constexpr uint32_t maximum_priority_number{ 240U};
+
+    // Interrupt priority configuration for ARMv7-m.
+    constexpr uint32_t number_of_preemption_priority_bits{ 2U};
+    constexpr uint32_t number_of_sub_priority_bits{ 2U};
+    constexpr uint32_t number_of_total_priority_bits{ __NVIC_PRIO_BITS};
+}
+
+// User-level hardware interface.
+namespace kernel::hardware
+{
     namespace interrupt
     {
-        // Maxium number of vendor defined interrupts for ARMv7-m.
-        constexpr uint32_t maximum_number = 240U;
-
         // Hardware priority config.
         namespace priority
         {
-            constexpr uint32_t number_of_preemption_priority_bits = 2U;
-            constexpr uint32_t number_of_sub_priority_bits = 2U;
-            constexpr uint32_t number_of_total_priority_bits = __NVIC_PRIO_BITS;
-
             // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
             constexpr void set(
                 IRQn_Type   a_interrupt_number,
@@ -74,7 +80,7 @@ namespace kernel::hardware
                 Sub         a_sub_priority
             )
             {
-                if ( a_vendor_interrupt_id < interrupt::maximum_number)
+                if ( a_vendor_interrupt_id < maximum_priority_number)
                 {
                     IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
 
@@ -87,31 +93,9 @@ namespace kernel::hardware
             }
         }
 
-        void init()
-        {
-            // This value indicate shift number needed to set binary point position in
-            // Interrupt priority level field, PRI_N[7:0].
-
-            // Since number of bits used for pre-emption priority is 4, binary point should
-            // result as follows: xx.yyyyyy, where xx are number of bits used by pre-emption priority
-            // and yyyyyy are bits used by sub-priority.
-            constexpr uint32_t binary_point_shift =
-                7U - priority::number_of_preemption_priority_bits; 
-
-            NVIC_SetPriorityGrouping( binary_point_shift);
-        }
-
-        void start()
-        {
-            // Note: Enable SysTick last, since it is the only PendSV trigger.
-            NVIC_EnableIRQ( SVCall_IRQn);
-            NVIC_EnableIRQ( PendSV_IRQn);
-            NVIC_EnableIRQ( SysTick_IRQn);
-        }
-
         void enable( uint32_t a_vendor_interrupt_id)
         {
-            if ( a_vendor_interrupt_id < interrupt::maximum_number)
+            if ( a_vendor_interrupt_id < maximum_priority_number)
             {
                 IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
 
@@ -129,6 +113,34 @@ namespace kernel::hardware
         }
     }
 
+    namespace critical_section
+    {
+        // TODO: test if compiler is not re-ordering this functions.
+        void enter( volatile Context & a_context, interrupt::priority::Preemption a_preemption_priority)
+        {
+            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+            uint32_t new_value = 
+                preemption_priority << ( 8U - number_of_preemption_priority_bits);
+
+            // Setting BASEPRI to 0 has no effect, so it is most likely bug.
+            assert( 0U != new_value);
+
+            // Store previous priority;
+            a_context.m_local_data = __get_BASEPRI();
+
+            // Use BASEPRI register value as critical section for provided pre-emption priority.
+            __set_BASEPRI( new_value);
+
+            __DSB(); // Used as compiler re-order barrer and forces that m_local_data is not cached.
+        }
+
+        void leave( volatile Context & a_context)
+        {
+            __DSB(); // Used as compiler re-order barrer
+            __set_BASEPRI( a_context.m_local_data);
+        }
+    }
+
     namespace debug
     {
         void init()
@@ -136,6 +148,7 @@ namespace kernel::hardware
             ITM->TCR |= ITM_TCR_ITMENA_Msk;  // ITM enable
             ITM->TER = 1UL;                  // ITM Port #0 enable
         }
+
         void putChar( char c)
         {
             ITM_SendChar( c);
@@ -145,7 +158,7 @@ namespace kernel::hardware
         {
             while ( '\0' != *s)
             {
-                kernel::hardware::debug::putChar( *s);
+                debug::putChar( *s);
                 ++s;
             }
         }
@@ -153,6 +166,35 @@ namespace kernel::hardware
         void setBreakpoint()
         {
             __BKPT( 0);
+        }
+    }
+}
+
+// Kernel-level hardware interface.
+namespace kernel::internal::hardware
+{
+    namespace interrupt
+    {
+        void init()
+        {
+            // This value indicate shift number needed to set binary point position in
+            // Interrupt priority level field, PRI_N[7:0].
+
+            // Since number of bits used for pre-emption priority is 4, binary point should
+            // result as follows: xx.yyyyyy, where xx are number of bits used by pre-emption priority
+            // and yyyyyy are bits used by sub-priority.
+            constexpr uint32_t binary_point_shift =
+                7U - number_of_preemption_priority_bits; 
+
+            NVIC_SetPriorityGrouping( binary_point_shift);
+        }
+
+        void start()
+        {
+            // Note: Enable SysTick last, since it is the only PendSV trigger.
+            NVIC_EnableIRQ( SVCall_IRQn);
+            NVIC_EnableIRQ( PendSV_IRQn);
+            NVIC_EnableIRQ( SysTick_IRQn);
         }
     }
 
@@ -173,18 +215,21 @@ namespace kernel::hardware
 
     void init()
     {
-        SysTick_Config( SYSTICK_PRESCALER - 1U);
+        SysTick_Config( systick_prescaler - 1U);
 
-        debug::init();
+        // TODO: enable only in debug mode.
+        kernel::hardware::debug::init();
 
         interrupt::init();
 
         // Note: SysTick and PendSV interrupts use the same priority,
         //       to remove the need of critical section for use of shared
         //       kernel data. It is actually recommended in ARM reference manual.
-        interrupt::priority::set( SVCall_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
-        interrupt::priority::set( PendSV_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
-        interrupt::priority::set( SysTick_IRQn, interrupt::priority::Preemption::Kernel, interrupt::priority::Sub::Low);
+        using namespace kernel::hardware::interrupt;
+
+        priority::set( SVCall_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
+        priority::set( PendSV_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
+        priority::set( SysTick_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
     }
     
     void start()
@@ -209,7 +254,7 @@ namespace kernel::hardware
 
     namespace context::current
     {
-        void set( volatile kernel::hardware::task::Context * a_context)
+        void set( volatile task::Context * a_context)
         {
             current_task_context = a_context;
         }
@@ -217,42 +262,14 @@ namespace kernel::hardware
 
     namespace context::next
     {
-        void set( volatile kernel::hardware::task::Context * a_context)
+        void set( volatile task::Context * a_context)
         {
             next_task_context = a_context;
         }
     }
-
-    namespace critical_section
-    {
-        // TODO: test if compiler is not re-ordering this functions.
-        void enter( volatile Context & a_context, interrupt::priority::Preemption a_preemption_priority)
-        {
-            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
-            uint32_t new_value = 
-                preemption_priority << ( 8U - interrupt::priority::number_of_preemption_priority_bits);
-
-            // Setting BASEPRI to 0 has no effect, so it is most likely bug.
-            assert( 0U != new_value);
-
-            // Store previous priority;
-            a_context.m_local_data = __get_BASEPRI();
-
-            // Use BASEPRI register value as critical section for provided pre-emption priority.
-            __set_BASEPRI( new_value);
-
-            __DSB(); // Used as compiler re-order barrer and forces that m_local_data is not cached.
-        }
-
-        void leave( volatile Context & a_context)
-        {
-            __DSB(); // Used as compiler re-order barrer
-            __set_BASEPRI( a_context.m_local_data);
-        }
-    }
 }
 
-namespace kernel::hardware::task
+namespace kernel::internal::hardware::task
 {
     // This function initialize default stack frame for each task.
     void Stack::init( uint32_t a_routine_address) volatile
@@ -268,19 +285,19 @@ namespace kernel::hardware::task
         constexpr uint32_t program_status_register_value = 0x01000'000U;
 
         // CPU uses full descending stack, thats why starting stack frame is placed at the bodom.
-        m_data[ TASK_STACK_SIZE - 8U] = default_general_purpose_register_value; // R0
-        m_data[ TASK_STACK_SIZE - 7U] = default_general_purpose_register_value; // R1
-        m_data[ TASK_STACK_SIZE - 6U] = default_general_purpose_register_value; // R2
-        m_data[ TASK_STACK_SIZE - 5U] = default_general_purpose_register_value; // R3
-        m_data[ TASK_STACK_SIZE - 4U] = default_general_purpose_register_value; // R12
-        m_data[ TASK_STACK_SIZE - 3U] = default_link_register_value;            // R14 - Link register
-        m_data[ TASK_STACK_SIZE - 2U] = a_routine_address;                      // R15 - Program counter
-        m_data[ TASK_STACK_SIZE - 1U] = program_status_register_value;          // xPSR - Program Status Register
+        m_data[ stack_size - 8U] = default_general_purpose_register_value; // R0
+        m_data[ stack_size - 7U] = default_general_purpose_register_value; // R1
+        m_data[ stack_size - 6U] = default_general_purpose_register_value; // R2
+        m_data[ stack_size - 5U] = default_general_purpose_register_value; // R3
+        m_data[ stack_size - 4U] = default_general_purpose_register_value; // R12
+        m_data[ stack_size - 3U] = default_link_register_value;            // R14 - Link register
+        m_data[ stack_size - 2U] = a_routine_address;                      // R15 - Program counter
+        m_data[ stack_size - 1U] = program_status_register_value;          // xPSR - Program Status Register
     }
     
     uint32_t Stack::getStackPointer() volatile
     {
-        return reinterpret_cast< uint32_t>( &m_data[ TASK_STACK_SIZE - 8U]);
+        return reinterpret_cast< uint32_t>( &m_data[ stack_size - 8U]);
     }
 }
 

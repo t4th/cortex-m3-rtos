@@ -27,7 +27,7 @@ namespace kernel::internal::scheduler::wait_list
         // TODO: consider this a list to reduce search iterations.
         volatile common::MemoryBuffer<
             WaitItem,
-            task::MAX_NUMBER
+            task::max_number
         > m_list{};
     };
 
@@ -108,7 +108,7 @@ namespace kernel::internal::scheduler::wait_list
         task::Id & a_task_id
     )
     {
-        for ( uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        for ( uint32_t i = 0U; i < kernel::internal::task::max_number; ++i)
         {
             // TODO: it doesn't matter if memory is allocated or not. Consider removing.
             if ( true == a_context.m_list.isAllocated( i))
