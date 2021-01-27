@@ -791,9 +791,9 @@ namespace kernel::internal
 
 namespace kernel::internal
 {
-    // This function is bridge between kernel::hardware and kernel::internal implementations.
+    // This function is bridge between kernel::internal::hardware and kernel::internal implementations.
     // It stores hardware stack pointer in internal::task descriptor and provide memory location
-    // where kernel::hardware will store current context.
+    // where kernel::internal::hardware will store current context.
     // NOTE: Must only be called from handler mode (MSP stack) since it is modifying psp.
     inline void storeContext(
         task::Context &   a_task_context,
@@ -807,8 +807,8 @@ namespace kernel::internal
         hardware::context::current::set( current_task_context);
     }
 
-    // This function is bridge between kernel::hardware and kernel::internal implementations.
-    // It provide kernel::hardware layer with previously stored task context and stack pointer
+    // This function is bridge between kernel::internal::hardware and kernel::internal implementations.
+    // It provide kernel::internal::hardware layer with previously stored task context and stack pointer
     // from kernel::internal::task descriptor.
     // NOTE: Must only be called from handler mode (MSP stack) since it is modifying psp.
     inline void loadContext( 
@@ -823,7 +823,7 @@ namespace kernel::internal
         hardware::sp::set( next_sp);
     }
 
-    // This is function used by kernel::hardware to load and get next task sp and context. 
+    // This is function used by kernel::internal::hardware to load and get next task sp and context. 
     void loadNextTask()
     {
         internal::task::Id next_task;
@@ -848,7 +848,7 @@ namespace kernel::internal
         //       should be reset when syscall is used by user.
     }
 
-    // This is function used by kernel::hardware to get information, where to store current
+    // This is function used by kernel::internal::hardware to get information, where to store current
     // context and from where get next context.
     void switchContext()
     {

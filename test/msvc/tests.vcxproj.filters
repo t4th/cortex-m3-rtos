@@ -104,5 +104,8 @@
     <ClInclude Include="..\..\source\common\circular_list.hpp">
       <Filter>tested files\kernel\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\containers\queue.hpp">
+      <Filter>tested files\kernel\containers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

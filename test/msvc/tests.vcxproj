@@ -30,6 +30,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\source\common\circular_list.hpp" />
     <ClInclude Include="..\..\source\common\memory_buffer.hpp" />
+    <ClInclude Include="..\..\source\containers\queue.hpp" />
     <ClInclude Include="..\..\source\event\event.hpp" />
     <ClInclude Include="..\..\source\scheduler\scheduler.hpp" />
     <ClInclude Include="..\..\source\task\task.hpp" />
