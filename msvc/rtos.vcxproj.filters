@@ -42,6 +42,9 @@
     <Filter Include="examples\using_interrupt">
       <UniqueIdentifier>{ee4d830d-f091-41d7-b889-884a49379312}</UniqueIdentifier>
     </Filter>
+    <Filter Include="examples\serial_interrupt">
+      <UniqueIdentifier>{b5061237-41da-46b6-8c5a-86ed6db15674}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\kernel.cpp">
@@ -67,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="..\examples\using_interrupt\main.cpp">
       <Filter>examples\using_interrupt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\examples\serial_interrupt\main.cpp">
+      <Filter>examples\serial_interrupt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

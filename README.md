@@ -23,7 +23,7 @@ On target example projects:
 https://github.com/t4th/cortex-m3-rtos-blinky-example
 
 ## Notes
-12/12/2020 - initial version of waitForMultipleObject.
+12/12/2020 - initial version of waitForMultipleObjects.
 
 12/03/2020 - initial version of timers, events, sleep, critical section and waitForSingleObject are now pushed and working
 
@@ -36,13 +36,18 @@ https://github.com/t4th/cortex-m3-rtos-blinky-example
 - [x] software timers: create, delete
 - [x] sleep function
 - [x] events: create, delete
-- [x] function WaitForSingleObject, WaitForMultipleObject
-- [x] Critical section: enter, leave
-- [ ] HW vendor interrupts interface for kernel ~~way to map HW interrupts to events~~
+- [x] synchronization functions: WaitForSingleObject, WaitForMultipleObjects
+- [x] software critical section: enter, leave
+- [x] hardware critical section: enter, leave
+- [x] queue
+- [ ] examples
+- [ ] core tests
 
 ### 1.0+ Features
+- [ ] static way to map HW interrupts to events (compile time named events?)
 - [ ] stack over/underflow detection in Idle task
 - [ ] implement privilege levels
+- [ ] implement priority inheritance
 - [ ] setup gcc project with cmake for linux
 - [ ] adapt HW layer for Cortex-M4
 - [ ] adapt HW layer for Cortex-M7

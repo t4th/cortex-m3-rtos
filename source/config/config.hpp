@@ -16,7 +16,7 @@ namespace kernel::internal::hardware
         // Define maximum stack size for each task.
         // Setting this too low or decreasing compiler optimization levels
         // can easly cause undefined behaviour due to stack over/under-flow.
-        constexpr uint32_t stack_size{ 192U};
+        constexpr uint32_t stack_size{ 1024U};
     }
 }
 
