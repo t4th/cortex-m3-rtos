@@ -1,7 +1,26 @@
 @startuml
 set namespaceSeparator ::
+hide circle
 
-class kernel::kernel{
+hide <<tag>> 
+class alignment <<tag>>{
+}
+
+note as MainNote
+    <b>kernel</b> namespace provide kernel API to User, which include nested namespaces.
+    For example <b>kernel::hardware</b> expose ARM Core functionality abstractions.
+    
+    <b>kernel::internal</b> components are implementation details and should not be accessed by User.
+end note
+
+class user
+{
++ main()
+}
+
+alignment -[hidden]d-> user
+
+class kernel::kernel << namespace >>{
 -internal::system_timer::Context
 -internal::task::Context
 -internal::scheduler::Context
@@ -19,23 +38,27 @@ class kernel::kernel{
 + getTime()
 }
 
+user .d.|> kernel::kernel : <<use>>
 kernel::kernel -d-> kernel::internal::system_timer
 kernel::kernel -d-> kernel::internal::lock
-kernel::kernel -d-> kernel::task
-kernel::kernel -d-> kernel::critical_section
-kernel::kernel -d-> kernel::event
-kernel::kernel -d-> kernel::timer
-kernel::kernel -d-> kernel::sync
-kernel::kernel -> kernel::hardware::hardware
+
+kernel::kernel -[hidden]d-> kernel::task
+kernel::kernel -[hidden]d-> kernel::critical_section
+kernel::kernel -[hidden]d-> kernel::event
+kernel::kernel -[hidden]d-> kernel::timer
+kernel::kernel -[hidden]d-> kernel::sync
+kernel::kernel <-> kernel::internal::hardware::hardware
 
 kernel::kernel -d-> kernel::internal::scheduler
 kernel::kernel -d-> kernel::internal::handle
 
-class kernel::config
+kernel::kernel -[hidden]r-> kernel::hardware::critical_section
+
+class kernel::config << namespace >>
 {
 }
 
-class kernel::task {
+class kernel::task << namespace >>{
  +create()
  +terminate()
  + getCurrent()
@@ -46,14 +69,14 @@ class kernel::task {
 
 kernel::task -d-> kernel::internal::task
 
-class kernel::critical_section {
+class kernel::critical_section << namespace >>{
 +init()
 +deinit()
 +enter()
 +leave()
 }
 
-class kernel::sync {
+class kernel::sync << namespace >>{
 +waitForSingleObject()
 +waitForMultipleObjects()
 }
@@ -61,7 +84,7 @@ class kernel::sync {
 kernel::sync -d-> kernel::internal::task
 kernel::kernel -> kernel::internal::task
 
-class kernel::event {
+class kernel::event << namespace >>{
 +create()
 +set()
 +reset()
@@ -70,7 +93,7 @@ class kernel::event {
 
 kernel::event -> kernel::internal::event
 
-class kernel::timer {
+class kernel::timer << namespace >>{
 +create()
 +destroy()
 +start()
@@ -79,21 +102,21 @@ class kernel::timer {
 
 kernel::timer -> kernel::internal::timer
 
-class kernel::internal::common {
+class kernel::internal::common << namespace >>{
  memory_buffer
  circular_list
 }
 
-class kernel::internal::task {
+class kernel::internal::task << namespace >>{
 + create()
 + destroy()
 }
 
-kernel::internal::task -d-> kernel::hardware::task
+kernel::internal::task -d-> kernel::internal::hardware::task
 
-kernel::internal::task -d-> kernel::hardware::sp
+kernel::internal::task -d-> kernel::internal::hardware::sp
 
-class kernel::internal::scheduler {
+class kernel::internal::scheduler << namespace >>{
 - ready_list
 - wait_list
 + addReadyTask()
@@ -108,7 +131,7 @@ class kernel::internal::scheduler {
 + checkWaitConditions()
 }
 
-class kernel::internal::event {
+class kernel::internal::event << namespace >>{
 + create()
 + destroy()
 + set()
@@ -116,7 +139,7 @@ class kernel::internal::event {
 + getState()
 }
 
-class kernel::internal::timer {
+class kernel::internal::timer << namespace >>{
 + create()
 + destroy()
 + set()
@@ -125,7 +148,7 @@ class kernel::internal::timer {
 + tick()
 }
 
-class kernel::internal::handle {
+class kernel::internal::handle << namespace >>{
 + create()
 + getIndex()
 + getObjectType()
@@ -133,19 +156,19 @@ class kernel::internal::handle {
 }
 
 
-class kernel::internal::system_timer {
+class kernel::internal::system_timer << namespace >>{
 +get()
 +increment()
 +isIntervalElapsed()
 }
 
-class kernel::internal::lock {
+class kernel::internal::lock << namespace >>{
 +isLocked()
 +enter()
 +leave()
 }
 
-class kernel::hardware::hardware {
+class kernel::internal::hardware::hardware << namespace >>{
 -current_task_context
 -next_task_context
 +init()
@@ -153,25 +176,36 @@ class kernel::hardware::hardware {
 +syscall()
 }
 
-kernel::hardware::hardware -> kernel::kernel
+class kernel::hardware::critical_section << namespace >>{
++ Context
++ enter()
++ leave()
+}
 
-class kernel::hardware::debug {
+class kernel::hardware::interrupt << namespace >>{
++ enable()
++ wait()
+}
+
+
+class kernel::hardware::interrupt::priority << namespace >>{
++ enum class Preemption
++ enum class Sub
++ set()
+}
+
+class kernel::hardware::debug << namespace >>{
 + putChar()
 + print()
 + setBreakpoint()
 }
 
-class kernel::hardware::interrupt {
-+ enableAll()
-+ disableAll()
-}
-
-class kernel::hardware::sp {
+class kernel::internal::hardware::sp << namespace >>{
 + set()
 + get()
 }
 
-class kernel::hardware::task {
+class kernel::internal::hardware::task << namespace >>{
 + Context
 + Stack
 }
