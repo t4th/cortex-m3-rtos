@@ -28,6 +28,9 @@ namespace kernel
 
     // Return time in miliseconds since kernel started.
     Time_ms getTime();
+
+    // Return core frequency in Hz.
+    uint32_t getCoreFrequencyHz();
 }
 
 // User API for controling tasks.

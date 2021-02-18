@@ -3,8 +3,6 @@
 
 #include <kernel.hpp>
 
-#include "hardware/hardware.hpp"
-
 #include "gpio.hpp"
 
 
@@ -54,10 +52,13 @@ extern "C"
 
                 if ( false == queue_not_full)
                 {
-                    kernel::hardware::debug::print( "Rx queue push overflow\n");
+                        // todo: make overflow event
+                        // kernel::hardware::debug::print( "Rx queue push overflow\n");
                 }
             }
             critical_section::leave( cs);
+
+            kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
 
             // todo: check if clearing pending bit is not reordered
             USART1->SR &= ~USART_SR_RXNE;
@@ -94,11 +95,13 @@ void startup_task( void * a_parameter)
     gpio::setPinAsInput< gpio::Port::A, gpio::Pin::Number10, gpio::InputMode::Floating>();
 
     // configure usart 1
-    constexpr uint16_t usart_baudrate_9600{ kernel::internal::hardware::core_clock_freq_hz / 9600U};
-    USART1->BRR = usart_baudrate_9600;
+    const uint32_t  core_frequency = kernel::getCoreFrequencyHz();
+    const uint32_t  usart_baudrate_9600{ core_frequency / 9600U};
+
+    USART1->BRR = static_cast< uint16_t>( usart_baudrate_9600);
     USART1->CR1 |=  USART_CR1_RXNEIE  // enable rx ready interrupt
-                |   USART_CR1_RE      // enable rx
-                |   USART_CR1_TE;     // enable tx
+                |   USART_CR1_RE;      // enable rx
+                //|   USART_CR1_TE;     // enable tx
 
     // interrupts
     constexpr uint32_t usart1_interrupt_number = 37U;
@@ -129,26 +132,62 @@ void worker_task( void * a_parameter)
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
             uint8_t received_byte;
-            bool queue_not_empty;
+            bool print_word = false;
+            bool is_item_available = false;
+            size_t number_of_elements = 0U;
 
             using namespace kernel::hardware;
+
 
             critical_section::Context cs;
             critical_section::enter( cs, interrupt::priority::Preemption::User);
             {
-                queue_not_empty =
-                    g_shared_data.m_usart_rx_queue.pop( received_byte);
+                number_of_elements = g_shared_data.m_usart_rx_queue.getSize() - 1U;
+
+                uint8_t item;
+
+                bool is_item_available =
+                    g_shared_data.m_usart_rx_queue.at( number_of_elements, item);
+
+                if ( true == is_item_available)
+                {
+                    // if the last item is end-of-line
+                    if ( '\n' == item)
+                    {
+                        print_word = true;
+                    }
+                }
+
             }
             critical_section::leave( cs);
 
-            if ( true == queue_not_empty)
+
+            if ( true == print_word)
             {
-                kernel::hardware::debug::print( "Byte received: \n");
-                kernel::hardware::debug::putChar( static_cast< char>( received_byte));
-            }
-            else
-            {
-                kernel::hardware::debug::print( "Rx queue pop underflow\n");
+                kernel::hardware::debug::print( "Bytes received: \n");
+
+                for ( uint32_t i = 0; i < number_of_elements; ++i)
+                {
+                    bool queue_not_empty = false;
+
+                    critical_section::enter( cs, interrupt::priority::Preemption::User);
+                    {
+                        queue_not_empty = g_shared_data.m_usart_rx_queue.pop( received_byte);
+                    }
+                    critical_section::leave( cs);
+
+                    if ( true == queue_not_empty)
+                    {
+                    
+                        kernel::hardware::debug::putChar( static_cast< char>( received_byte));
+                    }
+                    else
+                    {
+                        kernel::hardware::debug::print( "Rx queue pop underflow\n");
+                    }
+                }
+
+                //kernel::hardware::debug::putChar( '\n');
             }
         }
         else

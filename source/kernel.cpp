@@ -73,6 +73,11 @@ namespace kernel
     {
         return internal::system_timer::get( internal::context::m_systemTimer);
     }
+    
+    uint32_t getCoreFrequencyHz()
+    {
+        return kernel::internal::hardware::core_clock_freq_hz;
+    }
 }
 
 namespace kernel::task
@@ -557,6 +562,8 @@ namespace kernel::sync
         //       all wait conditions SpinLock times, but testing it with
         //       test project didn't show any performance boost, so it was 
         //       removed.
+
+        // todo: add spin lock checks
 
         internal::lock::enter( internal::context::m_lock);
         {

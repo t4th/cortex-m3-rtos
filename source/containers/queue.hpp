@@ -27,6 +27,30 @@ namespace kernel::containers
             return ( 0U == m_current_size);
         }
 
+        size_t getSize()
+        {
+            return m_current_size;
+        }
+
+        bool at( size_t a_index, TData & a_data)
+        {
+            if ( a_index > MaxSize)
+            {
+                return false;
+            }
+
+            size_t real_index = m_tail + a_index;
+            
+            if ( real_index >= MaxSize)
+            {
+                real_index = real_index - MaxSize;
+            }
+
+            a_data = m_data[ real_index];
+
+            return true;
+        }
+
         bool push( TData & a_new_item)
         {
             if ( true == isFull())
