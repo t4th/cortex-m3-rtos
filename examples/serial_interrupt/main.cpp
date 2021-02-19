@@ -1,6 +1,9 @@
 // This is on target example, but you can still use Keil simulator and set
 // USART interrupts manually to pending state from within NVIC peripheral.
 
+// Example: Wait for string of characters ended with next-line character '\n'
+//          and print it via debugger built-in ITM trace.
+
 #include <kernel.hpp>
 
 #include "gpio.hpp"
@@ -13,7 +16,7 @@
 
 struct Shared
 {
-    static constexpr size_t max_queue_elements = 64U;
+    static constexpr size_t max_queue_elements{ 64U};
 
     kernel::Handle m_usart_byte_rx;
     kernel::Handle m_usart_byte_tx;
@@ -53,12 +56,15 @@ extern "C"
                 if ( false == queue_not_full)
                 {
                         // todo: make overflow event
-                        // kernel::hardware::debug::print( "Rx queue push overflow\n");
+                        debug::print( "Rx queue push overflow\n");
                 }
             }
             critical_section::leave( cs);
 
-            kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
+            if ( '\n' == received_byte)
+            {
+                kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
+            }
 
             // todo: check if clearing pending bit is not reordered
             USART1->SR &= ~USART_SR_RXNE;
@@ -133,66 +139,41 @@ void worker_task( void * a_parameter)
         {
             uint8_t received_byte;
             bool print_word = false;
-            bool is_item_available = false;
             size_t number_of_elements = 0U;
 
             using namespace kernel::hardware;
 
-
             critical_section::Context cs;
-            critical_section::enter( cs, interrupt::priority::Preemption::User);
+
+            // pop all characters until next-line character
+            while ( true)
             {
-                number_of_elements = g_shared_data.m_usart_rx_queue.getSize() - 1U;
+                bool queue_not_empty = false;
 
-                uint8_t item;
-
-                bool is_item_available =
-                    g_shared_data.m_usart_rx_queue.at( number_of_elements, item);
-
-                if ( true == is_item_available)
+                critical_section::enter( cs, interrupt::priority::Preemption::User);
                 {
-                    // if the last item is end-of-line
-                    if ( '\n' == item)
+                    queue_not_empty = g_shared_data.m_usart_rx_queue.pop( received_byte);
+                }
+                critical_section::leave( cs);
+
+                if ( true == queue_not_empty)
+                {
+                    debug::putChar( static_cast< char>( received_byte));
+                    if ( '\n' == received_byte)
                     {
-                        print_word = true;
+                        break;
                     }
                 }
-
-            }
-            critical_section::leave( cs);
-
-
-            if ( true == print_word)
-            {
-                kernel::hardware::debug::print( "Bytes received: \n");
-
-                for ( uint32_t i = 0; i < number_of_elements; ++i)
+                else
                 {
-                    bool queue_not_empty = false;
-
-                    critical_section::enter( cs, interrupt::priority::Preemption::User);
-                    {
-                        queue_not_empty = g_shared_data.m_usart_rx_queue.pop( received_byte);
-                    }
-                    critical_section::leave( cs);
-
-                    if ( true == queue_not_empty)
-                    {
-                    
-                        kernel::hardware::debug::putChar( static_cast< char>( received_byte));
-                    }
-                    else
-                    {
-                        kernel::hardware::debug::print( "Rx queue pop underflow\n");
-                    }
+                    debug::print( "\nRx queue pop underflow\n");
+                    break;
                 }
-
-                //kernel::hardware::debug::putChar( '\n');
-            }
+            };
         }
         else
         {
-            kernel::hardware::debug::print( "Error.\n");
+            kernel::hardware::debug::print( "\nError.\n");
         }
     }
 }
