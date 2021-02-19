@@ -1,8 +1,7 @@
 // This is on target example, but you can still use Keil simulator and set
 // USART interrupts manually to pending state from within NVIC peripheral.
 
-// Example: Wait for string of characters ended with next-line character '\n'
-//          and print it via debugger built-in ITM trace.
+// Example: Echo input string from usart 1 to ITM trace builit-in in debugger.
 
 #include <kernel.hpp>
 
@@ -61,10 +60,7 @@ extern "C"
             }
             critical_section::leave( cs);
 
-            if ( '\n' == received_byte)
-            {
-                kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
-            }
+            kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
 
             // todo: check if clearing pending bit is not reordered
             USART1->SR &= ~USART_SR_RXNE;
@@ -132,7 +128,6 @@ void worker_task( void * a_parameter)
 
     while( true)
     {
-        // Wait for USART1 RX.
         auto result = kernel::sync::waitForSingleObject( shared_data.m_usart_byte_rx);
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
@@ -145,7 +140,7 @@ void worker_task( void * a_parameter)
 
             critical_section::Context cs;
 
-            // pop all characters until next-line character
+            // Flush all queue content until its empty.
             while ( true)
             {
                 bool queue_not_empty = false;
@@ -159,14 +154,10 @@ void worker_task( void * a_parameter)
                 if ( true == queue_not_empty)
                 {
                     debug::putChar( static_cast< char>( received_byte));
-                    if ( '\n' == received_byte)
-                    {
-                        break;
-                    }
                 }
                 else
                 {
-                    debug::print( "\nRx queue pop underflow\n");
+                    // queue is empty
                     break;
                 }
             };
