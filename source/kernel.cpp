@@ -520,103 +520,6 @@ namespace kernel::event
     }
 }
 
-namespace kernel::sync
-{
-    WaitResult waitForSingleObject(
-        kernel::Handle &    a_handle,
-        bool                a_wait_forver,
-        Time_ms             a_timeout
-    )
-    {
-        WaitResult result = waitForMultipleObjects(
-            &a_handle,
-            1U,
-            false,
-            a_wait_forver,
-            a_timeout,
-            nullptr
-        );
-
-        return result;
-    }
-
-    WaitResult waitForMultipleObjects(
-        kernel::Handle *    a_array_of_handles,
-        uint32_t            a_number_of_elements,
-        bool                a_wait_for_all,
-        bool                a_wait_forver,
-        Time_ms             a_timeout,
-        uint32_t *          a_signaled_item_index
-    )
-    {
-        WaitResult result = WaitResult::WaitFailed;
-
-        assert( a_number_of_elements >= 1U);
-
-        if ( nullptr == a_array_of_handles)
-        {
-            return kernel::sync::WaitResult::InvalidHandle;
-        }
-
-        // Note: Before creating system object, this function used to check
-        //       all wait conditions SpinLock times, but testing it with
-        //       test project didn't show any performance boost, so it was 
-        //       removed.
-
-        // todo: add spin lock checks
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            // Set task to Wait state for object pointed by a_handle
-            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
-
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
-
-            bool operation_result = internal::scheduler::setTaskToWaitForObj(
-                internal::context::m_scheduler,
-                internal::context::m_tasks,
-                current_task_id,
-                a_array_of_handles,
-                a_number_of_elements,
-                a_wait_for_all,
-                a_wait_forver,
-                a_timeout,
-                currentTime
-            );
-
-            if ( false == operation_result)
-            {
-                assert( true);
-            }
-        }
-
-        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
-
-            result = internal::task::wait::result::get(
-                internal::context::m_tasks,
-                current_task_id
-            );
-
-            if ( a_signaled_item_index)
-            {
-                *a_signaled_item_index = internal::task::wait::last_signal_index::get(
-                    internal::context::m_tasks,
-                    current_task_id
-                );
-            }
-        }
-        internal::lock::leave( internal::context::m_lock);
-
-        return result;
-    }
-}
-
 namespace kernel::critical_section
 {
     bool init( Context & a_context, uint32_t a_spinLock)
@@ -723,6 +626,111 @@ namespace kernel::critical_section
             }
         }
         internal::lock::leave( internal::context::m_lock);
+    }
+}
+
+namespace kernel::sync
+{
+    WaitResult waitForSingleObject(
+        kernel::Handle &    a_handle,
+        bool                a_wait_forver,
+        Time_ms             a_timeout
+    )
+    {
+        WaitResult result = waitForMultipleObjects(
+            &a_handle,
+            1U,
+            false,
+            a_wait_forver,
+            a_timeout,
+            nullptr
+        );
+
+        return result;
+    }
+
+    WaitResult waitForMultipleObjects(
+        kernel::Handle *    a_array_of_handles,
+        uint32_t            a_number_of_elements,
+        bool                a_wait_for_all,
+        bool                a_wait_forver,
+        Time_ms             a_timeout,
+        uint32_t *          a_signaled_item_index
+    )
+    {
+        WaitResult result = WaitResult::WaitFailed;
+
+        assert( a_number_of_elements >= 1U);
+
+        if ( nullptr == a_array_of_handles)
+        {
+            return kernel::sync::WaitResult::InvalidHandle;
+        }
+
+        // Note: Before creating system object, this function used to check
+        //       all wait conditions SpinLock times, but testing it with
+        //       test project didn't show any performance boost, so it was 
+        //       removed.
+
+        // todo: add spin lock checks
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            // Set task to Wait state for object pointed by a_handle
+            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+
+            bool operation_result = internal::scheduler::setTaskToWaitForObj(
+                internal::context::m_scheduler,
+                internal::context::m_tasks,
+                current_task_id,
+                a_array_of_handles,
+                a_number_of_elements,
+                a_wait_for_all,
+                a_wait_forver,
+                a_timeout,
+                currentTime
+            );
+
+            if ( false == operation_result)
+            {
+                assert( true);
+            }
+        }
+
+        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+
+            result = internal::task::wait::result::get(
+                internal::context::m_tasks,
+                current_task_id
+            );
+
+            if ( a_signaled_item_index)
+            {
+                *a_signaled_item_index = internal::task::wait::last_signal_index::get(
+                    internal::context::m_tasks,
+                    current_task_id
+                );
+            }
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return result;
+    }
+}
+
+namespace kernel::static_queue
+{
+    size_t size( kernel::Handle & a_handle)
+    {
+        return false;
     }
 }
 

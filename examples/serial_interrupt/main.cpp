@@ -15,12 +15,8 @@
 
 struct Shared
 {
-    static constexpr size_t max_queue_elements{ 64U};
-
-    kernel::Handle m_usart_byte_rx;
-    kernel::Handle m_usart_byte_tx;
-    kernel::containers::StaticQueue< uint8_t, max_queue_elements> m_usart_rx_queue;
-    kernel::containers::StaticQueue< uint8_t, max_queue_elements> m_usart_tx_queue;
+    kernel::Handle m_usart_rx_queue;
+    kernel::Handle m_usart_tx_queue;
 
     kernel::Handle m_worker_task;
 };
@@ -44,23 +40,16 @@ extern "C"
         {
             uint8_t received_byte = USART1->DR & 0xFF;
             
-            using namespace kernel::hardware;
+            bool queue_not_full = kernel::static_queue::sendFromInterrupt(
+                    g_shared_data.m_usart_rx_queue,
+                    received_byte
+                );
 
-            critical_section::Context cs;
-            critical_section::enter( cs, interrupt::priority::Preemption::User);
+            if ( false == queue_not_full)
             {
-                bool queue_not_full =
-                    g_shared_data.m_usart_rx_queue.push( received_byte);
-
-                if ( false == queue_not_full)
-                {
-                        // todo: make overflow event
-                        debug::print( "Rx queue push overflow\n");
-                }
+                // todo: make overflow event
+                kernel::hardware::debug::print( "Rx queue push overflow\n");
             }
-            critical_section::leave( cs);
-
-            kernel::event::setFromInterrupt( g_shared_data.m_usart_byte_rx);
 
             // todo: check if clearing pending bit is not reordered
             USART1->SR &= ~USART_SR_RXNE;
@@ -77,10 +66,6 @@ extern "C"
 void startup_task( void * a_parameter)
 {
     Shared & shared_data = *( ( Shared*) a_parameter);
-
-    // create kernel synchronization events
-    kernel::event::create( shared_data.m_usart_byte_rx);
-    kernel::event::create( shared_data.m_usart_byte_tx);
 
     // clocks
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
@@ -128,7 +113,8 @@ void worker_task( void * a_parameter)
 
     while( true)
     {
-        auto result = kernel::sync::waitForSingleObject( shared_data.m_usart_byte_rx);
+        // Usiging handle pointing to queue will wait for at least one elements available.
+        auto result = kernel::sync::waitForSingleObject( shared_data.m_usart_rx_queue);
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
@@ -138,18 +124,13 @@ void worker_task( void * a_parameter)
 
             using namespace kernel::hardware;
 
-            critical_section::Context cs;
-
             // Flush all queue content until its empty.
             while ( true)
             {
-                bool queue_not_empty = false;
-
-                critical_section::enter( cs, interrupt::priority::Preemption::User);
-                {
-                    queue_not_empty = g_shared_data.m_usart_rx_queue.pop( received_byte);
-                }
-                critical_section::leave( cs);
+                bool queue_not_empty = kernel::static_queue::receiveFromInterrupt(
+                        g_shared_data.m_usart_rx_queue,
+                        received_byte
+                    );
 
                 if ( true == queue_not_empty)
                 {
@@ -171,10 +152,45 @@ void worker_task( void * a_parameter)
 
 int main()
 {
+    static constexpr size_t max_queue_elements{ 32U};
+
+    kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_rx_buffer;
+    kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_tx_buffer;
+
     kernel::init();
 
-    kernel::task::create( startup_task, kernel::task::Priority::Low, nullptr, &g_shared_data);
-    kernel::task::create( worker_task, kernel::task::Priority::Low, &g_shared_data.m_worker_task, &g_shared_data, true);
+    // Create receive and transmit queues with static buffers.
+    bool queue_created = kernel::static_queue::create( g_shared_data.m_usart_rx_queue, usart_rx_buffer);
+
+    if ( false == queue_created)
+    {
+        kernel::hardware::debug::print( "\nFailed to create rx queue.\n");
+        kernel::hardware::debug::setBreakpoint();
+    }
+
+    queue_created = kernel::static_queue::create( g_shared_data.m_usart_tx_queue, usart_tx_buffer);
+
+    if ( false == queue_created)
+    {
+        kernel::hardware::debug::print( "\nFailed to create rx queue.\n");
+        kernel::hardware::debug::setBreakpoint();
+    }
+
+    // Create startup and worker tasks.
+    kernel::task::create(
+        startup_task,
+        kernel::task::Priority::Low,
+        nullptr,
+        &g_shared_data
+    );
+
+    kernel::task::create(
+        worker_task,
+        kernel::task::Priority::Low,
+        &g_shared_data.m_worker_task,
+        &g_shared_data,
+        true
+    );
 
     kernel::start();
 

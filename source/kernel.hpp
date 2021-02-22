@@ -178,6 +178,53 @@ namespace kernel::sync
     );
 }
 
+namespace kernel::static_queue
+{
+    template < typename TType, size_t Size>
+    struct Buffer
+    {
+        TType m_data[ Size];
+    };
+
+    template < typename TType, size_t Size>
+    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
+    {
+        return false;
+    }
+
+    template < typename TType>
+    bool send( kernel::Handle & a_handle, TType & a_data)
+    {
+        return false;
+    }
+
+    template < typename TType>
+    bool receive( kernel::Handle & a_handle, TType & a_data)
+    {
+        return false;
+    }
+
+    template < typename TType>
+    bool sendFromInterrupt( kernel::Handle & a_handle, TType & a_data)
+    {
+        return false;
+    }
+
+    template < typename TType>
+    bool receiveFromInterrupt( kernel::Handle & a_handle, TType & a_data)
+    {
+        return false;
+    }
+
+    template < typename TType>
+    bool at( kernel::Handle & a_handle, size_t a_index)
+    {
+        return false;
+    }
+
+    size_t size( kernel::Handle & a_handle);
+}
+
 namespace kernel::hardware
 {
     namespace interrupt
