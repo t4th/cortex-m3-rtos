@@ -7,6 +7,7 @@
 #include "scheduler/scheduler.hpp"
 #include "timer/timer.hpp"
 #include "event/event.hpp"
+#include "queue/queue.hpp"
 #include "lock/lock.hpp"
 
 namespace kernel::internal::context
@@ -16,6 +17,7 @@ namespace kernel::internal::context
         internal::scheduler::Context    m_scheduler;
         internal::timer::Context        m_timers;
         internal::event::Context        m_events;
+        internal::queue::Context        m_queue;
         internal::lock::Context         m_lock;
 
         // Indicate if kernel is started. It is used to detected
@@ -446,6 +448,7 @@ namespace kernel::event
 
         return true;
     }
+
     void destroy( kernel::Handle & a_handle)
     {
         const auto objectType = internal::handle::getObjectType( a_handle);

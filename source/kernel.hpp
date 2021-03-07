@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <atomic>
 
-#include "containers/queue.hpp"
-
 // Calling any of below functions from within hardware interrupt routine
 // will cause undefined behaviour, unless specified otherwise.
 
