@@ -19,7 +19,8 @@ namespace kernel::internal::queue
         uint32_t    m_tail{ 0U};
 
         size_t      m_data_size{ 0U};
-        uint8_t *   m_data{ nullptr};
+
+        void *      m_data{ nullptr};
 
         kernel::Handle * m_event{ nullptr};
     };
@@ -31,22 +32,14 @@ namespace kernel::internal::queue
     };
 
     inline bool create(
-        Context &              a_context,
-        Id &                   a_id,
-        size_t &               a_data_size,
-        uint8_t * const        a_data,
-        kernel::Handle * const a_event
+        Context &           a_context,
+        Id &                a_id,
+        size_t &            a_data_size,
+        void * const        a_data,
+        kernel::Handle &    a_event
     )
     {
-        if ( nullptr == a_data)
-        {
-            return false;
-        }
-
-        if ( nullptr == a_event)
-        {
-            return false;
-        }
+        assert( nullptr != a_data);
 
         // Create new Queue object.
         uint32_t new_item_id;
@@ -68,7 +61,7 @@ namespace kernel::internal::queue
         new_queue.m_data_size = a_data_size;
         new_queue.m_data = a_data;
 
-        kernel::Handle * m_event = a_event;
+        new_queue.m_event = &a_event;
 
         return true;
     }

@@ -11,7 +11,8 @@ namespace kernel::internal::handle
     {
         Task = 0,
         Timer,
-        Event
+        Event,
+        queue
     };
     
     inline kernel::Handle create( ObjectType a_type, uint32_t a_index)

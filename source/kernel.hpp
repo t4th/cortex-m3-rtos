@@ -184,10 +184,16 @@ namespace kernel::static_queue
         TType m_data[ Size];
     };
 
+    bool create(
+        kernel::Handle &    a_handle,
+        size_t              a_data_size,
+        void * const        ap_data
+    );
+
     template < typename TType, size_t Size>
     bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
     {
-        return false;
+        return create( a_handle, sizeof( TType), &a_buffer.m_data);
     }
 
     template < typename TType>

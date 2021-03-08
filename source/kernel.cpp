@@ -376,6 +376,9 @@ namespace kernel::timer
         const auto objectType = internal::handle::getObjectType( a_handle);
 
         if ( internal::handle::ObjectType::Timer != objectType)
+        {
+            return;
+        }
 
         internal::lock::enter( internal::context::m_lock);
         {
@@ -731,6 +734,63 @@ namespace kernel::sync
 
 namespace kernel::static_queue
 {
+    bool create(
+        kernel::Handle &    a_handle,
+        size_t              a_data_size,
+        void * const        ap_data
+    )
+    {
+        if ( nullptr == ap_data)
+        {
+            return false;
+        }
+
+        if ( 0U == a_data_size)
+        {
+            return false;
+        }
+        
+        internal::lock::enter( internal::context::m_lock);
+        {
+            kernel::Handle sync_event_handle;
+
+            bool event_created = kernel::event::create(
+                sync_event_handle,
+                false
+            );
+
+            if ( false == event_created)
+            {
+                internal::lock::leave( internal::context::m_lock);
+                return false;
+            }
+
+            kernel::internal::queue::Id created_queue_id;
+
+            bool queue_created = kernel::internal::queue::create(
+                kernel::internal::context::m_queue,
+                created_queue_id,
+                a_data_size,
+                ap_data,
+                sync_event_handle
+            );
+
+            if ( false == queue_created)
+            {
+                internal::lock::leave( internal::context::m_lock);
+                return false;
+            }
+
+            a_handle = internal::handle::create(
+                internal::handle::ObjectType::queue,
+                created_queue_id
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return true;
+    }
+
     size_t size( kernel::Handle & a_handle)
     {
         return false;
