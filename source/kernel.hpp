@@ -196,6 +196,8 @@ namespace kernel::static_queue
         return create( a_handle, sizeof( TType), &a_buffer.m_data);
     }
 
+    void destroy( kernel::Handle & a_handle);
+
     template < typename TType>
     bool send( kernel::Handle & a_handle, TType & a_data)
     {
