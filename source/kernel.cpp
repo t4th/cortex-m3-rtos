@@ -736,7 +736,8 @@ namespace kernel::static_queue
 {
     bool create(
         kernel::Handle &    a_handle,
-        size_t              a_data_size,
+        size_t              a_data_max_size,
+        size_t              a_data_type_size,
         void * const        ap_data
     )
     {
@@ -745,7 +746,12 @@ namespace kernel::static_queue
             return false;
         }
 
-        if ( 0U == a_data_size)
+        if ( 0U == a_data_type_size)
+        {
+            return false;
+        }
+
+        if ( 0U == a_data_max_size)
         {
             return false;
         }
@@ -758,7 +764,8 @@ namespace kernel::static_queue
                 kernel::internal::context::m_queue,
                 kernel::internal::context::m_events,
                 created_queue_id,
-                a_data_size,
+                a_data_max_size,
+                a_data_type_size,
                 ap_data
             );
 

@@ -186,14 +186,15 @@ namespace kernel::static_queue
 
     bool create(
         kernel::Handle &    a_handle,
-        size_t              a_data_size,
+        size_t              a_data_max_size,
+        size_t              a_data_type_size,
         void * const        ap_data
     );
 
     template < typename TType, size_t Size>
     bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
     {
-        return create( a_handle, sizeof( TType), &a_buffer.m_data);
+        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data);
     }
 
     void destroy( kernel::Handle & a_handle);

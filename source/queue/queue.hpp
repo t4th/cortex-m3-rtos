@@ -24,8 +24,9 @@ namespace kernel::internal::queue
         size_t      m_current_size{ 0U};
         uint32_t    m_head{ 0U};
         uint32_t    m_tail{ 0U};
-
-        size_t      m_data_size{ 0U};
+        
+        size_t      m_data_max_size{ 0U};
+        size_t      m_data_type_size{ 0U};
         void *      m_data{ nullptr};
 
         kernel::internal::event::Id m_sync_event{ 0U};
@@ -41,11 +42,12 @@ namespace kernel::internal::queue
         Context &                   a_context,
         internal::event::Context &  a_event_context,
         Id &                        a_id,
-        size_t &                    a_data_size,
-        void * const                a_data
+        size_t &                    a_data_max_size,
+        size_t &                    a_data_type_size,
+        void * const                ap_data
     )
     {
-        assert( nullptr != a_data);
+        assert( nullptr != ap_data);
 
         // Create new Queue object.
         uint32_t new_queue_id;
@@ -79,8 +81,9 @@ namespace kernel::internal::queue
         new_queue.m_head = 0U;
         new_queue.m_tail = 0U;
         
-        new_queue.m_data_size = a_data_size;
-        new_queue.m_data = a_data;
+        new_queue.m_data_max_size = a_data_max_size;
+        new_queue.m_data_type_size = a_data_type_size;
+        new_queue.m_data = ap_data;
         new_queue.m_sync_event = event_id;
 
         return true;
@@ -98,6 +101,40 @@ namespace kernel::internal::queue
         
         // destroy queue
         a_context.m_data.free( a_id);
+    }
+
+    inline bool send(
+        Context &                   a_context,
+        internal::event::Context    a_event_context,
+        Id &                        a_id,
+        void * const                ap_data)
+    {
+        assert( nullptr != ap_data);
+
+
+        return false;
+    }
+    
+    inline bool receive(
+        Context &                   a_context,
+        internal::event::Context    a_event_context,
+        Id &                        a_id,
+        void *                      ap_data)
+    {
+        assert( nullptr != ap_data);
+
+
+        return false;
+    }
+
+    bool isFull( Context & a_context, Id & a_id)
+    {
+        return ( a_context.m_data.at( a_id).m_current_size >= a_context.m_data.at( a_id).m_data_max_size);
+    }
+
+    bool isEmpty( Context & a_context, Id & a_id)
+    {
+        return ( 0U == a_context.m_data.at( a_id).m_current_size);
     }
 
     namespace sync_event_id
