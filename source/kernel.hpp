@@ -199,16 +199,26 @@ namespace kernel::static_queue
 
     void destroy( kernel::Handle & a_handle);
 
+    bool send(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    );
+
     template < typename TType>
     bool send( kernel::Handle & a_handle, TType & a_data)
     {
-        return false;
+        return send( a_handle, &a_data);
     }
+    
+    bool receive(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    );
 
     template < typename TType>
     bool receive( kernel::Handle & a_handle, TType & a_data)
     {
-        return false;
+        return receive( a_handle, &a_data);
     }
 
     template < typename TType>

@@ -27,7 +27,7 @@ namespace kernel::internal::queue
         
         size_t      m_data_max_size{ 0U};
         size_t      m_data_type_size{ 0U};
-        void *      m_data{ nullptr};
+        uint8_t *   m_data{ nullptr};
 
         kernel::internal::event::Id m_sync_event{ 0U};
     };
@@ -44,11 +44,9 @@ namespace kernel::internal::queue
         Id &                        a_id,
         size_t &                    a_data_max_size,
         size_t &                    a_data_type_size,
-        void * const                ap_data
+        uint8_t &                   a_data
     )
     {
-        assert( nullptr != ap_data);
-
         // Create new Queue object.
         uint32_t new_queue_id;
 
@@ -83,7 +81,7 @@ namespace kernel::internal::queue
         
         new_queue.m_data_max_size = a_data_max_size;
         new_queue.m_data_type_size = a_data_type_size;
-        new_queue.m_data = ap_data;
+        new_queue.m_data = &a_data;
         new_queue.m_sync_event = event_id;
 
         return true;
@@ -103,38 +101,99 @@ namespace kernel::internal::queue
         a_context.m_data.free( a_id);
     }
 
-    inline bool send(
-        Context &                   a_context,
-        internal::event::Context    a_event_context,
-        Id &                        a_id,
-        void * const                ap_data)
-    {
-        assert( nullptr != ap_data);
-
-
-        return false;
-    }
-    
-    inline bool receive(
-        Context &                   a_context,
-        internal::event::Context    a_event_context,
-        Id &                        a_id,
-        void *                      ap_data)
-    {
-        assert( nullptr != ap_data);
-
-
-        return false;
-    }
-
-    bool isFull( Context & a_context, Id & a_id)
+    inline bool isFull( Context & a_context, Id & a_id)
     {
         return ( a_context.m_data.at( a_id).m_current_size >= a_context.m_data.at( a_id).m_data_max_size);
     }
 
-    bool isEmpty( Context & a_context, Id & a_id)
+    inline bool isEmpty( Context & a_context, Id & a_id)
     {
         return ( 0U == a_context.m_data.at( a_id).m_current_size);
+    }
+
+    inline bool send(
+        Context &                   a_context,
+        internal::event::Context &  a_event_context,
+        Id &                        a_id,
+        uint8_t &                   a_data
+    )
+    {
+        volatile Queue & queue = a_context.m_data.at( a_id);
+        
+        if ( true == isFull( a_context, a_id))
+        {
+            return false;
+        }
+
+        if ( false == isEmpty( a_context, a_id))
+        {
+            ++queue.m_head;
+            
+            if ( queue.m_head >= queue.m_data_max_size)
+            {
+                queue.m_head = 0U;
+            }
+        }
+
+        // memory copy
+        // todo: consider using normal memcpy
+        {
+            uint8_t * dst = queue.m_data;
+            uint8_t * src = &a_data;
+
+            size_t real_head_offset = queue.m_data_type_size * queue.m_head;
+            dst = dst + real_head_offset;
+
+            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
+            {
+                dst[ i] = src[ i];
+            }
+        }
+
+        ++queue.m_current_size;
+
+        return true;
+    }
+    
+    inline bool receive(
+        Context &                   a_context,
+        internal::event::Context &  a_event_context,
+        Id &                        a_id,
+        uint8_t &                   a_data
+    )
+    {
+        volatile Queue & queue = a_context.m_data.at( a_id);
+        
+        if ( true == isEmpty( a_context, a_id))
+        {
+            return false;
+        }
+                // memory copy
+        {
+            uint8_t * dst = &a_data;
+            uint8_t * src = queue.m_data;
+            size_t real_head_offset = queue.m_data_type_size * queue.m_head;
+            src = src + real_head_offset;
+
+            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
+            {
+                dst[ i] = src[ i];
+            }
+        }
+
+        if ( queue.m_current_size > 1U)
+        {
+            ++queue.m_tail;
+
+            if ( queue.m_tail >= queue.m_data_max_size)
+            {
+                queue.m_tail = 0U;
+            }
+        }
+
+        --queue.m_current_size;
+            
+        return true;
     }
 
     namespace sync_event_id

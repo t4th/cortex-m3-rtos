@@ -759,6 +759,7 @@ namespace kernel::static_queue
         internal::lock::enter( internal::context::m_lock);
         {
             kernel::internal::queue::Id created_queue_id;
+            uint8_t & buffer_address = *((uint8_t *)ap_data);
 
             bool queue_created = kernel::internal::queue::create(
                 kernel::internal::context::m_queue,
@@ -766,7 +767,7 @@ namespace kernel::static_queue
                 created_queue_id,
                 a_data_max_size,
                 a_data_type_size,
-                ap_data
+                buffer_address
             );
 
             if ( false == queue_created)
@@ -795,6 +796,68 @@ namespace kernel::static_queue
             internal::event::destroy( internal::context::m_events, queue_id);
         }
         internal::lock::leave( internal::context::m_lock);
+    }
+
+    bool send(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        bool send_result = false;
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            uint8_t & data_address = *((uint8_t *)ap_data);
+
+            send_result = internal::queue::send(
+                internal::context::m_queue,
+                internal::context::m_events,
+                queue_id,
+                data_address
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return send_result;
+    }
+
+    bool receive(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        bool send_result = false;
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            uint8_t & data_address = *((uint8_t *)ap_data);
+
+            send_result = internal::queue::receive(
+                internal::context::m_queue,
+                internal::context::m_events,
+                queue_id,
+                data_address
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return send_result;
     }
 
     size_t size( kernel::Handle & a_handle)
