@@ -49,6 +49,12 @@
     <Filter Include="tested files\kernel\timer">
       <UniqueIdentifier>{bb13ca7c-4fe1-464a-8c0b-1bb2b9643972}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests\queue">
+      <UniqueIdentifier>{62359658-ccc9-4da0-bdc8-f12970c36ca1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tested files\kernel\queue">
+      <UniqueIdentifier>{bd52d159-7294-4327-8aed-955a05a88817}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\catch.cpp">
@@ -68,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp">
       <Filter>tests\kernel\handle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\kernel\queue\queue_test.cpp">
+      <Filter>tests\queue</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -94,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="..\..\source\common\circular_list.hpp">
       <Filter>tested files\kernel\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\queue\queue.hpp">
+      <Filter>tested files\kernel\queue</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -23,6 +23,7 @@
     <ClCompile Include="..\source\kernel\common\circular_list_test.cpp" />
     <ClCompile Include="..\source\kernel\common\memory_buffer_test.cpp" />
     <ClCompile Include="..\source\kernel\handle\handle_test.cpp" />
+    <ClCompile Include="..\source\kernel\queue\queue_test.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp" />
     <ClCompile Include="..\source\kernel\task\task_test.cpp" />
   </ItemGroup>
@@ -30,6 +31,7 @@
     <ClInclude Include="..\..\source\common\circular_list.hpp" />
     <ClInclude Include="..\..\source\common\memory_buffer.hpp" />
     <ClInclude Include="..\..\source\event\event.hpp" />
+    <ClInclude Include="..\..\source\queue\queue.hpp" />
     <ClInclude Include="..\..\source\scheduler\scheduler.hpp" />
     <ClInclude Include="..\..\source\task\task.hpp" />
     <ClInclude Include="..\..\source\timer\timer.hpp" />
