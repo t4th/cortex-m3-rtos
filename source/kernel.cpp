@@ -793,7 +793,12 @@ namespace kernel::static_queue
         internal::lock::enter( internal::context::m_lock);
         {
             auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-            internal::event::destroy( internal::context::m_events, queue_id);
+
+            internal::queue::destroy(
+                internal::context::m_queue,
+                internal::context::m_events,
+                queue_id
+                );
         }
         internal::lock::leave( internal::context::m_lock);
     }
@@ -860,9 +865,27 @@ namespace kernel::static_queue
         return send_result;
     }
 
-    size_t size( kernel::Handle & a_handle)
+    bool size( kernel::Handle & a_handle, size_t & a_size)
     {
-        return false;
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+            a_size = internal::queue::size::get(
+                internal::context::m_queue,
+                queue_id
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return true;
     }
 }
 

@@ -89,7 +89,7 @@ namespace kernel::internal::queue
 
     inline void destroy(
         Context &                   a_context,
-        internal::event::Context    a_event_context,
+        internal::event::Context &  a_event_context,
         Id &                        a_id
     )
     {
@@ -111,6 +111,7 @@ namespace kernel::internal::queue
         return ( 0U == a_context.m_data.at( a_id).m_current_size);
     }
 
+    // Push item to the head.
     inline bool send(
         Context &                   a_context,
         internal::event::Context &  a_event_context,
@@ -119,7 +120,7 @@ namespace kernel::internal::queue
     )
     {
         volatile Queue & queue = a_context.m_data.at( a_id);
-        
+
         if ( true == isFull( a_context, a_id))
         {
             return false;
@@ -128,7 +129,7 @@ namespace kernel::internal::queue
         if ( false == isEmpty( a_context, a_id))
         {
             ++queue.m_head;
-            
+
             if ( queue.m_head >= queue.m_data_max_size)
             {
                 queue.m_head = 0U;
@@ -155,6 +156,7 @@ namespace kernel::internal::queue
         return true;
     }
     
+    // Pop item from the tail.
     inline bool receive(
         Context &                   a_context,
         internal::event::Context &  a_event_context,
@@ -163,17 +165,18 @@ namespace kernel::internal::queue
     )
     {
         volatile Queue & queue = a_context.m_data.at( a_id);
-        
+
         if ( true == isEmpty( a_context, a_id))
         {
             return false;
         }
-                // memory copy
+
+        // memory copy
         {
             uint8_t * dst = &a_data;
             uint8_t * src = queue.m_data;
-            size_t real_head_offset = queue.m_data_type_size * queue.m_head;
-            src = src + real_head_offset;
+            size_t real_tail_offset = queue.m_data_type_size * queue.m_tail;
+            src = src + real_tail_offset;
 
             for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
             {
@@ -192,8 +195,17 @@ namespace kernel::internal::queue
         }
 
         --queue.m_current_size;
-            
+
         return true;
+    }
+
+
+    namespace size
+    {
+        inline size_t get( Context & a_context, Id & a_id)
+        {
+            return a_context.m_data.at( a_id).m_current_size;
+        }
     }
 
     namespace sync_event_id

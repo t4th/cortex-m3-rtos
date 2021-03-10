@@ -181,6 +181,7 @@ namespace kernel::static_queue
     template < typename TType, size_t Size>
     struct Buffer
     {
+        // Note: This value is not initialized on purpose.
         TType m_data[ Size];
     };
 
@@ -191,29 +192,31 @@ namespace kernel::static_queue
         void * const        ap_data
     );
 
-    template < typename TType, size_t Size>
-    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
-    {
-        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data);
-    }
-
     void destroy( kernel::Handle & a_handle);
 
     bool send(
         kernel::Handle &    a_handle,
         void * const        ap_data
     );
+    
+    bool receive(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    );
+
+    bool size( kernel::Handle & a_handle, size_t & a_size);
+    
+    template < typename TType, size_t Size>
+    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
+    {
+        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data);
+    }
 
     template < typename TType>
     bool send( kernel::Handle & a_handle, TType & a_data)
     {
         return send( a_handle, &a_data);
     }
-    
-    bool receive(
-        kernel::Handle &    a_handle,
-        void * const        ap_data
-    );
 
     template < typename TType>
     bool receive( kernel::Handle & a_handle, TType & a_data)
@@ -238,8 +241,6 @@ namespace kernel::static_queue
     {
         return false;
     }
-
-    size_t size( kernel::Handle & a_handle);
 }
 
 namespace kernel::hardware

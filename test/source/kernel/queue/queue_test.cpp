@@ -4,7 +4,7 @@
 
 TEST_CASE( "Queue")
 {
-    SECTION ("Create new queue and add some data.")
+    SECTION ("Create new queue, add and remove items.")
     {
         constexpr size_t Max_buffer_size{ 4U};
         kernel::static_queue::Buffer< int32_t, Max_buffer_size> buffer;
@@ -14,23 +14,74 @@ TEST_CASE( "Queue")
 
         kernel::internal::queue::Id queue_id;
 
-        size_t max_buffer_size{ Max_buffer_size};
-        size_t max_type_size{ sizeof( int32_t)};
-
-        bool queue_created = kernel::internal::queue::create(
-            queue_context,
-            event_context,
-            queue_id,
-            max_buffer_size,
-            max_type_size,
-            *reinterpret_cast< uint8_t*> ( buffer.m_data)
-        );
-
-        REQUIRE( true == queue_created);
-
-        // Put some data on the queue.
+        // Create new queue.
         {
-            int32_t data_to_send = 0x1234'5678;
+            size_t max_buffer_size{ Max_buffer_size};
+            size_t max_type_size{ sizeof( int32_t)};
+
+            bool queue_created = kernel::internal::queue::create(
+                queue_context,
+                event_context,
+                queue_id,
+                max_buffer_size,
+                max_type_size,
+                *reinterpret_cast< uint8_t*> ( buffer.m_data)
+            );
+
+            REQUIRE( true == queue_created);
+            REQUIRE( true == kernel::internal::queue::isEmpty( queue_context, queue_id));
+        }
+
+        // Fill up queue with data
+        for ( int i = 0; i < Max_buffer_size; ++i)
+        {
+            int32_t data_to_send = i;
+
+            bool data_sent = kernel::internal::queue::send(
+                queue_context,
+                event_context,
+                queue_id,
+                *reinterpret_cast< uint8_t*> ( &data_to_send)
+            );
+
+            REQUIRE( true == data_sent);
+            REQUIRE( data_to_send == buffer.m_data[ i]);
+        }
+
+        REQUIRE( true == kernel::internal::queue::isFull( queue_context, queue_id));
+
+        // Try adding item to full queue.
+        {
+            int32_t data_to_send = 0x1234'567;
+
+            bool data_sent = kernel::internal::queue::send(
+                queue_context,
+                event_context,
+                queue_id,
+                *reinterpret_cast< uint8_t*> ( &data_to_send)
+            );
+
+            REQUIRE( false == data_sent);
+        }
+
+        // Receive item from queue.
+        {
+            int32_t data_to_receive = 0xCDCD'CDCD;
+
+            bool data_sent = kernel::internal::queue::receive(
+                queue_context,
+                event_context,
+                queue_id,
+                *reinterpret_cast< uint8_t*> ( &data_to_receive)
+            );
+
+            REQUIRE( true == data_sent);
+            REQUIRE( 0 == data_to_receive);
+        }
+
+        // Try adding item to queue.
+        {
+            int32_t data_to_send = 0x1234'567;
 
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
@@ -42,20 +93,49 @@ TEST_CASE( "Queue")
             REQUIRE( true == data_sent);
             REQUIRE( data_to_send == buffer.m_data[ 0]);
         }
-        
-        // Put some data on the queue.
-        {
-            int32_t data_to_send = 0xABAB'DEDE;
 
-            bool data_sent = kernel::internal::queue::send(
+        // Receive all items from queue.
+        {
+            const int32_t expected_values[ Max_buffer_size]
+                { 1, 2, 3, 0x1234'567};
+
+            for ( int i = 0; i < Max_buffer_size; ++i)
+            {
+                int32_t data_to_receive = 0xCDCD'CDCD;
+
+                bool data_sent = kernel::internal::queue::receive(
+                    queue_context,
+                    event_context,
+                    queue_id,
+                    *reinterpret_cast< uint8_t*> ( &data_to_receive)
+                );
+
+                REQUIRE( true == data_sent);
+                REQUIRE( expected_values[ i] == data_to_receive);
+            }
+        }
+
+        REQUIRE( true == kernel::internal::queue::isEmpty( queue_context, queue_id));
+        
+        // Receive item from empty queue.
+        {
+            int32_t data_to_receive = 0xCDCD'CDCD;
+
+            bool data_sent = kernel::internal::queue::receive(
                 queue_context,
                 event_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_send)
+                *reinterpret_cast< uint8_t*> ( &data_to_receive)
             );
 
-            REQUIRE( true == data_sent);
-            REQUIRE( data_to_send == buffer.m_data[ 1]);
+            REQUIRE( false == data_sent);
+            REQUIRE( 0xCDCD'CDCD == data_to_receive);
         }
+
+        // Destroy queue
+        kernel::internal::queue::destroy(
+                queue_context,
+                event_context,
+                queue_id);
     }
 }
