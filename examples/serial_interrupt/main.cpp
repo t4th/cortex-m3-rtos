@@ -113,7 +113,7 @@ void worker_task( void * a_parameter)
 
     while( true)
     {
-        // Usiging handle pointing to queue will wait for at least one elements available.
+        // Wait until at least one elements is available in queue.
         auto result = kernel::sync::waitForSingleObject( shared_data.m_usart_rx_queue);
 
         if ( kernel::sync::WaitResult::ObjectSet == result)

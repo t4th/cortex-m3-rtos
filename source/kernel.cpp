@@ -763,7 +763,6 @@ namespace kernel::static_queue
 
             bool queue_created = kernel::internal::queue::create(
                 kernel::internal::context::m_queue,
-                kernel::internal::context::m_events,
                 created_queue_id,
                 a_data_max_size,
                 a_data_type_size,
@@ -796,11 +795,79 @@ namespace kernel::static_queue
 
             internal::queue::destroy(
                 internal::context::m_queue,
-                internal::context::m_events,
                 queue_id
                 );
         }
         internal::lock::leave( internal::context::m_lock);
+    }
+
+    bool size( kernel::Handle & a_handle, size_t & a_size)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+            a_size = internal::queue::getSize(
+                internal::context::m_queue,
+                queue_id
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return true;
+    }
+
+    bool isFull( kernel::Handle & a_handle, bool & a_is_full)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+            a_is_full = internal::queue::isFull(
+                internal::context::m_queue,
+                queue_id
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return true;
+    }
+
+    bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+            a_is_empty = internal::queue::isEmpty(
+                internal::context::m_queue,
+                queue_id
+            );
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return true;
     }
 
     bool send(
@@ -824,7 +891,6 @@ namespace kernel::static_queue
 
             send_result = internal::queue::send(
                 internal::context::m_queue,
-                internal::context::m_events,
                 queue_id,
                 data_address
             );
@@ -855,7 +921,6 @@ namespace kernel::static_queue
 
             send_result = internal::queue::receive(
                 internal::context::m_queue,
-                internal::context::m_events,
                 queue_id,
                 data_address
             );
@@ -863,29 +928,6 @@ namespace kernel::static_queue
         internal::lock::leave( internal::context::m_lock);
 
         return send_result;
-    }
-
-    bool size( kernel::Handle & a_handle, size_t & a_size)
-    {
-        const auto objectType = internal::handle::getObjectType( a_handle);
-
-        if ( internal::handle::ObjectType::Queue != objectType)
-        {
-            return false;
-        }
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-            
-            a_size = internal::queue::size::get(
-                internal::context::m_queue,
-                queue_id
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
-
-        return true;
     }
 }
 
@@ -1064,6 +1106,7 @@ namespace kernel::internal
                 context::m_tasks,
                 context::m_timers,
                 context::m_events,
+                context::m_queue,
                 current_time
             );
 

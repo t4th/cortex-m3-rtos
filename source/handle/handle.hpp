@@ -2,6 +2,7 @@
 
 #include "timer/timer.hpp"
 #include "event/event.hpp"
+#include "queue/queue.hpp"
 
 #include <kernel.hpp>
 
@@ -39,6 +40,7 @@ namespace kernel::internal::handle
     inline bool testCondition(
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
+        internal::queue::Context &  a_queue_context,
         volatile kernel::Handle &   a_handle,
         bool &                      a_condition_fulfilled
     )
@@ -52,11 +54,7 @@ namespace kernel::internal::handle
         case internal::handle::ObjectType::Event:
         {
             auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            auto evState = internal::event::state::get( a_event_context, event_id);
-            if ( internal::event::State::Set == evState)
-            {
-                a_condition_fulfilled = true;
-            }
+            a_condition_fulfilled = internal::event::isSignaled( a_event_context, event_id);
             break;
         }
         case internal::handle::ObjectType::Timer:
@@ -64,6 +62,17 @@ namespace kernel::internal::handle
             auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
             auto timerState = internal::timer::getState( a_timer_context, timer_id);
             if ( internal::timer::State::Finished == timerState)
+            {
+                a_condition_fulfilled = true;
+            }
+            break;
+        }
+        // Signal task if queue is not empty.
+        case internal::handle::ObjectType::Queue:
+        {
+            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            bool is_queue_empty = internal::queue::isEmpty( a_queue_context, queue_id);
+            if ( false == is_queue_empty)
             {
                 a_condition_fulfilled = true;
             }

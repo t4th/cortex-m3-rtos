@@ -83,11 +83,15 @@ namespace kernel::internal::event
         }
     }
 
-    namespace state
+    inline bool isSignaled( Context & a_context, Id & a_id)
     {
-        inline State get( Context & a_context, Id & a_id)
+        auto & event = a_context.m_data.at( a_id);
+
+        if ( internal::event::State::Set == event.m_state)
         {
-            return a_context.m_data.at( a_id).m_state;
+            return true;
         }
+
+        return false;
     }
 }

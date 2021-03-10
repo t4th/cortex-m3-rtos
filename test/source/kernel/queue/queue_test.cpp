@@ -9,7 +9,6 @@ TEST_CASE( "Queue")
         constexpr size_t Max_buffer_size{ 4U};
         kernel::static_queue::Buffer< int32_t, Max_buffer_size> buffer;
 
-        kernel::internal::event::Context event_context;
         kernel::internal::queue::Context queue_context;
 
         kernel::internal::queue::Id queue_id;
@@ -21,7 +20,6 @@ TEST_CASE( "Queue")
 
             bool queue_created = kernel::internal::queue::create(
                 queue_context,
-                event_context,
                 queue_id,
                 max_buffer_size,
                 max_type_size,
@@ -39,7 +37,6 @@ TEST_CASE( "Queue")
 
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
-                event_context,
                 queue_id,
                 *reinterpret_cast< uint8_t*> ( &data_to_send)
             );
@@ -56,7 +53,6 @@ TEST_CASE( "Queue")
 
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
-                event_context,
                 queue_id,
                 *reinterpret_cast< uint8_t*> ( &data_to_send)
             );
@@ -70,7 +66,6 @@ TEST_CASE( "Queue")
 
             bool data_sent = kernel::internal::queue::receive(
                 queue_context,
-                event_context,
                 queue_id,
                 *reinterpret_cast< uint8_t*> ( &data_to_receive)
             );
@@ -85,7 +80,6 @@ TEST_CASE( "Queue")
 
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
-                event_context,
                 queue_id,
                 *reinterpret_cast< uint8_t*> ( &data_to_send)
             );
@@ -105,7 +99,6 @@ TEST_CASE( "Queue")
 
                 bool data_sent = kernel::internal::queue::receive(
                     queue_context,
-                    event_context,
                     queue_id,
                     *reinterpret_cast< uint8_t*> ( &data_to_receive)
                 );
@@ -123,7 +116,6 @@ TEST_CASE( "Queue")
 
             bool data_sent = kernel::internal::queue::receive(
                 queue_context,
-                event_context,
                 queue_id,
                 *reinterpret_cast< uint8_t*> ( &data_to_receive)
             );
@@ -135,7 +127,6 @@ TEST_CASE( "Queue")
         // Destroy queue
         kernel::internal::queue::destroy(
                 queue_context,
-                event_context,
                 queue_id);
     }
 }

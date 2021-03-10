@@ -57,6 +57,7 @@ namespace
         task::Context           m_Task;
         timer::Context          m_Timer;
         event::Context          m_Event;
+        queue::Context          m_Queue;
 
         // members used by specyfic test case instance
         std::vector<task::Id>   m_TaskHandles;
@@ -606,6 +607,7 @@ TEST_CASE("Scheduler")
                     context->m_Task,
                     context->m_Timer,
                     context->m_Event,
+                    context->m_Queue,
                     new_time
                 );
             }
@@ -803,6 +805,7 @@ TEST_CASE("Scheduler")
                 context->m_Task,
                 context->m_Timer,
                 context->m_Event,
+                context->m_Queue,
                 currentTime
                 );
         }
@@ -832,6 +835,7 @@ TEST_CASE("Scheduler")
                 context->m_Task,
                 context->m_Timer,
                 context->m_Event,
+                context->m_Queue,
                 currentTime
             );
         }
@@ -864,6 +868,7 @@ TEST_CASE("Scheduler")
                 context->m_Task,
                 context->m_Timer,
                 context->m_Event,
+                context->m_Queue,
                 currentTime
             );
         }

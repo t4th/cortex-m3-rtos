@@ -5,19 +5,17 @@
 
 #include <kernel.hpp>
 
-#include <event/event.hpp>
-
 // Static Queue implementation.
 // User is providing pointer to data and data size.
-// Queue is managing life cycle of synchronization event so
-// queue handle could be used with WaitForObject functions.
+
+// Queue main usage is data transfer between tasks and between
+// tasks and hardware interrupts. This require usage of hardware
+// level critical sections for context access.
 
 namespace kernel::internal::queue
 {
     // todo: consider it type strong
     typedef uint32_t Id;
-
-    constexpr size_t max_number{ 5U};
 
     struct Queue
     {
@@ -28,8 +26,6 @@ namespace kernel::internal::queue
         size_t      m_data_max_size{ 0U};
         size_t      m_data_type_size{ 0U};
         uint8_t *   m_data{ nullptr};
-
-        kernel::internal::event::Id m_sync_event{ 0U};
     };
 
     struct Context
@@ -39,12 +35,11 @@ namespace kernel::internal::queue
     };
 
     inline bool create(
-        Context &                   a_context,
-        internal::event::Context &  a_event_context,
-        Id &                        a_id,
-        size_t &                    a_data_max_size,
-        size_t &                    a_data_type_size,
-        uint8_t &                   a_data
+        Context &   a_context,
+        Id &        a_id,
+        size_t &    a_data_max_size,
+        size_t &    a_data_type_size,
+        uint8_t &   a_data
     )
     {
         // Create new Queue object.
@@ -57,21 +52,6 @@ namespace kernel::internal::queue
 
         a_id = new_queue_id;
 
-        // create synchronization event
-        kernel::internal::event::Id event_id;
-
-        bool event_created = internal::event::create(
-            a_event_context,
-            event_id,
-            false
-            );
-
-        if ( false == event_created)
-        {
-            a_context.m_data.free( new_queue_id);
-            return false;
-        }
-
         volatile Queue & new_queue = a_context.m_data.at( new_queue_id);
 
         // Initialize new Queue object.
@@ -82,41 +62,36 @@ namespace kernel::internal::queue
         new_queue.m_data_max_size = a_data_max_size;
         new_queue.m_data_type_size = a_data_type_size;
         new_queue.m_data = &a_data;
-        new_queue.m_sync_event = event_id;
 
         return true;
     }
 
-    inline void destroy(
-        Context &                   a_context,
-        internal::event::Context &  a_event_context,
-        Id &                        a_id
-    )
+    inline void destroy( Context & a_context, Id & a_id)
     {
-        // destroy event
-        internal::event::Id event_id = a_context.m_data.at( a_id).m_sync_event;
-        internal::event::destroy( a_event_context, event_id);
-        
-        // destroy queue
         a_context.m_data.free( a_id);
     }
 
     inline bool isFull( Context & a_context, Id & a_id)
     {
-        return ( a_context.m_data.at( a_id).m_current_size >= a_context.m_data.at( a_id).m_data_max_size);
+        volatile Queue & queue = a_context.m_data.at( a_id);
+
+        bool is_queue_full = ( queue.m_current_size >= queue.m_data_max_size);
+
+        return is_queue_full;
     }
 
     inline bool isEmpty( Context & a_context, Id & a_id)
     {
-        return ( 0U == a_context.m_data.at( a_id).m_current_size);
+        bool is_queue_empty = ( 0U == a_context.m_data.at( a_id).m_current_size);
+
+        return is_queue_empty;
     }
 
     // Push item to the head.
     inline bool send(
-        Context &                   a_context,
-        internal::event::Context &  a_event_context,
-        Id &                        a_id,
-        uint8_t &                   a_data
+        Context &   a_context,
+        Id &        a_id,
+        uint8_t &   a_data
     )
     {
         volatile Queue & queue = a_context.m_data.at( a_id);
@@ -136,7 +111,7 @@ namespace kernel::internal::queue
             }
         }
 
-        // memory copy
+        // Memory copy.
         // todo: consider using normal memcpy
         {
             uint8_t * dst = queue.m_data;
@@ -158,10 +133,9 @@ namespace kernel::internal::queue
     
     // Pop item from the tail.
     inline bool receive(
-        Context &                   a_context,
-        internal::event::Context &  a_event_context,
-        Id &                        a_id,
-        uint8_t &                   a_data
+        Context &   a_context,
+        Id &        a_id,
+        uint8_t &   a_data
     )
     {
         volatile Queue & queue = a_context.m_data.at( a_id);
@@ -171,7 +145,8 @@ namespace kernel::internal::queue
             return false;
         }
 
-        // memory copy
+        // Memory copy.
+        // todo: consider using normal memcpy
         {
             uint8_t * dst = &a_data;
             uint8_t * src = queue.m_data;
@@ -199,20 +174,8 @@ namespace kernel::internal::queue
         return true;
     }
 
-
-    namespace size
+    inline size_t getSize( Context & a_context, Id & a_id)
     {
-        inline size_t get( Context & a_context, Id & a_id)
-        {
-            return a_context.m_data.at( a_id).m_current_size;
-        }
-    }
-
-    namespace sync_event_id
-    {
-        inline internal::event::Id get( Context & a_context, Id & a_id)
-        {
-            return a_context.m_data.at( a_id).m_sync_event;
-        }
+        return a_context.m_data.at( a_id).m_current_size;
     }
 }

@@ -5,6 +5,7 @@
 #include "task.hpp"
 #include "event.hpp"
 #include "timer.hpp"
+#include "queue/queue.hpp"
 
 TEST_CASE( "Handle")
 {
@@ -50,6 +51,7 @@ TEST_CASE( "Handle")
         {
             std::unique_ptr< timer::Context> timer_context( new timer::Context);
             std::unique_ptr< event::Context> event_context( new event::Context);
+            std::unique_ptr< queue::Context> queue_context( new queue::Context);
 
             // Prepare event object and handle.
             event::Id new_index;
@@ -66,6 +68,7 @@ TEST_CASE( "Handle")
             bool valid_handle = handle::testCondition(
                 *timer_context,
                 *event_context,
+                *queue_context,
                 new_handle,
                 condition_check_result
             );
@@ -81,6 +84,7 @@ TEST_CASE( "Handle")
             valid_handle = handle::testCondition(
                 *timer_context,
                 *event_context,
+                *queue_context,
                 new_handle,
                 condition_check_result
             );
@@ -93,6 +97,7 @@ TEST_CASE( "Handle")
         {
             std::unique_ptr< timer::Context> timer_context( new timer::Context);
             std::unique_ptr< event::Context> event_context( new event::Context);
+            std::unique_ptr< queue::Context> queue_context( new queue::Context);
 
             // Prepare event object and handle.
             timer::Id new_index;
@@ -111,6 +116,7 @@ TEST_CASE( "Handle")
             bool valid_handle = handle::testCondition(
                 *timer_context,
                 *event_context,
+                *queue_context,
                 new_handle,
                 condition_check_result
             );
@@ -127,6 +133,7 @@ TEST_CASE( "Handle")
             valid_handle = handle::testCondition(
                 *timer_context,
                 *event_context,
+                *queue_context,
                 new_handle,
                 condition_check_result
             );
@@ -139,6 +146,7 @@ TEST_CASE( "Handle")
         {
             std::unique_ptr< timer::Context> timer_context( new timer::Context);
             std::unique_ptr< event::Context> event_context( new event::Context);
+            std::unique_ptr< queue::Context> queue_context( new queue::Context);
 
             kernel::Handle invalid_handle = ( kernel::Handle) 0xaf23123U;
 
@@ -147,6 +155,7 @@ TEST_CASE( "Handle")
             bool valid_handle = handle::testCondition(
                 *timer_context,
                 *event_context,
+                *queue_context,
                 invalid_handle,
                 condition_check_result
             );

@@ -194,17 +194,15 @@ namespace kernel::static_queue
 
     void destroy( kernel::Handle & a_handle);
 
-    bool send(
-        kernel::Handle &    a_handle,
-        void * const        ap_data
-    );
+    bool send( kernel::Handle & a_handle, void * const ap_data);
     
-    bool receive(
-        kernel::Handle &    a_handle,
-        void * const        ap_data
-    );
+    bool receive( kernel::Handle & a_handle, void * const ap_data);
 
     bool size( kernel::Handle & a_handle, size_t & a_size);
+
+    bool isFull( kernel::Handle & a_handle, bool & a_is_full);
+
+    bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty);
     
     template < typename TType, size_t Size>
     bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
@@ -232,12 +230,6 @@ namespace kernel::static_queue
 
     template < typename TType>
     bool receiveFromInterrupt( kernel::Handle & a_handle, TType & a_data)
-    {
-        return false;
-    }
-
-    template < typename TType>
-    bool at( kernel::Handle & a_handle, size_t a_index)
     {
         return false;
     }

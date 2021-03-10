@@ -47,6 +47,12 @@ namespace kernel::internal::timer
     constexpr uint32_t max_number{ 16U};
 }
 
+namespace kernel::internal::queue
+{
+    // Define maximum number of static queues.
+    constexpr size_t max_number{ 5U};
+}
+
 namespace kernel::internal::scheduler::wait
 {
     // Define maximum waitable signals by task.
