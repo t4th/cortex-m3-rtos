@@ -205,29 +205,16 @@ namespace kernel::internal::scheduler::wait
                 }
             }
 
-            bool condition_fulfilled = false;
-            kernel::hardware::critical_section::Context cs_context;
-
-            // testWaitSignals is testing waiting signals that can be set
-            // from external interrupts and in some cases, update such signals.
-            // That us why hardware-level critical section must be used.
-            kernel::hardware::critical_section::enter(
-                cs_context,
-                kernel::hardware::interrupt::priority::Preemption::Critical
+            bool condition_fulfilled = testWaitSignals(
+                a_timer_context,
+                a_event_context,
+                a_queue_context,
+                a_result,
+                a_conditions.m_waitSignals,
+                a_conditions.m_numberOfSignals,
+                a_conditions.m_waitForAllSignals,
+                a_signaled_item_index
             );
-            {
-                condition_fulfilled = testWaitSignals(
-                    a_timer_context,
-                    a_event_context,
-                    a_queue_context,
-                    a_result,
-                    a_conditions.m_waitSignals,
-                    a_conditions.m_numberOfSignals,
-                    a_conditions.m_waitForAllSignals,
-                    a_signaled_item_index
-                );
-            }
-            kernel::hardware::critical_section::leave( cs_context);
 
             return condition_fulfilled;
         }

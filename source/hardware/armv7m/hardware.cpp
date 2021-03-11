@@ -116,7 +116,7 @@ namespace kernel::hardware
     namespace critical_section
     {
         // TODO: test if compiler is not re-ordering this functions.
-        void enter( volatile Context & a_context, interrupt::priority::Preemption a_preemption_priority)
+        void enter( Context & a_context, interrupt::priority::Preemption a_preemption_priority)
         {
             uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
             uint32_t new_value = 
@@ -134,7 +134,7 @@ namespace kernel::hardware
             __DSB(); // Used as compiler re-order barrer and forces that m_local_data is not cached.
         }
 
-        void leave( volatile Context & a_context)
+        void leave( Context & a_context)
         {
             __DSB(); // Used as compiler re-order barrer
             __set_BASEPRI( a_context.m_local_data);
@@ -313,6 +313,7 @@ extern "C"
     )
     {
         kernel::hardware::debug::setBreakpoint();
+        for (;;);
     }
     
     inline __attribute__ (( naked )) void LoadTask(void)

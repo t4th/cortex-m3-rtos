@@ -282,16 +282,35 @@ namespace kernel::hardware
     {
         struct Context
         {
-            uint32_t m_local_data{};
+            volatile uint32_t m_local_data{};
         };
 
-        void enter(
-            volatile Context &                  a_context,
-            interrupt::priority::Preemption     a_preemption_priority
+        void enter( 
+            Context &                       a_context,
+            interrupt::priority::Preemption a_preemption_priority
         );
 
-        void leave( volatile Context & a_context);
+        void leave( Context & a_context);
     }
+
+    // Helper RAII style hardware critical section.
+    class CriticalSection
+    {
+    public:
+        CriticalSection()
+        {
+           critical_section::enter(
+                m_context,
+                interrupt::priority::Preemption::Critical
+            );
+        }
+        ~CriticalSection()
+        {
+            critical_section::leave( m_context);
+        }
+    private:
+        critical_section::Context m_context{};
+    };
 
     namespace debug
     {

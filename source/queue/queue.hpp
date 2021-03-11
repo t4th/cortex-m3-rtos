@@ -42,6 +42,8 @@ namespace kernel::internal::queue
         uint8_t &   a_data
     )
     {
+        kernel::hardware::CriticalSection critical_section;
+
         // Create new Queue object.
         uint32_t new_queue_id;
 
@@ -68,11 +70,15 @@ namespace kernel::internal::queue
 
     inline void destroy( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section;
+
         a_context.m_data.free( a_id);
     }
 
     inline bool isFull( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section;
+
         volatile Queue & queue = a_context.m_data.at( a_id);
 
         bool is_queue_full = ( queue.m_current_size >= queue.m_data_max_size);
@@ -82,6 +88,8 @@ namespace kernel::internal::queue
 
     inline bool isEmpty( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section;
+
         bool is_queue_empty = ( 0U == a_context.m_data.at( a_id).m_current_size);
 
         return is_queue_empty;
@@ -94,6 +102,8 @@ namespace kernel::internal::queue
         uint8_t &   a_data
     )
     {
+        kernel::hardware::CriticalSection critical_section;
+
         volatile Queue & queue = a_context.m_data.at( a_id);
 
         if ( true == isFull( a_context, a_id))
@@ -138,6 +148,8 @@ namespace kernel::internal::queue
         uint8_t &   a_data
     )
     {
+        kernel::hardware::CriticalSection critical_section;
+
         volatile Queue & queue = a_context.m_data.at( a_id);
 
         if ( true == isEmpty( a_context, a_id))
@@ -176,6 +188,8 @@ namespace kernel::internal::queue
 
     inline size_t getSize( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section;
+
         return a_context.m_data.at( a_id).m_current_size;
     }
 }

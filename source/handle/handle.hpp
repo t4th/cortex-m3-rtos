@@ -100,9 +100,7 @@ namespace kernel::internal::handle
         case internal::handle::ObjectType::Event:
         {
             auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            
             internal::event::manualReset( a_event_context, event_id);
-
             break;
         }
         default:
