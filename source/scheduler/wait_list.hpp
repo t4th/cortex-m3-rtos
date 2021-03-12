@@ -98,6 +98,7 @@ namespace kernel::internal::scheduler::wait_list
         if ( false == init_succesful)
         {
             assert( true);
+            return false;
         }
 
         return true;

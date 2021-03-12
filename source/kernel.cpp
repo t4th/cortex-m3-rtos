@@ -665,6 +665,8 @@ namespace kernel::sync
             if ( false == operation_result)
             {
                 assert( true);
+                internal::lock::leave( internal::context::m_lock);
+                return WaitResult::TooManyHandles;
             }
         }
 

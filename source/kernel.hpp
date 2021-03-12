@@ -134,7 +134,8 @@ namespace kernel::sync
         ObjectSet,
         TimeoutOccurred,
         WaitFailed,         // Return if any internal error occurred.
-        InvalidHandle
+        InvalidHandle,
+        TooManyHandles
     };
 
     // Can wait for system objects of type: Event, Timer.
