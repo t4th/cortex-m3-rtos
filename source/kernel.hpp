@@ -93,6 +93,7 @@ namespace kernel::timer
 }
 
 // User API for controling events.
+// kernel::event API is interrupt safe.
 namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
@@ -100,10 +101,6 @@ namespace kernel::event
     bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
-
-    // Must only be used from within Interrupt Routine.
-    void setFromInterrupt( kernel::Handle & a_handle);
-
     void reset( kernel::Handle & a_handle);
 }
 
@@ -176,6 +173,7 @@ namespace kernel::sync
     );
 }
 
+// kernel::static_queue API is interrupt safe.
 namespace kernel::static_queue
 {
     template < typename TType, size_t Size>
@@ -220,18 +218,6 @@ namespace kernel::static_queue
     bool receive( kernel::Handle & a_handle, TType & a_data)
     {
         return receive( a_handle, &a_data);
-    }
-
-    template < typename TType>
-    bool sendFromInterrupt( kernel::Handle & a_handle, TType & a_data)
-    {
-        return false;
-    }
-
-    template < typename TType>
-    bool receiveFromInterrupt( kernel::Handle & a_handle, TType & a_data)
-    {
-        return false;
     }
 }
 

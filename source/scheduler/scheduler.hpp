@@ -340,7 +340,6 @@ namespace kernel::internal::scheduler
         return a_context.m_current;
     }
 
-
     // Note: I don't like this super-function, but iterating over array should
     //       not be obfuscated by too many interfaces. Previous implementation
     //       included passing lambda with multitude of arguments ignoring 

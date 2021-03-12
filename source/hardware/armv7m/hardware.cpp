@@ -304,8 +304,6 @@ namespace kernel::internal::hardware::task
 extern "C"
 {
     // TOOD: print nice error log in case of failed run-time assert.
-    // TODO: Silence NO-RETURN warning.
-    // Note: This function can return.
     void __aeabi_assert(
         const char * expr,
         const char * file,

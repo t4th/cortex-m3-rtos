@@ -40,7 +40,7 @@ extern "C"
         {
             uint8_t received_byte = USART1->DR & 0xFF;
             
-            bool queue_not_full = kernel::static_queue::sendFromInterrupt(
+            bool queue_not_full = kernel::static_queue::send(
                     g_shared_data.m_usart_rx_queue,
                     received_byte
                 );
@@ -127,7 +127,7 @@ void worker_task( void * a_parameter)
             // Flush all queue content until its empty.
             while ( true)
             {
-                bool queue_not_empty = kernel::static_queue::receiveFromInterrupt(
+                bool queue_not_empty = kernel::static_queue::receive(
                         g_shared_data.m_usart_rx_queue,
                         received_byte
                     );

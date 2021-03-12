@@ -425,29 +425,27 @@ namespace kernel::timer
 
 namespace kernel::event
 {
+    // Note: No lock is required since internal::event
+    //       API is already protected.
     bool create( kernel::Handle & a_handle, bool a_manual_reset)
     {
-        internal::lock::enter( internal::context::m_lock);
+        internal::event::Id new_event_id;
+
+        bool event_created = internal::event::create(
+            internal::context::m_events,
+            new_event_id,
+            a_manual_reset
+        );
+
+        if ( false == event_created)
         {
-            internal::event::Id new_event_id;
-            bool event_created = internal::event::create(
-                internal::context::m_events,
-                new_event_id,
-                a_manual_reset
-            );
-
-            if ( false == event_created)
-            {
-                internal::lock::leave( internal::context::m_lock);
-                return false;
-            }
-
-            a_handle = internal::handle::create(
-                internal::handle::ObjectType::Event,
-                new_event_id
-            );
+            return false;
         }
-        internal::lock::leave( internal::context::m_lock);
+
+        a_handle = internal::handle::create(
+            internal::handle::ObjectType::Event,
+            new_event_id
+        );
 
         return true;
     }
@@ -461,32 +459,11 @@ namespace kernel::event
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::destroy( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+        internal::event::destroy( internal::context::m_events, event_id);
     }
 
     void set( kernel::Handle & a_handle)
-    {
-        const auto objectType = internal::handle::getObjectType( a_handle);
-
-        if ( internal::handle::ObjectType::Event != objectType)
-        {
-            return;
-        }
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::set( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
-    }
-
-    void setFromInterrupt( kernel::Handle & a_handle)
     {
         const auto objectType = internal::handle::getObjectType( a_handle);
 
@@ -508,12 +485,8 @@ namespace kernel::event
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::reset( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+        internal::event::reset( internal::context::m_events, event_id);
     }
 }
 
@@ -655,8 +628,6 @@ namespace kernel::sync
         uint32_t *          a_signaled_item_index
     )
     {
-        WaitResult result = WaitResult::WaitFailed;
-
         assert( a_number_of_elements >= 1U);
 
         if ( nullptr == a_array_of_handles)
@@ -698,6 +669,8 @@ namespace kernel::sync
         }
 
         internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
+        
+        WaitResult result = WaitResult::WaitFailed;
 
         internal::lock::enter( internal::context::m_lock);
         {
@@ -725,6 +698,8 @@ namespace kernel::sync
 
 namespace kernel::static_queue
 {
+    // Note: No lock is required since internal::queue
+    //       API is already protected.
     bool create(
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
@@ -747,26 +722,21 @@ namespace kernel::static_queue
             return false;
         }
         
-        internal::lock::enter( internal::context::m_lock);
+        kernel::internal::queue::Id created_queue_id;
+        uint8_t & buffer_address = *( ( uint8_t *)ap_data);
+
+        bool queue_created = kernel::internal::queue::create(
+            kernel::internal::context::m_queue,
+            created_queue_id,
+            a_data_max_size,
+            a_data_type_size,
+            buffer_address
+        );
+
+        if ( false == queue_created)
         {
-            kernel::internal::queue::Id created_queue_id;
-            uint8_t & buffer_address = *((uint8_t *)ap_data);
-
-            bool queue_created = kernel::internal::queue::create(
-                kernel::internal::context::m_queue,
-                created_queue_id,
-                a_data_max_size,
-                a_data_type_size,
-                buffer_address
-            );
-
-            if ( false == queue_created)
-            {
-                internal::lock::leave( internal::context::m_lock);
-                return false;
-            }
+            return false;
         }
-        internal::lock::leave( internal::context::m_lock);
 
         return true;
     }
@@ -780,16 +750,12 @@ namespace kernel::static_queue
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
 
-            internal::queue::destroy(
-                internal::context::m_queue,
-                queue_id
-                );
-        }
-        internal::lock::leave( internal::context::m_lock);
+        internal::queue::destroy(
+            internal::context::m_queue,
+            queue_id
+        );
     }
 
     bool size( kernel::Handle & a_handle, size_t & a_size)
@@ -801,16 +767,12 @@ namespace kernel::static_queue
             return false;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
             
-            a_size = internal::queue::getSize(
-                internal::context::m_queue,
-                queue_id
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
+        a_size = internal::queue::getSize(
+            internal::context::m_queue,
+            queue_id
+        );
 
         return true;
     }
@@ -824,16 +786,12 @@ namespace kernel::static_queue
             return false;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
             
-            a_is_full = internal::queue::isFull(
-                internal::context::m_queue,
-                queue_id
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
+        a_is_full = internal::queue::isFull(
+            internal::context::m_queue,
+            queue_id
+        );
 
         return true;
     }
@@ -847,16 +805,12 @@ namespace kernel::static_queue
             return false;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
             
-            a_is_empty = internal::queue::isEmpty(
-                internal::context::m_queue,
-                queue_id
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
+        a_is_empty = internal::queue::isEmpty(
+            internal::context::m_queue,
+            queue_id
+        );
 
         return true;
     }
@@ -873,20 +827,14 @@ namespace kernel::static_queue
             return false;
         }
 
-        bool send_result = false;
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        uint8_t & data_address = *(( uint8_t *)ap_data);
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-            uint8_t & data_address = *((uint8_t *)ap_data);
-
-            send_result = internal::queue::send(
-                internal::context::m_queue,
-                queue_id,
-                data_address
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
+        bool send_result = internal::queue::send(
+            internal::context::m_queue,
+            queue_id,
+            data_address
+        );
 
         return send_result;
     }
@@ -903,22 +851,16 @@ namespace kernel::static_queue
             return false;
         }
 
-        bool send_result = false;
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        uint8_t & data_address = *( ( uint8_t *)ap_data);
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-            uint8_t & data_address = *((uint8_t *)ap_data);
+        bool receive_result = internal::queue::receive(
+            internal::context::m_queue,
+            queue_id,
+            data_address
+        );
 
-            send_result = internal::queue::receive(
-                internal::context::m_queue,
-                queue_id,
-                data_address
-            );
-        }
-        internal::lock::leave( internal::context::m_lock);
-
-        return send_result;
+        return receive_result;
     }
 }
 
