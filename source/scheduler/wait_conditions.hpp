@@ -4,6 +4,7 @@
 
 #include "timer/timer.hpp"
 #include "event/event.hpp"
+#include "queue/queue.hpp"
 #include "handle/handle.hpp"
 
 // This is data structure holding task wait conditions.
@@ -89,6 +90,7 @@ namespace kernel::internal::scheduler::wait
     inline bool testWaitSignals(
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
+        internal::queue::Context &  a_queue_context,
         kernel::sync::WaitResult &  a_result,
         volatile kernel::Handle *   a_wait_signals,
         uint32_t                    a_number_of_signals,
@@ -105,6 +107,7 @@ namespace kernel::internal::scheduler::wait
             const bool valid_handle = handle::testCondition(
                 a_timer_context,
                 a_event_context,
+                a_queue_context,
                 a_wait_signals[ i],
                 condition_fulfilled
             );
@@ -171,6 +174,7 @@ namespace kernel::internal::scheduler::wait
         volatile Conditions &       a_conditions,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
+        internal::queue::Context &  a_queue_context,
         kernel::sync::WaitResult &  a_result,
         Time_ms &                   a_current,
         uint32_t &                  a_signaled_item_index
@@ -201,28 +205,16 @@ namespace kernel::internal::scheduler::wait
                 }
             }
 
-            bool condition_fulfilled = false;
-            kernel::hardware::critical_section::Context cs_context;
-
-            // testWaitSignals is testing waiting signals that can be set
-            // from external interrupts and in some cases, update such signals.
-            // That us why hardware-level critical section must be used.
-            kernel::hardware::critical_section::enter(
-                cs_context,
-                kernel::hardware::interrupt::priority::Preemption::Critical
+            bool condition_fulfilled = testWaitSignals(
+                a_timer_context,
+                a_event_context,
+                a_queue_context,
+                a_result,
+                a_conditions.m_waitSignals,
+                a_conditions.m_numberOfSignals,
+                a_conditions.m_waitForAllSignals,
+                a_signaled_item_index
             );
-            {
-                condition_fulfilled = testWaitSignals(
-                    a_timer_context,
-                    a_event_context,
-                    a_result,
-                    a_conditions.m_waitSignals,
-                    a_conditions.m_numberOfSignals,
-                    a_conditions.m_waitForAllSignals,
-                    a_signaled_item_index
-                );
-            }
-            kernel::hardware::critical_section::leave( cs_context);
 
             return condition_fulfilled;
         }

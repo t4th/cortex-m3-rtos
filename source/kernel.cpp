@@ -7,6 +7,7 @@
 #include "scheduler/scheduler.hpp"
 #include "timer/timer.hpp"
 #include "event/event.hpp"
+#include "queue/queue.hpp"
 #include "lock/lock.hpp"
 
 namespace kernel::internal::context
@@ -16,6 +17,7 @@ namespace kernel::internal::context
         internal::scheduler::Context    m_scheduler;
         internal::timer::Context        m_timers;
         internal::event::Context        m_events;
+        internal::queue::Context        m_queue;
         internal::lock::Context         m_lock;
 
         // Indicate if kernel is started. It is used to detected
@@ -374,6 +376,9 @@ namespace kernel::timer
         const auto objectType = internal::handle::getObjectType( a_handle);
 
         if ( internal::handle::ObjectType::Timer != objectType)
+        {
+            return;
+        }
 
         internal::lock::enter( internal::context::m_lock);
         {
@@ -420,32 +425,31 @@ namespace kernel::timer
 
 namespace kernel::event
 {
+    // Note: No lock is required since internal::event
+    //       API is already protected.
     bool create( kernel::Handle & a_handle, bool a_manual_reset)
     {
-        internal::lock::enter( internal::context::m_lock);
+        internal::event::Id new_event_id;
+
+        bool event_created = internal::event::create(
+            internal::context::m_events,
+            new_event_id,
+            a_manual_reset
+        );
+
+        if ( false == event_created)
         {
-            internal::event::Id new_event_id;
-            bool event_created = internal::event::create(
-                internal::context::m_events,
-                new_event_id,
-                a_manual_reset
-            );
-
-            if ( false == event_created)
-            {
-                internal::lock::leave( internal::context::m_lock);
-                return false;
-            }
-
-            a_handle = internal::handle::create(
-                internal::handle::ObjectType::Event,
-                new_event_id
-            );
+            return false;
         }
-        internal::lock::leave( internal::context::m_lock);
+
+        a_handle = internal::handle::create(
+            internal::handle::ObjectType::Event,
+            new_event_id
+        );
 
         return true;
     }
+
     void destroy( kernel::Handle & a_handle)
     {
         const auto objectType = internal::handle::getObjectType( a_handle);
@@ -455,12 +459,8 @@ namespace kernel::event
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::destroy( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+        internal::event::destroy( internal::context::m_events, event_id);
     }
 
     void set( kernel::Handle & a_handle)
@@ -472,34 +472,8 @@ namespace kernel::event
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::set( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
-    }
-
-    void setFromInterrupt( kernel::Handle & a_handle)
-    {
-        const auto objectType = internal::handle::getObjectType( a_handle);
-
-        if ( internal::handle::ObjectType::Event != objectType)
-        {
-            return;
-        }
-
         auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-
-        hardware::critical_section::Context cs_context;
-        hardware::critical_section::enter(
-            cs_context,
-            hardware::interrupt::priority::Preemption::Critical
-        );
-        {
-            internal::event::set( internal::context::m_events, event_id);
-        }
-        hardware::critical_section::leave( cs_context);
+        internal::event::set( internal::context::m_events, event_id);
     }
 
     void reset( kernel::Handle & a_handle)
@@ -511,109 +485,8 @@ namespace kernel::event
             return;
         }
 
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
-            internal::event::reset( internal::context::m_events, event_id);
-        }
-        internal::lock::leave( internal::context::m_lock);
-    }
-}
-
-namespace kernel::sync
-{
-    WaitResult waitForSingleObject(
-        kernel::Handle &    a_handle,
-        bool                a_wait_forver,
-        Time_ms             a_timeout
-    )
-    {
-        WaitResult result = waitForMultipleObjects(
-            &a_handle,
-            1U,
-            false,
-            a_wait_forver,
-            a_timeout,
-            nullptr
-        );
-
-        return result;
-    }
-
-    WaitResult waitForMultipleObjects(
-        kernel::Handle *    a_array_of_handles,
-        uint32_t            a_number_of_elements,
-        bool                a_wait_for_all,
-        bool                a_wait_forver,
-        Time_ms             a_timeout,
-        uint32_t *          a_signaled_item_index
-    )
-    {
-        WaitResult result = WaitResult::WaitFailed;
-
-        assert( a_number_of_elements >= 1U);
-
-        if ( nullptr == a_array_of_handles)
-        {
-            return kernel::sync::WaitResult::InvalidHandle;
-        }
-
-        // Note: Before creating system object, this function used to check
-        //       all wait conditions SpinLock times, but testing it with
-        //       test project didn't show any performance boost, so it was 
-        //       removed.
-
-        // todo: add spin lock checks
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            // Set task to Wait state for object pointed by a_handle
-            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
-
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
-
-            bool operation_result = internal::scheduler::setTaskToWaitForObj(
-                internal::context::m_scheduler,
-                internal::context::m_tasks,
-                current_task_id,
-                a_array_of_handles,
-                a_number_of_elements,
-                a_wait_for_all,
-                a_wait_forver,
-                a_timeout,
-                currentTime
-            );
-
-            if ( false == operation_result)
-            {
-                assert( true);
-            }
-        }
-
-        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
-
-        internal::lock::enter( internal::context::m_lock);
-        {
-            auto current_task_id = 
-                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
-
-            result = internal::task::wait::result::get(
-                internal::context::m_tasks,
-                current_task_id
-            );
-
-            if ( a_signaled_item_index)
-            {
-                *a_signaled_item_index = internal::task::wait::last_signal_index::get(
-                    internal::context::m_tasks,
-                    current_task_id
-                );
-            }
-        }
-        internal::lock::leave( internal::context::m_lock);
-
-        return result;
+        auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
+        internal::event::reset( internal::context::m_events, event_id);
     }
 }
 
@@ -723,6 +596,273 @@ namespace kernel::critical_section
             }
         }
         internal::lock::leave( internal::context::m_lock);
+    }
+}
+
+namespace kernel::sync
+{
+    WaitResult waitForSingleObject(
+        kernel::Handle &    a_handle,
+        bool                a_wait_forver,
+        Time_ms             a_timeout
+    )
+    {
+        WaitResult result = waitForMultipleObjects(
+            &a_handle,
+            1U,
+            false,
+            a_wait_forver,
+            a_timeout,
+            nullptr
+        );
+
+        return result;
+    }
+
+    WaitResult waitForMultipleObjects(
+        kernel::Handle *    a_array_of_handles,
+        uint32_t            a_number_of_elements,
+        bool                a_wait_for_all,
+        bool                a_wait_forver,
+        Time_ms             a_timeout,
+        uint32_t *          a_signaled_item_index
+    )
+    {
+        assert( a_number_of_elements >= 1U);
+
+        if ( nullptr == a_array_of_handles)
+        {
+            return kernel::sync::WaitResult::InvalidHandle;
+        }
+
+        // Note: Before creating system object, this function used to check
+        //       all wait conditions SpinLock times, but testing it with
+        //       test project didn't show any performance boost, so it was 
+        //       removed.
+
+        // todo: add spin lock checks
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            // Set task to Wait state for object pointed by a_handle
+            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+
+            bool operation_result = internal::scheduler::setTaskToWaitForObj(
+                internal::context::m_scheduler,
+                internal::context::m_tasks,
+                current_task_id,
+                a_array_of_handles,
+                a_number_of_elements,
+                a_wait_for_all,
+                a_wait_forver,
+                a_timeout,
+                currentTime
+            );
+
+            if ( false == operation_result)
+            {
+                assert( true);
+                internal::lock::leave( internal::context::m_lock);
+                return WaitResult::TooManyHandles;
+            }
+        }
+
+        internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
+        
+        WaitResult result = WaitResult::WaitFailed;
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto current_task_id = 
+                internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+
+            result = internal::task::wait::result::get(
+                internal::context::m_tasks,
+                current_task_id
+            );
+
+            if ( a_signaled_item_index)
+            {
+                *a_signaled_item_index = internal::task::wait::last_signal_index::get(
+                    internal::context::m_tasks,
+                    current_task_id
+                );
+            }
+        }
+        internal::lock::leave( internal::context::m_lock);
+
+        return result;
+    }
+}
+
+namespace kernel::static_queue
+{
+    // Note: No lock is required since internal::queue
+    //       API is already protected.
+    bool create(
+        kernel::Handle &    a_handle,
+        size_t              a_data_max_size,
+        size_t              a_data_type_size,
+        void * const        ap_data
+    )
+    {
+        if ( nullptr == ap_data)
+        {
+            return false;
+        }
+
+        if ( 0U == a_data_type_size)
+        {
+            return false;
+        }
+
+        if ( 0U == a_data_max_size)
+        {
+            return false;
+        }
+        
+        kernel::internal::queue::Id created_queue_id;
+        uint8_t & buffer_address = *( ( uint8_t *)ap_data);
+
+        bool queue_created = kernel::internal::queue::create(
+            kernel::internal::context::m_queue,
+            created_queue_id,
+            a_data_max_size,
+            a_data_type_size,
+            buffer_address
+        );
+
+        if ( false == queue_created)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void destroy( kernel::Handle & a_handle)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+
+        internal::queue::destroy(
+            internal::context::m_queue,
+            queue_id
+        );
+    }
+
+    bool size( kernel::Handle & a_handle, size_t & a_size)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+        a_size = internal::queue::getSize(
+            internal::context::m_queue,
+            queue_id
+        );
+
+        return true;
+    }
+
+    bool isFull( kernel::Handle & a_handle, bool & a_is_full)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+        a_is_full = internal::queue::isFull(
+            internal::context::m_queue,
+            queue_id
+        );
+
+        return true;
+    }
+
+    bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty)
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+            
+        a_is_empty = internal::queue::isEmpty(
+            internal::context::m_queue,
+            queue_id
+        );
+
+        return true;
+    }
+
+    bool send(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        uint8_t & data_address = *(( uint8_t *)ap_data);
+
+        bool send_result = internal::queue::send(
+            internal::context::m_queue,
+            queue_id,
+            data_address
+        );
+
+        return send_result;
+    }
+
+    bool receive(
+        kernel::Handle &    a_handle,
+        void * const        ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+        uint8_t & data_address = *( ( uint8_t *)ap_data);
+
+        bool receive_result = internal::queue::receive(
+            internal::context::m_queue,
+            queue_id,
+            data_address
+        );
+
+        return receive_result;
     }
 }
 
@@ -901,6 +1041,7 @@ namespace kernel::internal
                 context::m_tasks,
                 context::m_timers,
                 context::m_events,
+                context::m_queue,
                 current_time
             );
 

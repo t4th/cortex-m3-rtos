@@ -21,7 +21,7 @@ void printText( const char * a_text)
     kernel::hardware::debug::print( a_text);
 }
 
-constexpr size_t MAX = 100;
+constexpr size_t MAX = 100U;
 
 struct SharedData
 {
@@ -32,7 +32,7 @@ struct SharedData
 
 void changeCaseSize( SharedData & a_shared_data)
 {
-    for ( size_t i = 0; i < a_shared_data.size; ++i)
+    for ( size_t i = 0U; i < a_shared_data.size; ++i)
     {
         if ( isupper( a_shared_data.text[ i]))
         {
@@ -58,7 +58,7 @@ int main()
 
     if constexpr( use_critical_section)
     {
-        if ( false == kernel::critical_section::init( shared_data.cs_context, 100))
+        if ( false == kernel::critical_section::init( shared_data.cs_context, 100U))
         {
             printText( "failed to create critical section\n");
         }
@@ -107,15 +107,15 @@ void worker_task( void * a_parameter)
         // without delay, first task will starve others.
         if ( 0 == local_id)
         {
-            delay( 230);
+            delay( 230U);
         }
         else if ( 1 == local_id)
         {
-            delay( 130);
+            delay( 130U);
         }
         else
         {
-            delay( 900);
+            delay( 900U);
         }
     }
 }

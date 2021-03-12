@@ -175,6 +175,7 @@
     <ClInclude Include="..\source\handle\handle.hpp" />
     <ClInclude Include="..\source\hardware\hardware.hpp" />
     <ClInclude Include="..\source\kernel.hpp" />
+    <ClInclude Include="..\source\queue\queue.hpp" />
     <ClInclude Include="..\source\scheduler\ready_list.hpp" />
     <ClInclude Include="..\source\scheduler\scheduler.hpp" />
     <ClInclude Include="..\source\scheduler\wait_conditions.hpp" />

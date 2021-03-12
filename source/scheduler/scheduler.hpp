@@ -340,7 +340,6 @@ namespace kernel::internal::scheduler
         return a_context.m_current;
     }
 
-
     // Note: I don't like this super-function, but iterating over array should
     //       not be obfuscated by too many interfaces. Previous implementation
     //       included passing lambda with multitude of arguments ignoring 
@@ -353,6 +352,7 @@ namespace kernel::internal::scheduler
         internal::task::Context &   a_task_context,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
+        internal::queue::Context &  a_queue_context,
         Time_ms &                   a_current
     )
     {
@@ -374,6 +374,7 @@ namespace kernel::internal::scheduler
                         conditions,
                         a_timer_context,
                         a_event_context,
+                        a_queue_context,
                         a_wait_result,
                         a_current,
                         signaled_item_index

@@ -34,7 +34,7 @@ extern "C"
     // On my board, button is connected to port PA8, which use EXTI line 8.
     void EXTI9_5_IRQHandler()
     {
-        kernel::event::setFromInterrupt( shared_data.m_event);
+        kernel::event::set( shared_data.m_event);
 
         // clear pending bit
         EXTI->PR |= EXTI_PR_PR8;

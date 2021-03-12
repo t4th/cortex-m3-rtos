@@ -23,7 +23,7 @@ namespace kernel::internal::hardware
 namespace kernel::internal::task
 {
     // Define maximum number of tasks.
-    constexpr uint32_t max_number{ 16U};
+    constexpr uint32_t max_number{ 8U};
 }
 
 namespace kernel::internal::system_timer
@@ -38,13 +38,19 @@ namespace kernel::internal::event
     // It must be noted that kernel itself can implicitly
     // create and delete events for internal use and setting
     // this value to 0 will brick some kernel functionality.
-    constexpr uint32_t max_number{ 32U};
+    constexpr uint32_t max_number{ 8U};
 }
 
 namespace kernel::internal::timer
 {
     // Define maximum number of software timers.
-    constexpr uint32_t max_number{ 16U};
+    constexpr uint32_t max_number{ 8U};
+}
+
+namespace kernel::internal::queue
+{
+    // Define maximum number of static queues.
+    constexpr size_t max_number{ 4U};
 }
 
 namespace kernel::internal::scheduler::wait

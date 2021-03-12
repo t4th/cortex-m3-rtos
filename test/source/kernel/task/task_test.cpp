@@ -13,9 +13,9 @@ namespace
     }
 }
 
-namespace kernel::hardware::task
+namespace kernel::internal::hardware::task
 {
-    void Stack::init(uint32_t a_routine) volatile
+    void Stack::init( uint32_t a_routine_address) volatile
     {
     }
 
@@ -36,7 +36,7 @@ TEST_CASE("Task")
         uint32_t parameter;
 
         // Create maximum number of tasks.
-        for (uint32_t i = 0U; i < kernel::internal::task::MAX_NUMBER; ++i)
+        for (uint32_t i = 0U; i < kernel::internal::task::max_number; ++i)
         {
             bool result = kernel::internal::task::create(
                 context,

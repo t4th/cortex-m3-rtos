@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <atomic>
 
-#include "containers/queue.hpp"
-
 // Calling any of below functions from within hardware interrupt routine
 // will cause undefined behaviour, unless specified otherwise.
 
@@ -95,6 +93,7 @@ namespace kernel::timer
 }
 
 // User API for controling events.
+// kernel::event API is interrupt safe.
 namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
@@ -102,10 +101,6 @@ namespace kernel::event
     bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
-
-    // Must only be used from within Interrupt Routine.
-    void setFromInterrupt( kernel::Handle & a_handle);
-
     void reset( kernel::Handle & a_handle);
 }
 
@@ -139,7 +134,8 @@ namespace kernel::sync
         ObjectSet,
         TimeoutOccurred,
         WaitFailed,         // Return if any internal error occurred.
-        InvalidHandle
+        InvalidHandle,
+        TooManyHandles
     };
 
     // Can wait for system objects of type: Event, Timer.
@@ -176,6 +172,54 @@ namespace kernel::sync
         Time_ms             a_timeout = 0U,
         uint32_t *          a_signaled_item_index = nullptr
     );
+}
+
+// kernel::static_queue API is interrupt safe.
+namespace kernel::static_queue
+{
+    template < typename TType, size_t Size>
+    struct Buffer
+    {
+        // Note: This value is not initialized on purpose.
+        TType m_data[ Size];
+    };
+
+    bool create(
+        kernel::Handle &    a_handle,
+        size_t              a_data_max_size,
+        size_t              a_data_type_size,
+        void * const        ap_data
+    );
+
+    void destroy( kernel::Handle & a_handle);
+
+    bool send( kernel::Handle & a_handle, void * const ap_data);
+    
+    bool receive( kernel::Handle & a_handle, void * const ap_data);
+
+    bool size( kernel::Handle & a_handle, size_t & a_size);
+
+    bool isFull( kernel::Handle & a_handle, bool & a_is_full);
+
+    bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty);
+    
+    template < typename TType, size_t Size>
+    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
+    {
+        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data);
+    }
+
+    template < typename TType>
+    bool send( kernel::Handle & a_handle, TType & a_data)
+    {
+        return send( a_handle, &a_data);
+    }
+
+    template < typename TType>
+    bool receive( kernel::Handle & a_handle, TType & a_data)
+    {
+        return receive( a_handle, &a_data);
+    }
 }
 
 namespace kernel::hardware
@@ -225,16 +269,35 @@ namespace kernel::hardware
     {
         struct Context
         {
-            uint32_t m_local_data{};
+            volatile uint32_t m_local_data{};
         };
 
-        void enter(
-            volatile Context &                  a_context,
-            interrupt::priority::Preemption     a_preemption_priority
+        void enter( 
+            Context &                       a_context,
+            interrupt::priority::Preemption a_preemption_priority
         );
 
-        void leave( volatile Context & a_context);
+        void leave( Context & a_context);
     }
+
+    // Helper RAII style hardware critical section.
+    class CriticalSection
+    {
+    public:
+        CriticalSection()
+        {
+           critical_section::enter(
+                m_context,
+                interrupt::priority::Preemption::Critical
+            );
+        }
+        ~CriticalSection()
+        {
+            critical_section::leave( m_context);
+        }
+    private:
+        critical_section::Context m_context{};
+    };
 
     namespace debug
     {
