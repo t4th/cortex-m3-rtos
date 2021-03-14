@@ -38,7 +38,7 @@ namespace kernel::internal::event
         bool        a_manual_reset
     )
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         // Create new Event object.
         uint32_t new_item_id;
@@ -61,21 +61,21 @@ namespace kernel::internal::event
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         a_context.m_data.free( a_id);
     }
 
     inline void set( Context & a_context, Id & a_id)
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         a_context.m_data.at( a_id).m_state = State::Set;
     }
 
     inline void reset( Context & a_context, Id & a_id)
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         a_context.m_data.at( a_id).m_state = State::Reset;
     }
@@ -83,7 +83,7 @@ namespace kernel::internal::event
     // Reset event state if manual reset is disabled.
     inline void manualReset( Context & a_context, Id & a_id)
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         auto & event = a_context.m_data.at( a_id);
 
@@ -95,7 +95,7 @@ namespace kernel::internal::event
 
     inline bool isSignaled( Context & a_context, Id & a_id)
     {
-        //kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section;
 
         auto & event = a_context.m_data.at( a_id);
 
