@@ -427,14 +427,19 @@ namespace kernel::event
 {
     // Note: No lock is required since internal::event
     //       API is already protected.
-    bool create( kernel::Handle & a_handle, bool a_manual_reset)
+    bool create(
+        kernel::Handle &    a_handle,
+        bool                a_manual_reset,
+        const char *        a_name
+    )
     {
         internal::event::Id new_event_id;
 
         bool event_created = internal::event::create(
             internal::context::m_events,
             new_event_id,
-            a_manual_reset
+            a_manual_reset,
+            a_name
         );
 
         if ( false == event_created)
@@ -446,6 +451,16 @@ namespace kernel::event
             internal::handle::ObjectType::Event,
             new_event_id
         );
+
+        return true;
+    }
+
+    bool open( const char * ap_name, kernel::Handle & a_handle)
+    {
+        if ( nullptr == ap_name)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -503,7 +518,8 @@ namespace kernel::critical_section
             bool event_created = internal::event::create(
                 internal::context::m_events,
                 new_event_id,
-                false
+                false,
+                nullptr
             );
 
             if ( false == event_created)

@@ -98,7 +98,12 @@ namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
     // function completes. In other case, you have to manualy call reset.
-    bool create( kernel::Handle & a_handle, bool a_manual_reset = false);
+    bool create(
+        kernel::Handle &    a_handle,
+        bool                a_manual_reset = false,
+        const char *        a_name = nullptr
+    );
+    bool open( const char * ap_name, kernel::Handle & a_handle);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
     void reset( kernel::Handle & a_handle);

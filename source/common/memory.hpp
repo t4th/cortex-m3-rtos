@@ -5,19 +5,27 @@
 
 // Note: I just didn't want to include whole <cstring>. 
 //       Also references are so much nicer.
+// TODO: Simplify.
 namespace kernel::internal::memory
 {
+    template<
+        typename TTypeLeft,
+        typename TTypeRight
+    >
     inline void copy(
-        uint8_t &       a_destination,
-        const uint8_t & a_source,
-        size_t          a_number_of_bytes
+        TTypeLeft &         a_destination,
+        const TTypeRight &  a_source,
+        size_t              a_number_of_bytes
     )
     {
         assert( a_number_of_bytes > 0U);
 
+        uint8_t & destination = *reinterpret_cast< uint8_t*>( &a_destination);
+        const uint8_t & source = *reinterpret_cast< const uint8_t*>( &a_source);
+
         for ( size_t i = 0U; i < a_number_of_bytes; ++i)
         {
-            ( &a_destination)[ i] = ( &a_source)[ i];
+            ( &destination)[ i] = ( &source)[ i];
         }
     }
 

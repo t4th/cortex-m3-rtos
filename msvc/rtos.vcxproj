@@ -170,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\common\circular_list.hpp" />
+    <ClInclude Include="..\source\common\memory.hpp" />
     <ClInclude Include="..\source\common\memory_buffer.hpp" />
     <ClInclude Include="..\source\event\event.hpp" />
     <ClInclude Include="..\source\handle\handle.hpp" />

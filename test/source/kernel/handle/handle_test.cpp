@@ -55,7 +55,7 @@ TEST_CASE( "Handle")
 
             // Prepare event object and handle.
             event::Id new_index;
-            bool event_created = event::create( *event_context, new_index, false);
+            bool event_created = event::create( *event_context, new_index, false, nullptr);
 
             REQUIRE( true == event_created);
 

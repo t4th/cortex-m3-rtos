@@ -39,6 +39,9 @@ namespace kernel::internal::event
     // create and delete events for internal use and setting
     // this value to 0 will brick some kernel functionality.
     constexpr uint32_t max_number{ 8U};
+
+    // Define maxiumum length of event name.
+    constexpr uint32_t max_name_length{ 32U};
 }
 
 namespace kernel::internal::timer
