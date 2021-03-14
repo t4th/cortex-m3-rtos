@@ -2,6 +2,7 @@
 
 #include "config/config.hpp"
 #include "common/memory_buffer.hpp"
+#include "common/memory.hpp"
 
 #include <kernel.hpp>
 
@@ -122,18 +123,14 @@ namespace kernel::internal::queue
         }
 
         // Memory copy.
-        // todo: consider using normal memcpy
+        // todo: consider memory fence here.
         {
-            uint8_t * dst = queue.m_data;
-            uint8_t * src = &a_data;
+            const size_t real_head_offset = queue.m_data_type_size * queue.m_head;
 
-            size_t real_head_offset = queue.m_data_type_size * queue.m_head;
-            dst = dst + real_head_offset;
+            uint8_t & destination = *( queue.m_data + real_head_offset);
+            const uint8_t & source = a_data;
 
-            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
-            {
-                dst[ i] = src[ i];
-            }
+            memory::copy( destination, source, queue.m_data_type_size);
         }
 
         ++queue.m_current_size;
@@ -158,17 +155,14 @@ namespace kernel::internal::queue
         }
 
         // Memory copy.
-        // todo: consider using normal memcpy
+        // todo: consider memory fence here.
         {
-            uint8_t * dst = &a_data;
-            uint8_t * src = queue.m_data;
             size_t real_tail_offset = queue.m_data_type_size * queue.m_tail;
-            src = src + real_tail_offset;
 
-            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
-            {
-                dst[ i] = src[ i];
-            }
+            uint8_t & destination = a_data;
+            const uint8_t & source = *( queue.m_data + real_tail_offset);
+
+            memory::copy( destination, source, queue.m_data_type_size);
         }
 
         if ( queue.m_current_size > 1U)
