@@ -119,10 +119,6 @@ void worker_task( void * a_parameter)
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
             uint8_t received_byte;
-            bool print_word = false;
-            size_t number_of_elements = 0U;
-
-            using namespace kernel::hardware;
 
             // Flush all queue content until its empty.
             while ( true)
@@ -134,7 +130,7 @@ void worker_task( void * a_parameter)
 
                 if ( true == queue_not_empty)
                 {
-                    debug::putChar( static_cast< char>( received_byte));
+                    kernel::hardware::debug::putChar( static_cast< char>( received_byte));
                 }
                 else
                 {

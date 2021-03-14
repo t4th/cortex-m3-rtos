@@ -161,7 +161,7 @@ namespace kernel::task
             }
 
             // If priority of task just created is higher than current task, issue context switch.
-            if ( internal::context::m_started && (a_priority < current_task_priority))
+            if ( internal::context::m_started && ( a_priority < current_task_priority))
             {
                 internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
@@ -607,10 +607,13 @@ namespace kernel::sync
         Time_ms             a_timeout
     )
     {
+        constexpr uint32_t number_of_elements{ 1U};
+        constexpr bool dont_wait_for_all_elements{ false};
+
         WaitResult result = waitForMultipleObjects(
             &a_handle,
-            1U,
-            false,
+            number_of_elements,
+            dont_wait_for_all_elements,
             a_wait_forver,
             a_timeout,
             nullptr
@@ -702,6 +705,7 @@ namespace kernel::static_queue
 {
     // Note: No lock is required since internal::queue
     //       API is already protected.
+    // TODO: Remove pointer.
     bool create(
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
@@ -725,7 +729,7 @@ namespace kernel::static_queue
         }
         
         kernel::internal::queue::Id created_queue_id;
-        uint8_t & buffer_address = *( ( uint8_t *)ap_data);
+        uint8_t & buffer_address = *reinterpret_cast< uint8_t *>( ap_data);
 
         bool queue_created = kernel::internal::queue::create(
             kernel::internal::context::m_queue,
@@ -817,6 +821,7 @@ namespace kernel::static_queue
         return true;
     }
 
+    // TODO: Remove pointer.
     bool send(
         kernel::Handle &    a_handle,
         void * const        ap_data
@@ -830,7 +835,7 @@ namespace kernel::static_queue
         }
 
         auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        uint8_t & data_address = *(( uint8_t *)ap_data);
+        uint8_t & data_address = *reinterpret_cast< uint8_t *>( ap_data);
 
         bool send_result = internal::queue::send(
             internal::context::m_queue,
@@ -841,6 +846,7 @@ namespace kernel::static_queue
         return send_result;
     }
 
+    // TODO: Remove pointer.
     bool receive(
         kernel::Handle &    a_handle,
         void * const        ap_data
@@ -854,7 +860,7 @@ namespace kernel::static_queue
         }
 
         auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        uint8_t & data_address = *( ( uint8_t *)ap_data);
+        uint8_t & data_address = *reinterpret_cast< uint8_t *>( ap_data);
 
         bool receive_result = internal::queue::receive(
             internal::context::m_queue,
