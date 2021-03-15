@@ -59,29 +59,6 @@ namespace kernel::internal::event
         new_event.m_manual_reset = a_manual_reset;
         new_event.m_state = State::Reset;
 
-        // TODO: Cleanup this naive implementations.
-        // todo: consider dublications
-        if ( nullptr != a_name)
-        {
-            size_t string_length;
-
-            for ( size_t i = 0; i < max_name_length; ++i)
-            {
-                if ( '\0' == a_name[i])
-                {
-                    string_length = i;
-                    //memory::copy(
-                    //    new_event.m_name[0],
-                    //    a_name[0],
-                    //    string_length
-                    //);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         return true;
     }
 

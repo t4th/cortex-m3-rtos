@@ -5,7 +5,7 @@
 
 // Note: I just didn't want to include whole <cstring>. 
 //       Also references are so much nicer.
-// TODO: Simplify.
+// TODO: Simplify, because code size is too big.
 namespace kernel::internal::memory
 {
     template<
