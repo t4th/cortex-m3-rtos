@@ -2,6 +2,7 @@
 
 #include "config/config.hpp"
 #include "common/memory_buffer.hpp"
+#include "common/memory.hpp"
 
 #include <kernel.hpp>
 
@@ -19,27 +20,29 @@ namespace kernel::internal::queue
 
     struct Queue
     {
-        size_t      m_current_size{ 0U};
-        uint32_t    m_head{ 0U};
-        uint32_t    m_tail{ 0U};
+        size_t          m_current_size{ 0U};
+        uint32_t        m_head{ 0U};
+        uint32_t        m_tail{ 0U};
         
-        size_t      m_data_max_size{ 0U};
-        size_t      m_data_type_size{ 0U};
-        uint8_t *   m_data{ nullptr};
+        size_t          m_data_max_size{ 0U};
+        size_t          m_data_type_size{ 0U};
+        uint8_t *       mp_data{ nullptr};
+
+        const char *    mp_name{ nullptr};
     };
 
     struct Context
     {
-        volatile kernel::internal::common::
-            MemoryBuffer< Queue, max_number> m_data{};
+        volatile common::MemoryBuffer< Queue, max_number> m_data{};
     };
 
     inline bool create(
-        Context &   a_context,
-        Id &        a_id,
-        size_t &    a_data_max_size,
-        size_t &    a_data_type_size,
-        uint8_t &   a_data
+        Context &       a_context,
+        Id &            a_id,
+        size_t &        a_data_max_size,
+        size_t &        a_data_type_size,
+        uint8_t &       a_data,
+        const char *    ap_name
     )
     {
         kernel::hardware::CriticalSection critical_section;
@@ -63,9 +66,35 @@ namespace kernel::internal::queue
         
         new_queue.m_data_max_size = a_data_max_size;
         new_queue.m_data_type_size = a_data_type_size;
-        new_queue.m_data = &a_data;
+        new_queue.mp_data = &a_data;
+        new_queue.mp_name = ap_name;
 
         return true;
+    }
+
+    inline bool open(
+        Context &    a_context,
+        Id &         a_id,
+        const char * ap_name
+    )
+    {
+        assert( nullptr != ap_name);
+
+        kernel::hardware::CriticalSection critical_section;
+
+        for ( uint32_t id = 0U; id < max_number; ++id)
+        {
+            if ( true == a_context.m_data.isAllocated( id))
+            {
+                if ( ap_name == a_context.m_data.at( id).mp_name)
+                {
+                    a_id = id;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     inline void destroy( Context & a_context, Id & a_id)
@@ -122,18 +151,14 @@ namespace kernel::internal::queue
         }
 
         // Memory copy.
-        // todo: consider using normal memcpy
+        // todo: consider memory fence here.
         {
-            uint8_t * dst = queue.m_data;
-            uint8_t * src = &a_data;
+            const size_t real_head_offset = queue.m_data_type_size * queue.m_head;
 
-            size_t real_head_offset = queue.m_data_type_size * queue.m_head;
-            dst = dst + real_head_offset;
+            uint8_t & destination = *( queue.mp_data + real_head_offset);
+            const uint8_t & source = a_data;
 
-            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
-            {
-                dst[ i] = src[ i];
-            }
+            memory::copy( destination, source, queue.m_data_type_size);
         }
 
         ++queue.m_current_size;
@@ -158,17 +183,14 @@ namespace kernel::internal::queue
         }
 
         // Memory copy.
-        // todo: consider using normal memcpy
+        // todo: consider memory fence here.
         {
-            uint8_t * dst = &a_data;
-            uint8_t * src = queue.m_data;
             size_t real_tail_offset = queue.m_data_type_size * queue.m_tail;
-            src = src + real_tail_offset;
 
-            for ( size_t i = 0U; i < queue.m_data_type_size; ++i)
-            {
-                dst[ i] = src[ i];
-            }
+            uint8_t & destination = a_data;
+            const uint8_t & source = *( queue.mp_data + real_tail_offset);
+
+            memory::copy( destination, source, queue.m_data_type_size);
         }
 
         if ( queue.m_current_size > 1U)

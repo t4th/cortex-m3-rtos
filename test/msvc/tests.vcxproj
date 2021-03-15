@@ -26,6 +26,7 @@
     <ClCompile Include="..\source\kernel\queue\queue_test.cpp" />
     <ClCompile Include="..\source\kernel\scheduler\scheduler_test.cpp" />
     <ClCompile Include="..\source\kernel\task\task_test.cpp" />
+    <ClCompile Include="..\stubs\hardware_stubs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\common\circular_list.hpp" />

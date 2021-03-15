@@ -704,7 +704,7 @@ TEST_CASE("Scheduler")
             // Create event.
             {
                 kernel::internal::event::Id new_event_id;
-                bool result = kernel::internal::event::create(context->m_Event, new_event_id, true);
+                bool result = kernel::internal::event::create(context->m_Event, new_event_id, true, nullptr);
                 REQUIRE(true == result);
 
                 event = kernel::internal::handle::create(

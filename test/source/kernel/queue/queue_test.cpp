@@ -23,7 +23,8 @@ TEST_CASE( "Queue")
                 queue_id,
                 max_buffer_size,
                 max_type_size,
-                *reinterpret_cast< uint8_t*> ( buffer.m_data)
+                *reinterpret_cast< uint8_t*> ( buffer.m_data),
+                nullptr
             );
 
             REQUIRE( true == queue_created);

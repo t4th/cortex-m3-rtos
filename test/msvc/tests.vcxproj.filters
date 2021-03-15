@@ -78,6 +78,9 @@
     <ClCompile Include="..\source\kernel\queue\queue_test.cpp">
       <Filter>tests\queue</Filter>
     </ClCompile>
+    <ClCompile Include="..\stubs\hardware_stubs.cpp">
+      <Filter>stubs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\external\catch.hpp">
