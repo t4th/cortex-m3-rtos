@@ -20,12 +20,12 @@ namespace kernel::internal::memory
     {
         assert( a_number_of_bytes > 0U);
 
-        uint8_t & destination = *reinterpret_cast< uint8_t*>( &a_destination);
-        const uint8_t & source = *reinterpret_cast< const uint8_t*>( &a_source);
+        uint8_t * destination = reinterpret_cast< uint8_t*>( &a_destination);
+        const uint8_t * source = reinterpret_cast< const uint8_t*>( &a_source);
 
         for ( size_t i = 0U; i < a_number_of_bytes; ++i)
         {
-            ( &destination)[ i] = ( &source)[ i];
+            destination[ i] = source[ i];
         }
     }
 
