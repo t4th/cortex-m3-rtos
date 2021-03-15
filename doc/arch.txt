@@ -21,18 +21,6 @@ class user
 alignment -[hidden]d-> user
 
 class kernel::kernel << namespace >>{
--internal::system_timer::Context
--internal::task::Context
--internal::scheduler::Context
--internal::timer::Context
--internal::event::Context
-
--internal::storeContext()
--internal::loadContext()
--internal::loadNextTask()
--internal::switchContext()
--internal::tick()
-
 + init()
 + start()
 + getTime()
@@ -48,6 +36,7 @@ kernel::kernel -[hidden]d-> kernel::event
 kernel::kernel -[hidden]d-> kernel::timer
 kernel::kernel -[hidden]d-> kernel::sync
 kernel::kernel <-> kernel::internal::hardware::hardware
+kernel::kernel <-> kernel::internal::internal
 
 kernel::kernel -d-> kernel::internal::scheduler
 kernel::kernel -d-> kernel::internal::handle
@@ -101,6 +90,23 @@ class kernel::timer << namespace >>{
 }
 
 kernel::timer -> kernel::internal::timer
+
+class kernel::internal::internal << namespace >>{
+-system_timer::Context
+-task::Context
+-scheduler::Context
+-timer::Context
+-event::Context
+-queue::Context
+-lock::Context
+-handle::Context
+
++storeContext()
++loadContext()
++loadNextTask()
++switchContext()
++tick()
+}
 
 class kernel::internal::common << namespace >>{
  memory_buffer
