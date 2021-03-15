@@ -190,7 +190,8 @@ namespace kernel::static_queue
         // Note: This value is not initialized on purpose.
         TType m_data[ Size];
     };
-
+    
+    // ap_name parameter must point to compile time available literal or UB.
     bool create(
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
@@ -198,7 +199,8 @@ namespace kernel::static_queue
         void * const        ap_data,
         const char *        ap_name = nullptr
     );
-
+    
+    // ap_name parameter must point to compile time available literal or UB.
     bool open( kernel::Handle & a_handle, const char * ap_name);
 
     void destroy( kernel::Handle & a_handle);
