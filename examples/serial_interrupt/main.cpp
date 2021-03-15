@@ -112,7 +112,7 @@ void startup_task( void * a_parameter)
 
 void worker_task( void * a_parameter)
 {
-    Shared & shared_data = *( ( Shared*) a_parameter);
+    Shared & shared_data = *reinterpret_cast< Shared*>( a_parameter);
 
     while( true)
     {

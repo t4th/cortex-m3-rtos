@@ -6,6 +6,8 @@
 
 #include <kernel.hpp>
 
+// Handle is abstract type holding information of object type
+// and object ID. 16 bit each in 32 bit variable.
 namespace kernel::internal::handle
 {
     enum class ObjectType
@@ -21,7 +23,7 @@ namespace kernel::internal::handle
         return reinterpret_cast< kernel::Handle>(( static_cast< uint32_t>( a_type) << 16U) | ( a_index & 0xFFFFU));
     }
 
-    inline ObjectType getObjectType(volatile kernel::Handle & a_handle)
+    inline ObjectType getObjectType( volatile kernel::Handle & a_handle)
     {
         uint32_t object_type = ( reinterpret_cast< uint32_t>( a_handle) >> 16U) & 0xFFFFU;
 

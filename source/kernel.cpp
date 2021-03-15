@@ -455,14 +455,30 @@ namespace kernel::event
         return true;
     }
 
-    bool open( const char * ap_name, kernel::Handle & a_handle)
+    bool open( kernel::Handle & a_handle, const char * ap_name)
     {
         if ( nullptr == ap_name)
         {
             return false;
         }
 
-        return true;
+        internal::event::Id event_id;
+
+        bool event_opened = internal::event::open(
+            internal::context::m_events,
+            event_id,
+            ap_name
+        );
+        
+        if ( true == event_opened)
+        {
+            a_handle = internal::handle::create(
+                internal::handle::ObjectType::Event,
+                event_id
+            );
+        }
+
+        return event_opened;
     }
 
     void destroy( kernel::Handle & a_handle)
@@ -726,7 +742,8 @@ namespace kernel::static_queue
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
         size_t              a_data_type_size,
-        void * const        ap_data
+        void * const        ap_data,
+        const char *        ap_name
     )
     {
         if ( nullptr == ap_data)
@@ -752,7 +769,8 @@ namespace kernel::static_queue
             created_queue_id,
             a_data_max_size,
             a_data_type_size,
-            buffer_address
+            buffer_address,
+            ap_name
         );
 
         if ( false == queue_created)
@@ -761,6 +779,32 @@ namespace kernel::static_queue
         }
 
         return true;
+    }
+
+    bool open( kernel::Handle & a_handle, const char * ap_name)
+    {
+        if ( nullptr == ap_name)
+        {
+            return false;
+        }
+
+        internal::event::Id queue_id;
+
+        bool event_opened = internal::queue::open(
+            internal::context::m_queue,
+            queue_id,
+            ap_name
+        );
+        
+        if ( true == event_opened)
+        {
+            a_handle = internal::handle::create(
+                internal::handle::ObjectType::Queue,
+                queue_id
+            );
+        }
+
+        return event_opened;
     }
 
     void destroy( kernel::Handle & a_handle)

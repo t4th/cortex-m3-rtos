@@ -98,12 +98,14 @@ namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
     // function completes. In other case, you have to manualy call reset.
+    // ap_name parameter must point to compile time available literal or UB.
     bool create(
         kernel::Handle &    a_handle,
         bool                a_manual_reset = false,
-        const char *        a_name = nullptr
+        const char *        ap_name = nullptr
     );
-    bool open( const char * ap_name, kernel::Handle & a_handle);
+    // ap_name parameter must point to compile time available literal or UB.
+    bool open( kernel::Handle & a_handle, const char * ap_name);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
     void reset( kernel::Handle & a_handle);
@@ -193,8 +195,11 @@ namespace kernel::static_queue
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
         size_t              a_data_type_size,
-        void * const        ap_data
+        void * const        ap_data,
+        const char *        ap_name = nullptr
     );
+
+    bool open( kernel::Handle & a_handle, const char * ap_name);
 
     void destroy( kernel::Handle & a_handle);
 
@@ -209,9 +214,9 @@ namespace kernel::static_queue
     bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty);
     
     template < typename TType, size_t Size>
-    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer)
+    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer, const char * ap_name = nullptr)
     {
-        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data);
+        return create( a_handle, Size, sizeof( TType), &a_buffer.m_data, ap_name);
     }
 
     template < typename TType>

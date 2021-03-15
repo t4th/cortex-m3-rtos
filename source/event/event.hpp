@@ -2,7 +2,6 @@
 
 #include "config/config.hpp"
 #include "common/memory_buffer.hpp"
-#include "common/memory.hpp"
 
 #include <kernel.hpp>
 
@@ -19,9 +18,9 @@ namespace kernel::internal::event
 
     struct Event
     {
-        State m_state;
-        bool  m_manual_reset;
-        char  m_name[ max_name_length];
+        State           m_state;
+        const char *    mp_name;
+        bool            m_manual_reset;
     };
 
     struct Context
@@ -31,14 +30,14 @@ namespace kernel::internal::event
         //       generalized internal::event or adding new specialized
         //       internal::auto_reset_event. For current project state it is unnecessary
         //       complexity.
-        volatile kernel::internal::common::MemoryBuffer< Event, max_number> m_data{};
+        volatile common::MemoryBuffer< Event, max_number> m_data{};
     };
 
     inline bool create(
         Context &    a_context,
         Id &         a_id,
         bool         a_manual_reset,
-        const char * a_name
+        const char * ap_name
     )
     {
         kernel::hardware::CriticalSection critical_section;
@@ -58,8 +57,34 @@ namespace kernel::internal::event
 
         new_event.m_manual_reset = a_manual_reset;
         new_event.m_state = State::Reset;
+        new_event.mp_name = ap_name;
 
         return true;
+    }
+
+    inline bool open(
+        Context &    a_context,
+        Id &         a_id,
+        const char * ap_name
+    )
+    {
+        assert( nullptr != ap_name);
+
+        kernel::hardware::CriticalSection critical_section;
+
+        for ( uint32_t id = 0U; id < max_number; ++id)
+        {
+            if ( true == a_context.m_data.isAllocated( id))
+            {
+                if ( ap_name == a_context.m_data.at( id).mp_name)
+                {
+                    a_id = id;
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     inline void destroy( Context & a_context, Id & a_id)
