@@ -742,7 +742,7 @@ namespace kernel::static_queue
         kernel::Handle &    a_handle,
         size_t              a_data_max_size,
         size_t              a_data_type_size,
-        void * const        ap_data,
+        volatile void * const        ap_data,
         const char *        ap_name
     )
     {
@@ -762,7 +762,7 @@ namespace kernel::static_queue
         }
         
         kernel::internal::queue::Id created_queue_id;
-        uint8_t & buffer_address = *reinterpret_cast< uint8_t *>( ap_data);
+        volatile uint8_t & buffer_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
 
         bool queue_created = kernel::internal::queue::create(
             kernel::internal::context::m_queue,
@@ -883,8 +883,8 @@ namespace kernel::static_queue
 
     // TODO: Remove pointer.
     bool send(
-        kernel::Handle &    a_handle,
-        void * const        ap_data
+        kernel::Handle &      a_handle,
+        volatile void * const ap_data
     )
     {
         const auto objectType = internal::handle::getObjectType( a_handle);
@@ -895,7 +895,7 @@ namespace kernel::static_queue
         }
 
         auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        uint8_t & data_address = *reinterpret_cast< uint8_t *>( ap_data);
+        auto & data_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
 
         bool send_result = internal::queue::send(
             internal::context::m_queue,
@@ -908,8 +908,8 @@ namespace kernel::static_queue
 
     // TODO: Remove pointer.
     bool receive(
-        kernel::Handle &    a_handle,
-        void * const        ap_data
+        kernel::Handle &      a_handle,
+        volatile void * const ap_data
     )
     {
         const auto objectType = internal::handle::getObjectType( a_handle);
@@ -920,7 +920,7 @@ namespace kernel::static_queue
         }
 
         auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        uint8_t & data_address = *reinterpret_cast< uint8_t *>( ap_data);
+        auto & data_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
 
         bool receive_result = internal::queue::receive(
             internal::context::m_queue,

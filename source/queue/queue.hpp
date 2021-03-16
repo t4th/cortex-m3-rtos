@@ -20,15 +20,15 @@ namespace kernel::internal::queue
 
     struct Queue
     {
-        size_t          m_current_size{ 0U};
-        uint32_t        m_head{ 0U};
-        uint32_t        m_tail{ 0U};
+        size_t              m_current_size{ 0U};
+        uint32_t            m_head{ 0U};
+        uint32_t            m_tail{ 0U};
         
-        size_t          m_data_max_size{ 0U};
-        size_t          m_data_type_size{ 0U};
-        uint8_t *       mp_data{ nullptr};
+        size_t              m_data_max_size{ 0U};
+        size_t              m_data_type_size{ 0U};
+        volatile uint8_t *  mp_data{ nullptr};
 
-        const char *    mp_name{ nullptr};
+        const char *        mp_name{ nullptr};
     };
 
     struct Context
@@ -37,12 +37,12 @@ namespace kernel::internal::queue
     };
 
     inline bool create(
-        Context &       a_context,
-        Id &            a_id,
-        size_t &        a_data_max_size,
-        size_t &        a_data_type_size,
-        uint8_t &       a_data,
-        const char *    ap_name
+        Context &          a_context,
+        Id &               a_id,
+        size_t &           a_data_max_size,
+        size_t &           a_data_type_size,
+        volatile uint8_t & a_data,
+        const char *       ap_name
     )
     {
         kernel::hardware::CriticalSection critical_section;
@@ -126,9 +126,9 @@ namespace kernel::internal::queue
 
     // Push item to the head.
     inline bool send(
-        Context &   a_context,
-        Id &        a_id,
-        uint8_t &   a_data
+        Context &           a_context,
+        Id &                a_id,
+        volatile uint8_t &  a_data
     )
     {
         kernel::hardware::CriticalSection critical_section;
@@ -155,8 +155,8 @@ namespace kernel::internal::queue
         {
             const size_t real_head_offset = queue.m_data_type_size * queue.m_head;
 
-            uint8_t & destination = *( queue.mp_data + real_head_offset);
-            const uint8_t & source = a_data;
+            volatile uint8_t & destination = *( queue.mp_data + real_head_offset);
+            const volatile uint8_t & source = a_data;
 
             memory::copy( destination, source, queue.m_data_type_size);
         }
@@ -168,9 +168,9 @@ namespace kernel::internal::queue
     
     // Pop item from the tail.
     inline bool receive(
-        Context &   a_context,
-        Id &        a_id,
-        uint8_t &   a_data
+        Context &           a_context,
+        Id &                a_id,
+        volatile uint8_t &  a_data
     )
     {
         kernel::hardware::CriticalSection critical_section;
@@ -187,8 +187,8 @@ namespace kernel::internal::queue
         {
             size_t real_tail_offset = queue.m_data_type_size * queue.m_tail;
 
-            uint8_t & destination = a_data;
-            const uint8_t & source = *( queue.mp_data + real_tail_offset);
+            volatile uint8_t & destination = a_data;
+            const volatile uint8_t & source = *( queue.mp_data + real_tail_offset);
 
             memory::copy( destination, source, queue.m_data_type_size);
         }

@@ -188,16 +188,16 @@ namespace kernel::static_queue
     struct Buffer
     {
         // Note: This value is not initialized on purpose.
-        TType m_data[ Size];
+        volatile TType m_data[ Size];
     };
     
     // ap_name parameter must point to compile time available literal or UB.
     bool create(
-        kernel::Handle &    a_handle,
-        size_t              a_data_max_size,
-        size_t              a_data_type_size,
-        void * const        ap_data,
-        const char *        ap_name = nullptr
+        kernel::Handle &      a_handle,
+        size_t                a_data_max_size,
+        size_t                a_data_type_size,
+        volatile void * const ap_data,
+        const char *          ap_name = nullptr
     );
     
     // ap_name parameter must point to compile time available literal or UB.
@@ -205,9 +205,9 @@ namespace kernel::static_queue
 
     void destroy( kernel::Handle & a_handle);
 
-    bool send( kernel::Handle & a_handle, void * const ap_data);
+    bool send( kernel::Handle & a_handle, volatile void * const ap_data);
     
-    bool receive( kernel::Handle & a_handle, void * const ap_data);
+    bool receive( kernel::Handle & a_handle, volatile void * const ap_data);
 
     bool size( kernel::Handle & a_handle, size_t & a_size);
 
@@ -216,19 +216,19 @@ namespace kernel::static_queue
     bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty);
     
     template < typename TType, size_t Size>
-    bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer, const char * ap_name = nullptr)
+    inline bool create( kernel::Handle & a_handle, Buffer< TType, Size> & a_buffer, const char * ap_name = nullptr)
     {
         return create( a_handle, Size, sizeof( TType), &a_buffer.m_data, ap_name);
     }
 
     template < typename TType>
-    bool send( kernel::Handle & a_handle, TType & a_data)
+    inline bool send( kernel::Handle & a_handle, TType & a_data)
     {
         return send( a_handle, &a_data);
     }
 
     template < typename TType>
-    bool receive( kernel::Handle & a_handle, TType & a_data)
+    inline bool receive( kernel::Handle & a_handle, TType & a_data)
     {
         return receive( a_handle, &a_data);
     }

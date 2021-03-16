@@ -255,7 +255,7 @@ namespace kernel::internal::scheduler
     {
         bool next_task_found = false;
 
-        for ( uint32_t prio = static_cast<uint32_t>( kernel::task::Priority::High);
+        for ( uint32_t prio = static_cast< uint32_t>( kernel::task::Priority::High);
             prio < kernel::internal::task::priorities_count;
             ++prio)
         {
