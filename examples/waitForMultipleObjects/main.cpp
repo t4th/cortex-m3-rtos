@@ -13,16 +13,18 @@ using kernel::hardware::debug::setBreakpoint;
 
 static constexpr uint32_t number_of_events = 6U;
 
+// Define shared data between tasks.
+// Contains array with handles to all waitable events.
 struct Data
 {
     kernel::Handle events[ number_of_events];
 };
 
-// sets events in different timer intervals
+// Sets events in different timer intervals.
 void order_task( void * a_parameter)
 {
-    const char * number[ number_of_events] = 
-    { "event 0", "event 1", "event 2", "event 3", "event 4", "event 5"};
+    const char * event_name[ number_of_events] = 
+    { "event 0", "event 1", "event 2", "event 3", "event 4", "manual reset event 5"};
     
     // Pass shared data through task parameter.
     Data & data = *reinterpret_cast< Data*>( a_parameter);
@@ -35,7 +37,7 @@ void order_task( void * a_parameter)
         for ( uint32_t i = 0U; i < number_of_events; ++i)
         {
             print( "order_task: set ");
-            print( number[ i]);
+            print( event_name[ i]);
             print( ".\n");
             kernel::event::set( data.events[ i]);
             kernel::task::sleep( 100U);
@@ -93,12 +95,12 @@ void worker_task( void * a_parameter)
 
 int main()
 {
-    Data data;
+    Data data{};
 
     kernel::init();
 
-    // Create 5 automatic reset events.
-    const uint32_t number_of_automatic_events = number_of_events - 1;
+    // Create 5 automatic reset events. Leave 6th spot for manual reset event.
+    const uint32_t number_of_automatic_events = number_of_events - 1U;
 
     for ( uint32_t i = 0U; i < number_of_automatic_events; ++i)
     {
@@ -111,9 +113,11 @@ int main()
         }
     }
 
-    // Create manual reset event
+    // Create manual reset event.
+    constexpr uint32_t id_of_manual_reset_events = number_of_events - 1U;
+
     bool event_created = kernel::event::create(
-        data.events[ number_of_events - 1],
+        data.events[ id_of_manual_reset_events],
         true,
         "manual reset event"
     );
