@@ -737,16 +737,15 @@ namespace kernel::static_queue
 {
     // Note: No lock is required since internal::queue
     //       API is already protected.
-    // TODO: Remove pointer.
     bool create(
-        kernel::Handle &    a_handle,
-        size_t              a_data_max_size,
-        size_t              a_data_type_size,
-        volatile void * const        ap_data,
-        const char *        ap_name
+        kernel::Handle &        a_handle,
+        size_t                  a_data_max_size,
+        size_t                  a_data_type_size,
+        volatile void * const   ap_static_buffer,
+        const char *            ap_name
     )
     {
-        if ( nullptr == ap_data)
+        if ( nullptr == ap_static_buffer)
         {
             return false;
         }
@@ -762,14 +761,13 @@ namespace kernel::static_queue
         }
         
         kernel::internal::queue::Id created_queue_id;
-        volatile uint8_t & buffer_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
 
         bool queue_created = kernel::internal::queue::create(
             kernel::internal::context::m_queue,
             created_queue_id,
             a_data_max_size,
             a_data_type_size,
-            buffer_address,
+            ap_static_buffer,
             ap_name
         );
 
@@ -823,6 +821,63 @@ namespace kernel::static_queue
             queue_id
         );
     }
+
+    bool send(
+        kernel::Handle &      a_handle,
+        volatile void * const ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        if ( nullptr == ap_data)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+
+        bool send_result = internal::queue::send(
+            internal::context::m_queue,
+            queue_id,
+            ap_data
+        );
+
+        return send_result;
+    }
+
+    bool receive(
+        kernel::Handle &      a_handle,
+        volatile void * const ap_data
+    )
+    {
+        const auto objectType = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Queue != objectType)
+        {
+            return false;
+        }
+
+        if ( nullptr == ap_data)
+        {
+            return false;
+        }
+
+        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
+
+        bool receive_result = internal::queue::receive(
+            internal::context::m_queue,
+            queue_id,
+            ap_data
+        );
+
+        return receive_result;
+    }
+
 
     bool size( kernel::Handle & a_handle, size_t & a_size)
     {
@@ -879,56 +934,6 @@ namespace kernel::static_queue
         );
 
         return true;
-    }
-
-    // TODO: Remove pointer.
-    bool send(
-        kernel::Handle &      a_handle,
-        volatile void * const ap_data
-    )
-    {
-        const auto objectType = internal::handle::getObjectType( a_handle);
-
-        if ( internal::handle::ObjectType::Queue != objectType)
-        {
-            return false;
-        }
-
-        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        auto & data_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
-
-        bool send_result = internal::queue::send(
-            internal::context::m_queue,
-            queue_id,
-            data_address
-        );
-
-        return send_result;
-    }
-
-    // TODO: Remove pointer.
-    bool receive(
-        kernel::Handle &      a_handle,
-        volatile void * const ap_data
-    )
-    {
-        const auto objectType = internal::handle::getObjectType( a_handle);
-
-        if ( internal::handle::ObjectType::Queue != objectType)
-        {
-            return false;
-        }
-
-        auto queue_id = internal::handle::getId< internal::queue::Id>( a_handle);
-        auto & data_address = *reinterpret_cast< volatile uint8_t *>( ap_data);
-
-        bool receive_result = internal::queue::receive(
-            internal::context::m_queue,
-            queue_id,
-            data_address
-        );
-
-        return receive_result;
     }
 }
 

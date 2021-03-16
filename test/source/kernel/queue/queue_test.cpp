@@ -18,12 +18,14 @@ TEST_CASE( "Queue")
             size_t max_buffer_size{ Max_buffer_size};
             size_t max_type_size{ sizeof( int32_t)};
 
+            volatile void * const static_buffer = &buffer.m_data;
+
             bool queue_created = kernel::internal::queue::create(
                 queue_context,
                 queue_id,
                 max_buffer_size,
                 max_type_size,
-                *reinterpret_cast< uint8_t*> ( buffer.m_data),
+                static_buffer,
                 nullptr
             );
 
@@ -39,7 +41,7 @@ TEST_CASE( "Queue")
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_send)
+                reinterpret_cast< volatile uint8_t*> ( &data_to_send)
             );
 
             REQUIRE( true == data_sent);
@@ -55,7 +57,7 @@ TEST_CASE( "Queue")
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_send)
+                &data_to_send
             );
 
             REQUIRE( false == data_sent);
@@ -68,7 +70,7 @@ TEST_CASE( "Queue")
             bool data_sent = kernel::internal::queue::receive(
                 queue_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_receive)
+                &data_to_receive
             );
 
             REQUIRE( true == data_sent);
@@ -82,7 +84,7 @@ TEST_CASE( "Queue")
             bool data_sent = kernel::internal::queue::send(
                 queue_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_send)
+                &data_to_send
             );
 
             REQUIRE( true == data_sent);
@@ -101,7 +103,7 @@ TEST_CASE( "Queue")
                 bool data_sent = kernel::internal::queue::receive(
                     queue_context,
                     queue_id,
-                    *reinterpret_cast< uint8_t*> ( &data_to_receive)
+                    &data_to_receive
                 );
 
                 REQUIRE( true == data_sent);
@@ -118,7 +120,7 @@ TEST_CASE( "Queue")
             bool data_sent = kernel::internal::queue::receive(
                 queue_context,
                 queue_id,
-                *reinterpret_cast< uint8_t*> ( &data_to_receive)
+                &data_to_receive
             );
 
             REQUIRE( false == data_sent);

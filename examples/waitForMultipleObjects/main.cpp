@@ -24,7 +24,7 @@ struct Data
 void order_task( void * a_parameter)
 {
     const char * event_name[ number_of_events] = 
-    { "event 0", "event 1", "event 2", "event 3", "event 4", "manual reset event 5"};
+    { "event 0", "event 1", "event 2", "event 3", "event 4", "event 5 (manual reset)"};
     
     // Pass shared data through task parameter.
     Data & data = *reinterpret_cast< Data*>( a_parameter);

@@ -37,14 +37,16 @@ namespace kernel::internal::queue
     };
 
     inline bool create(
-        Context &          a_context,
-        Id &               a_id,
-        size_t &           a_data_max_size,
-        size_t &           a_data_type_size,
-        volatile uint8_t & a_data,
-        const char *       ap_name
+        Context &               a_context,
+        Id &                    a_id,
+        size_t &                a_data_max_size,
+        size_t &                a_data_type_size,
+        volatile void * const   ap_static_buffer,
+        const char *            ap_name
     )
     {
+        assert( nullptr != ap_static_buffer);
+
         kernel::hardware::CriticalSection critical_section;
 
         // Create new Queue object.
@@ -66,7 +68,9 @@ namespace kernel::internal::queue
         
         new_queue.m_data_max_size = a_data_max_size;
         new_queue.m_data_type_size = a_data_type_size;
-        new_queue.mp_data = &a_data;
+        new_queue.mp_data = reinterpret_cast< volatile uint8_t *>( ap_static_buffer);
+
+        // TODO: consider checking for dublicates.
         new_queue.mp_name = ap_name;
 
         return true;
@@ -126,11 +130,13 @@ namespace kernel::internal::queue
 
     // Push item to the head.
     inline bool send(
-        Context &           a_context,
-        Id &                a_id,
-        volatile uint8_t &  a_data
+        Context &               a_context,
+        Id &                    a_id,
+        volatile void * const   ap_data
     )
     {
+        assert( nullptr != ap_data);
+
         kernel::hardware::CriticalSection critical_section;
 
         volatile Queue & queue = a_context.m_data.at( a_id);
@@ -156,7 +162,7 @@ namespace kernel::internal::queue
             const size_t real_head_offset = queue.m_data_type_size * queue.m_head;
 
             volatile uint8_t & destination = *( queue.mp_data + real_head_offset);
-            const volatile uint8_t & source = a_data;
+            auto & source = *reinterpret_cast < const volatile uint8_t *>( ap_data);
 
             memory::copy( destination, source, queue.m_data_type_size);
         }
@@ -168,11 +174,13 @@ namespace kernel::internal::queue
     
     // Pop item from the tail.
     inline bool receive(
-        Context &           a_context,
-        Id &                a_id,
-        volatile uint8_t &  a_data
+        Context &               a_context,
+        Id &                    a_id,
+        volatile void * const   ap_data
     )
     {
+        assert( nullptr != ap_data);
+
         kernel::hardware::CriticalSection critical_section;
 
         volatile Queue & queue = a_context.m_data.at( a_id);
@@ -187,7 +195,7 @@ namespace kernel::internal::queue
         {
             size_t real_tail_offset = queue.m_data_type_size * queue.m_tail;
 
-            volatile uint8_t & destination = a_data;
+            auto & destination = *reinterpret_cast < volatile uint8_t *>( ap_data);
             const volatile uint8_t & source = *( queue.mp_data + real_tail_offset);
 
             memory::copy( destination, source, queue.m_data_type_size);

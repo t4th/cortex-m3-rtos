@@ -118,9 +118,9 @@ namespace kernel::critical_section
     struct Context
     {
         volatile std::atomic< uint32_t> m_lockCount;
-        volatile uint32_t m_spinLock;
-        kernel::Handle m_event;
-        kernel::Handle m_ownerTask; // debug information
+        volatile uint32_t               m_spinLock;
+        kernel::Handle                  m_event;
+        kernel::Handle                  m_ownerTask; // debug information
     };
 
     // Spinlock argument define number of ticks used to check critical section
@@ -184,6 +184,7 @@ namespace kernel::sync
 // kernel::static_queue API is interrupt safe.
 namespace kernel::static_queue
 {
+    // Modyfing this outside queue API is UB.
     template < typename TType, size_t Size>
     struct Buffer
     {
@@ -196,7 +197,7 @@ namespace kernel::static_queue
         kernel::Handle &      a_handle,
         size_t                a_data_max_size,
         size_t                a_data_type_size,
-        volatile void * const ap_data,
+        volatile void * const ap_static_buffer,
         const char *          ap_name = nullptr
     );
     
