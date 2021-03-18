@@ -7,8 +7,7 @@
 
 #include "gpio.hpp"
 
-// TODO: implement tx queue and interrupt
-
+// Send provided string to selected queue. End-of-string sign is also sent.
 template< size_t StringSize>
 void print( kernel::Handle & a_queue, const char ( &a_string)[ StringSize])
 {
@@ -41,35 +40,35 @@ void print( kernel::Handle & a_queue, const char ( &a_string)[ StringSize])
     USART1->CR1 |= USART_CR1_TXEIE;
 }
 
+void getQueuesHandles( kernel::Handle & a_rx_queue, kernel::Handle & a_tx_queue)
+{
+    if ( false == kernel::static_queue::open( a_rx_queue, "RX queue"))
+    {
+        kernel::hardware::debug::print( "\nFailed to open RX queue.\n");
+        kernel::hardware::debug::setBreakpoint();
+    }
+
+    if ( false == kernel::static_queue::open( a_tx_queue, "TX queue"))
+    {
+        kernel::hardware::debug::print( "\nFailed to open TX queue.\n");
+        kernel::hardware::debug::setBreakpoint();
+    }
+}
+
 extern "C"
 {
+    // Note: Overrun and other errors are not handled.
     void USART1_IRQHandler()
     {
         kernel::Handle usart_rx_queue;
         kernel::Handle usart_tx_queue;
     
-        // Of course most effective would be doing this just once,
-        // but this is just an API example.
-        bool queue_opened = kernel::static_queue::open( usart_rx_queue, "RX queue");
-
-        if ( false == queue_opened)
-        {
-            kernel::hardware::debug::print( "\nFailed to open RX queue.\n");
-            kernel::hardware::debug::setBreakpoint();
-        }
-
-        queue_opened = kernel::static_queue::open( usart_tx_queue, "TX queue");
-
-        if ( false == queue_opened)
-        {
-            kernel::hardware::debug::print( "\nFailed to open TX queue.\n");
-            kernel::hardware::debug::setBreakpoint();
-        }
+        getQueuesHandles( usart_rx_queue, usart_tx_queue);
 
         {
             volatile uint16_t status_register = USART1->SR;
 
-            // TODO: Send to queue as long RX is set.
+            // Receive handler.
             if ( status_register & USART_SR_RXNE)
             {
                 uint8_t received_byte = USART1->DR & 0xFF;
@@ -84,10 +83,10 @@ extern "C"
                     kernel::hardware::debug::print( "Rx queue full.\n");
                 }
 
-                // TODO: check if clearing pending bit is not reordered
                 USART1->SR &= ~USART_SR_RXNE;
             }
     
+            // Transmit handler.
             if ( status_register & USART_SR_TXE)
             {
                 uint8_t char_to_send{};
@@ -144,8 +143,8 @@ void startup_task( void * a_parameter)
 
     USART1->BRR = static_cast< uint16_t>( usart_baudrate_9600);
     USART1->CR1 |=  USART_CR1_RXNEIE   // Enable rx ready interrupt.
-                |   USART_CR1_RE;      // Enable rx.
-                //|   USART_CR1_TE;    // Enable tx.
+                |   USART_CR1_RE       // Enable rx.
+                |   USART_CR1_TE;      // Enable tx.
 
     // Enable USART1 interrupt in Interrupt Controller (NVIC).
     constexpr uint32_t usart1_interrupt_number = 37U;
@@ -169,21 +168,7 @@ void worker_task( void * a_parameter)
     kernel::Handle usart_rx_queue;
     kernel::Handle usart_tx_queue;
     
-    bool queue_opened = kernel::static_queue::open( usart_rx_queue, "RX queue");
-
-    if ( false == queue_opened)
-    {
-        kernel::hardware::debug::print( "\nFailed to open RX queue.\n");
-        kernel::hardware::debug::setBreakpoint();
-    }
-
-    queue_opened = kernel::static_queue::open( usart_tx_queue, "TX queue");
-
-    if ( false == queue_opened)
-    {
-        kernel::hardware::debug::print( "\nFailed to open TX queue.\n");
-        kernel::hardware::debug::setBreakpoint();
-    }
+    getQueuesHandles( usart_rx_queue, usart_tx_queue);
 
     print( usart_tx_queue, "Worker task started.");
 
