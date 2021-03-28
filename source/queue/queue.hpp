@@ -24,7 +24,7 @@ namespace kernel::internal::queue
         uint32_t            m_head{ 0U};
         uint32_t            m_tail{ 0U};
         
-        size_t              m_data_max_size{ 0U};
+        size_t              m_data_max_elements{ 0U};
         size_t              m_data_type_size{ 0U};
         volatile uint8_t *  mp_data{ nullptr};
 
@@ -39,7 +39,7 @@ namespace kernel::internal::queue
     inline bool create(
         Context &               a_context,
         Id &                    a_id,
-        size_t &                a_data_max_size,
+        size_t &                a_data_max_elements,
         size_t &                a_data_type_size,
         volatile void * const   ap_static_buffer,
         const char *            ap_name
@@ -66,7 +66,7 @@ namespace kernel::internal::queue
         new_queue.m_head = 0U;
         new_queue.m_tail = 0U;
         
-        new_queue.m_data_max_size = a_data_max_size;
+        new_queue.m_data_max_elements = a_data_max_elements;
         new_queue.m_data_type_size = a_data_type_size;
         new_queue.mp_data = reinterpret_cast< volatile uint8_t *>( ap_static_buffer);
 
@@ -114,7 +114,7 @@ namespace kernel::internal::queue
 
         volatile Queue & queue = a_context.m_data.at( a_id);
 
-        bool is_queue_full = ( queue.m_current_size >= queue.m_data_max_size);
+        bool is_queue_full = ( queue.m_current_size >= queue.m_data_max_elements);
 
         return is_queue_full;
     }
@@ -150,7 +150,7 @@ namespace kernel::internal::queue
         {
             ++queue.m_head;
 
-            if ( queue.m_head >= queue.m_data_max_size)
+            if ( queue.m_head >= queue.m_data_max_elements)
             {
                 queue.m_head = 0U;
             }
@@ -205,7 +205,7 @@ namespace kernel::internal::queue
         {
             ++queue.m_tail;
 
-            if ( queue.m_tail >= queue.m_data_max_size)
+            if ( queue.m_tail >= queue.m_data_max_elements)
             {
                 queue.m_tail = 0U;
             }

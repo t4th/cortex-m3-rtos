@@ -141,6 +141,68 @@ TEST_CASE( "Handle")
             REQUIRE( true == valid_handle);
             REQUIRE( true == condition_check_result);
         }
+        SECTION ( "Handle point to queue.")
+        {
+            std::unique_ptr< timer::Context> timer_context( new timer::Context);
+            std::unique_ptr< event::Context> event_context( new event::Context);
+            std::unique_ptr< queue::Context> queue_context( new queue::Context);
+
+            // Prepare event object and handle.
+            timer::Id        new_index;
+
+            constexpr size_t max_elements = 3U;
+            int              buffer[ max_elements]{};
+
+            size_t           data_max_size = max_elements;
+            size_t           data_type_size = sizeof(buffer[0]);
+
+            bool queue_created = queue::create(
+                *queue_context,
+                new_index,
+                data_max_size,
+                data_type_size,
+                buffer,
+                nullptr
+            );
+
+            REQUIRE( true == queue_created);
+
+            // Create handle.
+            kernel::Handle new_handle = handle::create( handle::ObjectType::Queue, new_index);
+
+            // Test the handle.
+            // Expected: Queue is empty and test condition should return false.
+            bool condition_check_result = false;
+            bool valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                *queue_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE( true == valid_handle);
+            REQUIRE( false == condition_check_result);
+
+            // Add items to the queue.
+            int data = 0x1234'ABCD;
+            bool data_sent = queue::send( *queue_context, new_index, &data);
+
+            REQUIRE( true == data_sent);
+
+            // Test the handle.
+            // Expected: Queue is not empty and test condition should return true.
+            valid_handle = handle::testCondition(
+                *timer_context,
+                *event_context,
+                *queue_context,
+                new_handle,
+                condition_check_result
+            );
+
+            REQUIRE( true == valid_handle);
+            REQUIRE( true == condition_check_result);
+        }
 
         SECTION ( "Handle point to unsupported system object.")
         {
