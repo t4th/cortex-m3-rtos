@@ -4,12 +4,6 @@
 // - waitForSingleObject synchronization function
 
 #include <kernel.hpp>
-#include "hardware/hardware.hpp"
-
-void printText( const char * a_text)
-{
-    kernel::hardware::debug::print( a_text);
-}
 
 struct Events
 {
@@ -34,67 +28,67 @@ int main()
 
 void task0( void * a_parameter)
 {
-    Events * events = ( Events*) a_parameter;
+    Events & events = *reinterpret_cast< Events*>( a_parameter);
 
-    printText( "task 0 - start\r\n");
+    kernel::hardware::debug::print( "task 0 - start\r\n");
 
     kernel::Handle hTask1;
 
-    bool task_create = kernel::task::create(
+    bool task_created = kernel::task::create(
         task1,
         kernel::task::Priority::Medium,
         &hTask1,
-        events,
-        true
+        &events,
+        true // Create suspended.
     );
         
-    if ( true == task_create)
+    if ( true == task_created)
     {
-        printText( "task 0 - created Medium suspended task 1\r\n");
+        kernel::hardware::debug::print( "task 0 - created Medium suspended task 1\r\n");
     }
 
-    bool event_created = kernel::event::create( events->event0);
+    bool event_created = kernel::event::create( events.event0);
     
     if ( event_created)
     {
-        printText( "task 0 - created event 0\r\n");
+        kernel::hardware::debug::print( "task 0 - created event 0\r\n");
     }
     else
     {
-        printText( "task 0 - create event failed\r\n");
+        kernel::hardware::debug::print( "task 0 - create event failed\r\n");
     }
 
-    printText( "task 0 - resuming task 1\r\n");
+    kernel::hardware::debug::print( "task 0 - resuming task 1\r\n");
     
     kernel::task::resume( hTask1);
 
     while ( true)
     {
-        kernel::task::sleep( 500U);
-        printText( "task 0 - set event 0\r\n");
-        kernel::event::set( events->event0);
+        kernel::task::sleep( 1000U);
+        kernel::hardware::debug::print( "task 0 - set event 0\r\n");
+        kernel::event::set( events.event0);
     }
 }
 
 void task1( void * a_parameter)
 {
-    Events * events = ( Events*) a_parameter;
+    Events & events = *reinterpret_cast< Events*>( a_parameter);
 
-    printText( "task 1 - start\r\n");
+    kernel::hardware::debug::print( "task 1 - start\r\n");
 
     while ( true)
     {
-        printText( "task 1 - wait forever for event 0\r\n");
+        kernel::hardware::debug::print( "task 1 - wait forever for event 0\r\n");
 
-        kernel::sync::WaitResult waitResult = kernel::sync::waitForSingleObject( events->event0);
+        kernel::sync::WaitResult waitResult = kernel::sync::waitForSingleObject( events.event0);
 
         if ( kernel::sync::WaitResult::ObjectSet == waitResult)
         {
-            printText( "task 1 - wake up with object set\r\n");
+            kernel::hardware::debug::print( "task 1 - wake up with object set\r\n");
         }
         else
         {
-            printText( "task 1 - wake up failed\r\n");
+            kernel::hardware::debug::print( "task 1 - wake up failed\r\n");
         }
 
         kernel::task::sleep( 100U);

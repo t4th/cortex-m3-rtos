@@ -3,34 +3,29 @@
 // - Sleep function
 
 #include <kernel.hpp>
-#include "hardware/hardware.hpp"
 
-struct timer
+struct Delay
 {
-    kernel::Time_ms time0;
-    kernel::Time_ms time1;
-    kernel::Time_ms time2;
+    kernel::Time_ms delay_for_task0;
+    kernel::Time_ms delay_for_task1;
+    kernel::Time_ms delay_for_task2;
 };
 
-void printText( const char * a_text)
-{
-    kernel::hardware::debug::print( a_text);
-}
-
-void task0( void * a_parameter);
+void task_routine( void * a_parameter);
 
 int main()
 {
-    timer timer;
-    timer.time0 = 100U;
-    timer.time1 = 500U;
-    timer.time2 = 1000U;
+    Delay delay;
+
+    delay.delay_for_task0 = 100U;
+    delay.delay_for_task1 = 500U;
+    delay.delay_for_task2 = 1000U;
 
     kernel::init();
 
-    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time0);
-    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time1);
-    kernel::task::create( task0, kernel::task::Priority::Low, nullptr, &timer.time2);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task0);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task1);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task2);
 
     kernel::start();
 
@@ -38,24 +33,26 @@ int main()
 }
 
 // Delayed ping.
-void task0( void * a_parameter)
+void task_routine( void * a_parameter)
 {
-    kernel::Time_ms * timer = ( kernel::Time_ms*) a_parameter;
-    printText( "task - start\r\n");
+    kernel::Time_ms & timer = *reinterpret_cast< kernel::Time_ms*>( a_parameter);
+
+    kernel::hardware::debug::print( "task - start\r\n");
 
     while ( true)
     {
-        kernel::task::sleep( *timer);
-        switch( *timer)
+        kernel::task::sleep( timer);
+
+        switch( timer)
         {
         case 100U:
-            printText( "task 0 - ping\r\n");
+            kernel::hardware::debug::print( "task 0 - ping\r\n");
             break;
         case 500U:
-            printText( "task 1 - ping\r\n");
+            kernel::hardware::debug::print( "task 1 - ping\r\n");
             break;
         case 1000U:
-            printText( "task 2 - ping\r\n");
+            kernel::hardware::debug::print( "task 2 - ping\r\n");
             break;
         }
     }

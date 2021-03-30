@@ -17,10 +17,7 @@ void print( kernel::Handle & a_queue, const char ( &a_string)[ StringSize])
     {
         uint8_t byte_to_send = static_cast< uint8_t>( a_string[ i]);
 
-        bool byte_sent = kernel::static_queue::send(
-                a_queue,
-                byte_to_send
-            );
+        bool byte_sent = kernel::static_queue::send( a_queue, byte_to_send);
 
         // Stay in the loop until all is sent.
         if ( false == byte_sent)
@@ -65,52 +62,47 @@ extern "C"
     
         getQueuesHandles( usart_rx_queue, usart_tx_queue);
 
+        volatile uint16_t status_register = USART1->SR;
+
+        // Receive handler.
+        if ( status_register & USART_SR_RXNE)
         {
-            volatile uint16_t status_register = USART1->SR;
-
-            // Receive handler.
-            if ( status_register & USART_SR_RXNE)
-            {
-                uint8_t received_byte = USART1->DR & 0xFF;
+            uint8_t received_byte = USART1->DR & 0xFF;
             
-                bool byte_sent = kernel::static_queue::send(
-                    usart_rx_queue,
-                    received_byte
-                );
+            bool byte_sent = kernel::static_queue::send( usart_rx_queue, received_byte);
 
-                if ( false == byte_sent)
-                {
-                    kernel::hardware::debug::print( "Rx queue full.\n");
-                }
-
-                USART1->SR &= ~USART_SR_RXNE;
-            }
-    
-            // Transmit handler.
-            if ( status_register & USART_SR_TXE)
+            if ( false == byte_sent)
             {
-                uint8_t char_to_send{};
-
-                // Flush Tx queue.
-                while ( true)
-                {
-                    bool byte_received = kernel::static_queue::receive(
-                            usart_tx_queue,
-                            char_to_send
-                        );
-
-                    if ( true == byte_received)
-                    {
-                        USART1->DR = char_to_send;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                };
-
-                USART1->CR1 &= ~USART_CR1_TXEIE;
+                kernel::hardware::debug::print( "Rx queue full.\n");
             }
+
+            USART1->SR &= ~USART_SR_RXNE;
+        }
+    
+        // Transmit handler.
+        if ( status_register & USART_SR_TXE)
+        {
+            uint8_t char_to_send{};
+
+            // Flush Tx queue.
+            while ( true)
+            {
+                bool byte_received = kernel::static_queue::receive(
+                        usart_tx_queue,
+                        char_to_send
+                    );
+
+                if ( true == byte_received)
+                {
+                    USART1->DR = char_to_send;
+                }
+                else
+                {
+                    break;
+                }
+            };
+
+            USART1->CR1 &= ~USART_CR1_TXEIE;
         }
     }
 }
@@ -211,7 +203,6 @@ int main()
 {
     static constexpr size_t max_queue_elements{ 32U};
 
-    // TODO: Consider buffer to be volatile, since its used in interrupt.
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_rx_buffer;
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_tx_buffer;
     

@@ -15,12 +15,13 @@ static constexpr uint32_t number_of_events = 6U;
 
 // Define shared data between tasks.
 // Contains array with handles to all waitable events.
+// Last event in an array is manual reset event.
 struct Data
 {
     kernel::Handle events[ number_of_events];
 };
 
-// Sets events in different timer intervals.
+// Sets events every 100ms.
 void order_task( void * a_parameter)
 {
     const char * event_name[ number_of_events] = 
@@ -45,25 +46,11 @@ void order_task( void * a_parameter)
     };
 }
 
-// wait for all events to be set
+// Wait for all events to be set
 void worker_task( void * a_parameter)
 {
     // Pass shared data through task parameter.
     Data & data = *reinterpret_cast< Data*>( a_parameter);
-
-    // Pass data through named system object.
-    kernel::Handle manual_reset_event;
-    
-    bool handle_opened = kernel::event::open(
-        manual_reset_event,
-        "manual reset event"
-    );
-
-    if ( false == handle_opened)
-    {
-        print( "Failed to open named event.\n");
-        kernel::hardware::debug::setBreakpoint();
-    }
 
     print( "worker_task: start.\n");
 
@@ -74,8 +61,8 @@ void worker_task( void * a_parameter)
         kernel::sync::WaitResult result = kernel::sync::waitForMultipleObjects(
             data.events,
             number_of_events,
-            true,
-            true
+            true, // Wait for all events to be set.
+            true  // Wait forever.
         );
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
@@ -89,7 +76,9 @@ void worker_task( void * a_parameter)
         }
 
         print( "worker_task: reset manual event.\n");
-        kernel::event::reset( manual_reset_event);
+        constexpr uint32_t manual_event_index { number_of_events - 1U};
+
+        kernel::event::reset( data.events[ manual_event_index]);
     };
 }
 
@@ -114,12 +103,11 @@ int main()
     }
 
     // Create manual reset event.
-    constexpr uint32_t id_of_manual_reset_events = number_of_events - 1U;
+    constexpr uint32_t manual_event_index = number_of_events - 1U;
 
     bool event_created = kernel::event::create(
-        data.events[ id_of_manual_reset_events],
-        true,
-        "manual reset event"
+        data.events[ manual_event_index],
+        true
     );
 
     if ( false == event_created)

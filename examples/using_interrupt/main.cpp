@@ -3,38 +3,23 @@
 
 #include <kernel.hpp>
 
-#include "hardware/hardware.hpp"
-
 #include "gpio.hpp"
 
-
-// todo
+// TODO:
 // - bind 4 buttons to Exti interrupts
 // - use medium priority tasks to handle those exception,
 //   while 4 low level tasks are blinking 4 LEDs.
 // - use usart interrupt to send/receive data
-
-struct Shared
-{
-    kernel::Handle m_event;
-    kernel::Handle m_worker_task;
-};
-
-// TODO: how to pass data to interrupt handler without globals?
-//       named events?
-Shared shared_data;
-
-void print( const char * a_text)
-{
-    kernel::hardware::debug::print( a_text);
-}
 
 extern "C"
 {
     // On my board, button is connected to port PA8, which use EXTI line 8.
     void EXTI9_5_IRQHandler()
     {
-        kernel::event::set( shared_data.m_event);
+        kernel::Handle sync_event;
+
+        (void)kernel::event::open( sync_event, "sync event");
+        kernel::event::set( sync_event);
 
         // clear pending bit
         EXTI->PR |= EXTI_PR_PR8;
@@ -44,20 +29,22 @@ extern "C"
 // Setup hardware and resume worker task when done.
 void startup_task( void * a_parameter)
 {
-    Shared & shared_data = *( ( Shared*) a_parameter);
+    kernel::Handle & worker_task = *reinterpret_cast< kernel::Handle*>( a_parameter);
 
-    // create kernel object to sync actions
-    kernel::event::create( shared_data.m_event);
+    // Create kernel object to sync actions
+    kernel::Handle sync_event;
 
-    // clocks
+    (void)kernel::event::create( sync_event, false, "sync event");
+
+    // Clocks
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
     RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
 
-    // exti
+    // Configure external interrupt.
     EXTI->IMR |= EXTI_IMR_MR8;
     EXTI->FTSR |= EXTI_FTSR_TR8;
 
-    // interrupts
+    // Configure and enable interrupt.
     constexpr uint32_t exti_9_5_interrupt_number = 23U;
 
     kernel::hardware::interrupt::priority::set(
@@ -73,17 +60,19 @@ void startup_task( void * a_parameter)
     gpio::setPinAsInput< gpio::Port::A, gpio::Pin::Number8, gpio::InputMode::Floating>();
     gpio::configureExternalInterrupt< gpio::Port::A, gpio::Pin::Number8>();
 
-    kernel::task::resume( shared_data.m_worker_task);
+    kernel::task::resume( worker_task);
 }
 
 void worker_task( void * a_parameter)
 {
-    Shared & shared_data = *( ( Shared*) a_parameter);
+    kernel::Handle sync_event;
+
+    (void)kernel::event::open( sync_event, "sync event");
 
     while( true)
     {
         // Wait 2 seconds for buttons press.
-        auto result = kernel::sync::waitForSingleObject( shared_data.m_event, false, 2000U);
+        auto result = kernel::sync::waitForSingleObject( sync_event, false, 2000U);
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
@@ -92,17 +81,32 @@ void worker_task( void * a_parameter)
         }
         else
         {
-            kernel::hardware::debug::print( "Wait failed\n");
+            kernel::hardware::debug::print( "Wait timeout reached\n");
         }
     }
 }
 
 int main()
 {
+    kernel::Handle worker_task_handle;
+
     kernel::init();
 
-    kernel::task::create( startup_task, kernel::task::Priority::Low, nullptr, &shared_data);
-    kernel::task::create( worker_task, kernel::task::Priority::Low, &shared_data.m_worker_task, &shared_data, true);
+    kernel::task::create(
+        startup_task,
+        kernel::task::Priority::Low,
+        nullptr,            // No need to store startup task handle.
+        &worker_task_handle // Pass worker handle as parameter.
+    );
+
+    // Store worker handle.
+    kernel::task::create(
+        worker_task,
+        kernel::task::Priority::Low,
+        &worker_task_handle,
+        nullptr,    // No parameter.
+        true        // Create suspended.
+    );
 
     kernel::start();
 

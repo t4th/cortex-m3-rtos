@@ -83,27 +83,25 @@ namespace kernel::task
 // User API for controling software timers.
 namespace kernel::timer
 {
-    bool create(
-        kernel::Handle &    a_handle,
-        Time_ms             a_interval
-    );
+    bool create( kernel::Handle & a_handle, Time_ms a_interval);
     void destroy( kernel::Handle & a_handle);
     void start( kernel::Handle & a_handle);
     void stop( kernel::Handle & a_handle);
 }
 
 // User API for controling events.
-// kernel::event API is interrupt safe.
+// Events API can be used from within interrupt handler.
 namespace kernel::event
 {
     // If a_manual_reset is set to false, event will be reset when waitForObject
     // function completes. In other case, you have to manualy call reset.
-    // ap_name parameter must point to compile time available literal or UB.
+    // ap_name parameter must be pointer to compile time available literal or UB.
     bool create(
         kernel::Handle &    a_handle,
         bool                a_manual_reset = false,
         const char *        ap_name = nullptr
     );
+
     // ap_name parameter must point to compile time available literal or UB.
     bool open( kernel::Handle & a_handle, const char * ap_name);
     void destroy( kernel::Handle & a_handle);
@@ -111,7 +109,10 @@ namespace kernel::event
     void reset( kernel::Handle & a_handle);
 }
 
-// User API for controling critical section.
+// User API for controling software critical sections.
+// Software critical section can be used to protect data shared between tasks.
+// Note: It cannot be used from within interrupt handler!
+//       For that purpose use kernel::hardware::critical_section
 namespace kernel::critical_section
 {
     // Modyfing this outside critical_section API is UB.
@@ -120,7 +121,7 @@ namespace kernel::critical_section
         volatile std::atomic< uint32_t> m_lockCount;
         volatile uint32_t               m_spinLock;
         kernel::Handle                  m_event;
-        kernel::Handle                  m_ownerTask; // debug information
+        kernel::Handle                  m_ownerTask; // Debug information.
     };
 
     // Spinlock argument define number of ticks used to check critical section
@@ -134,31 +135,20 @@ namespace kernel::critical_section
     void leave( Context & a_context);
 }
 
+// User API for synchronization functions.
 namespace kernel::sync
 {
     enum class WaitResult
     {
         ObjectSet,
         TimeoutOccurred,
-        WaitFailed,         // Return if any internal error occurred.
+        WaitFailed,
         InvalidHandle,
         TooManyHandles
     };
 
-    // Can wait for system objects of type: Event, Timer.
-    // Wait is successful when event object is in SET state and Timer
-    // is in FINISHED state. If used with invalid handle, error is returned.
-
-    // The moment function is called, and provided signals are not signaled,
-    // task will enter Waiting state until they do, or optional timeout is
-    // reached.
-
-    // If a_wait_forver is true, then a_timeout is not used.
-
-    // Function return ObjectSet if signal condittion is met.
-
-    // NOTE: Destroying system objects used by this function will result
-    //       in undefined behaviour
+    // Can wait for system objects of type: Event, Timer, Queue.
+    // NOTE: Destroying system objects used by this function will result in undefined behaviour.
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver = true,
@@ -166,9 +156,7 @@ namespace kernel::sync
     );
 
     // Wait for multiple system objects provided as an array of handles.
-
     // If a_wait_for_all is set, task will wait until ALL signals are signaled.
-
     // If a_wait_for_all is not set, optional argument a_signaled_item_index,
     // will return first signaled handle index.
     WaitResult waitForMultipleObjects(
@@ -181,18 +169,17 @@ namespace kernel::sync
     );
 }
 
-// kernel::static_queue API is interrupt safe.
+// Static queue API can be used from within interrupt handler.
 namespace kernel::static_queue
 {
-    // Modyfing this outside queue API is UB.
+    // Static memory buffer. Modyfing it outside queue API is UB.
     template < typename TType, size_t Size>
     struct Buffer
     {
-        // Note: This value is not initialized on purpose.
-        volatile TType m_data[ Size];
+        volatile TType m_data[ Size]; // Note: Not initialized on purpose.
     };
     
-    // ap_name parameter must point to compile time available literal or UB.
+    // ap_name parameter must be pointer to compile time available literal or UB.
     bool create(
         kernel::Handle &      a_handle,
         size_t                a_data_max_size,
@@ -201,19 +188,13 @@ namespace kernel::static_queue
         const char *          ap_name = nullptr
     );
     
-    // ap_name parameter must point to compile time available literal or UB.
+    // ap_name parameter must be pointer to compile time available literal or UB.
     bool open( kernel::Handle & a_handle, const char * ap_name);
-
     void destroy( kernel::Handle & a_handle);
-
     bool send( kernel::Handle & a_handle, volatile void * const ap_data);
-    
     bool receive( kernel::Handle & a_handle, volatile void * const ap_data);
-
     bool size( kernel::Handle & a_handle, size_t & a_size);
-
     bool isFull( kernel::Handle & a_handle, bool & a_is_full);
-
     bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty);
     
     template < typename TType, size_t Size>
@@ -241,7 +222,7 @@ namespace kernel::hardware
     {
         namespace priority
         {
-            // Priority groups. Smaller value is higher priority.
+            // Priority groups.
             enum class Preemption
             {
                 Critical = 1U,
@@ -250,7 +231,6 @@ namespace kernel::hardware
             };
 
             // Sub-priorities of Priority groups.
-            // Smaller value is higher priority within group.
             enum class Sub
             {
                 High = 0U,
@@ -258,8 +238,7 @@ namespace kernel::hardware
                 Low = 2U
             };
 
-            // a_vendor_interrupt_id must be set according to vendor data sheet.
-            // Vendor interrupts always starts from 0.
+            // Vendor interrupt ID must be set according to MCU vendor data sheet.
             // Using invalid interrupt ID value will result in Undefined Behaviour.
             void set(
                 uint32_t    a_vendor_interrupt_id,
@@ -268,8 +247,7 @@ namespace kernel::hardware
             );
         }
 
-        // a_vendor_interrupt_id must be set according to vendor data sheet.
-        // Vendor interrupts always starts from 0.
+        // Vendor interrupt ID must be set according to MCU vendor data sheet.
         // Using invalid interrupt ID value will result in Undefined Behaviour.
         void enable( uint32_t a_vendor_interrupt_id);
 
@@ -277,7 +255,7 @@ namespace kernel::hardware
         void wait();
     }
 
-    // Hardware level critical section used for protecting data accessed by different interrupts.
+    // Hardware level critical section used for protecting shared data between interrupts.
     namespace critical_section
     {
         struct Context
@@ -299,10 +277,7 @@ namespace kernel::hardware
     public:
         CriticalSection()
         {
-           critical_section::enter(
-                m_context,
-                interrupt::priority::Preemption::Critical
-            );
+           critical_section::enter( m_context, interrupt::priority::Preemption::Critical);
         }
         ~CriticalSection()
         {
@@ -319,4 +294,3 @@ namespace kernel::hardware
         void setBreakpoint();
     }
 }
-

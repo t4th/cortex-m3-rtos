@@ -1,12 +1,9 @@
 // Contains example used to verify if tasks are switching correctly.
-// Test: Create two tasks trying to access shared data with
-// and without critical section.
+// Test: Create two tasks trying to access shared data with and without critical section.
 
-// Expected: Without critical section enabled, artifacts should be
-//           visible in output window.
+// Expected: Without critical section enabled, artifacts should be visible in output window.
 
 #include <kernel.hpp>
-#include "hardware/hardware.hpp"
 
 #include <cctype>
 #include <cstring>
@@ -16,12 +13,7 @@
 // false - disable use of critical section
 constexpr bool use_critical_section = true;
 
-void printText( const char * a_text)
-{
-    kernel::hardware::debug::print( a_text);
-}
-
-constexpr size_t MAX = 100U;
+constexpr size_t MAX{ 100U};
 
 struct SharedData
 {
@@ -60,7 +52,7 @@ int main()
     {
         if ( false == kernel::critical_section::init( shared_data.cs_context, 100U))
         {
-            printText( "failed to create critical section\n");
+            kernel::hardware::debug::print( "failed to create critical section\n");
         }
     }
 
@@ -75,13 +67,12 @@ int main()
 
 void delay( uint32_t a_ticks)
 {
-    volatile uint32_t i;
-    for ( i = 0U; i < a_ticks; i++);
+    for ( volatile uint32_t i = 0U; i < a_ticks; i++);
 }
 
 void worker_task( void * a_parameter)
 {
-    SharedData & shared_data = *( ( SharedData*) a_parameter);
+    SharedData & shared_data = *reinterpret_cast< SharedData*>( a_parameter);
 
     const char * text_id[ 3] = { "task 0: ", "task 1: ", "task 2: "};
     static int task_id = 0;
@@ -104,7 +95,7 @@ void worker_task( void * a_parameter)
             kernel::critical_section::leave( shared_data.cs_context);
         }
 
-        // without delay, first task will starve others.
+        // Without delay, first task will starve others.
         if ( 0 == local_id)
         {
             delay( 230U);
