@@ -168,8 +168,9 @@ void example_task_routine( void * a_parameter)
     while( true)
     {
         // Wait forever for at least one pointed object to be in Signaled State.
-        // Signaled State state is condition unique for each underlying object.
-        // For timer its FINISHED state for event its SET state and for queue it is when there is at least one element available to read.
+        // Signaled State state is condition unique for each underlying object:
+        // for timer its FINISHED state; for event its SET state;
+        // for queue it is when there is at least one element available to read.
         while ( ObjectSet == waitForMultipleObjects( all_objects, 3))
         {
             // Do something after waking up.
