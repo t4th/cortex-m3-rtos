@@ -153,25 +153,27 @@ The objects that don't use handles are software and hardware critical sections w
 
 void example_task_routine( void * a_parameter)
 {
-    kernel::handle all_objects[ 3];
+    kernel::Handle all_objects[ 3];
 
     // Create timer.
     kernel::timer::create( all_objects[ 0], 1000U);
 
     // Create event.
-    kernel::event::create( all_objects[ 1]));
+    kernel::event::create( all_objects[ 1]);
 
     // Create static queue.
     kernel::static_queue::Buffer< char, 10> memory_buffer;
-    kernel::queue( all_objects[ 2]), memory_buffer);
+    kernel::static_queue::create( all_objects[ 2], memory_buffer);
 
     while( true)
     {
+        using namespace kernel::sync;
+
         // Wait forever for at least one pointed object to be in Signaled State.
         // Signaled State state is condition unique for each underlying object:
         // for timer its FINISHED state; for event its SET state;
         // for queue it is when there is at least one element available to read.
-        while ( ObjectSet == waitForMultipleObjects( all_objects, 3))
+        while ( WaitResult::ObjectSet == waitForMultipleObjects( all_objects, 3))
         {
             // Do something after waking up.
         }
@@ -189,16 +191,16 @@ int main()
 ```
 
 ### Data synchronization
-Data access can be maintained by kernel::critical_section and kernel::hardware::critical_section.
+Data access can be maintained by **kernel::critical_section** and **kernel::hardware::critical_section**.
 
-kernel::critical_section is software critical section and it will only work for data shared between tasks.
+**kernel::critical_section** is software critical section and it will only work for data shared between tasks.
 
 ```c++
 #include <kernel.hpp>
 #include <cstring>
 
 // You can also group this data in a struct and pass it as parameter to tasks - see example projects.
-kernel::critical_section::context cs_context;
+kernel::critical_section::Context cs_context;
 int shared_data[100];
 
 void task1( void * a_parameter)
@@ -239,17 +241,24 @@ int main()
 ```
 See **examples/critical_section** for practical use.
 
-kernel::hardware::critical_section is hardware level critical section which can protect data between task and hardware interrupt.
-Unlike software version, context is initialized by **enter** function and it require Preemption priority as an argument.
+**kernel::hardware::critical_section** is hardware level critical section which can protect data between task and hardware interrupt.
+Unlike software version, context is initialized by **enter** function and it require **Preemption priority** as an argument.
 Provided priority must be equal or higher than hardware interrupt to be effective.
 
+Also hardware critical section context doesn't has to be shared between elements - it is only required in local scope.
+
 ```c++
-kernel::hardware::critical_section::context cs_context;
-int shared_data[100];
+#include <kernel.hpp>
+
+int shared_data[ 100];
 
 void IRQ_HANDLER()
 {
-    kernel::hardware::critical_section::enter( cs_context, interrupt::priority::Preemption::Critical);
+    using namespace kernel::hardware::interrupt;
+
+    kernel::hardware::critical_section::Context cs_context;
+    
+    kernel::hardware::critical_section::enter( cs_context, priority::Preemption::Critical);
     {
         std::memset( shared_data, 0, 100);
     }
@@ -258,9 +267,13 @@ void IRQ_HANDLER()
 
 void task1( void * a_parameter)
 {
+    kernel::hardware::critical_section::Context cs_context;
+    
     while ( true)
     {
-        kernel::hardware::critical_section::enter( cs_context, interrupt::priority::Preemption::Critical);
+        using namespace kernel::hardware::interrupt;
+
+        kernel::hardware::critical_section::enter( cs_context, priority::Preemption::Critical);
         {
             std::memset( shared_data, 1, 100);
         }
@@ -274,12 +287,14 @@ System objects like **event** and **static_queue** are already protected by hard
 ```c++
 #include <kernel.hpp>
 
-kernel::handle rx_queue;
+kernel::Handle rx_queue;
 
 void IRQ_HANDLER()
 {
     // Send some data to the rx_queue.
-    kernel::static_queue::send( usart_rx_queue, 0x1234);
+    int data_to_be_sent = 0x1234;
+
+    kernel::static_queue::send( rx_queue, data_to_be_sent);
 }
 
 void example_task_routine( void * a_parameter)
@@ -290,8 +305,10 @@ void example_task_routine( void * a_parameter)
 
     while( true)
     {
+        using namespace kernel::sync;
+        
         // Wait forever for queue not empty.
-        while ( ObjectSet == waitForSingleObject( all_objects, 3))
+        while ( WaitResult::ObjectSet == waitForSingleObject( rx_queue, 3))
         {
             int received_data{};
 
@@ -307,7 +324,7 @@ int main()
 
     // Create static queue.
     kernel::static_queue::Buffer< int, 100> memory_buffer;
-    kernel::queue( rx_queue), memory_buffer);
+    kernel::static_queue::create( rx_queue, memory_buffer);
 
     kernel::task::create( example_task_routine, kernel::task::Priority::Low);
 
