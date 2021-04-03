@@ -2,12 +2,18 @@
 
 #include "common/memory_buffer.hpp"
 
+// Circular linked list with statically allocated fixed number of nodes.
+// In context of kernel, it is only used internally by scheduler.
 namespace kernel::internal::common
 {
     // TDataType must be of primitive type.
     template < typename TDataType, std::size_t MaxSize>
     class CircularList
     {
+        public:
+            // Type strong index of Node.
+            enum class Id : uint32_t{};
+
         private:
             struct Node
             {
@@ -20,7 +26,7 @@ namespace kernel::internal::common
             typedef typename common::MemoryBuffer< Node, MaxSize>::Id MemoryBufferIndex;
 
         public:
-            bool add( TDataType a_new_data, uint32_t & a_new_node_index) volatile
+            bool add( TDataType a_new_data, Id & a_new_node_index) volatile
             {
                 MemoryBufferIndex new_node_index;
 
@@ -29,7 +35,7 @@ namespace kernel::internal::common
                     return false;
                 }
 
-                a_new_node_index = static_cast< uint32_t>( new_node_index);
+                a_new_node_index = static_cast< Id>( new_node_index);
                 
                 volatile Node & new_node = m_buffer.at( new_node_index);
                 
@@ -73,7 +79,7 @@ namespace kernel::internal::common
                 return true;
             }
 
-            void remove( uint32_t a_node_index) volatile
+            void remove( Id a_node_index) volatile
             {
                 if ( m_count > 0U)
                 {
@@ -85,8 +91,14 @@ namespace kernel::internal::common
                         m_buffer.at( static_cast< MemoryBufferIndex>( prev)).m_next = next;
                         m_buffer.at( static_cast< MemoryBufferIndex>( next)).m_prev = prev;
 
-                        if ( a_node_index == m_first) { m_first = next; }
-                        else if ( a_node_index == m_last) { m_last = prev; }
+                        if ( static_cast< uint32_t>( a_node_index) == m_first)
+                        {
+                            m_first = next;
+                        }
+                        else if ( static_cast< uint32_t>( a_node_index) == m_last)
+                        {
+                            m_last = prev;
+                        }
                     }
 
                     m_buffer.free( static_cast< MemoryBufferIndex>( a_node_index));
@@ -94,7 +106,7 @@ namespace kernel::internal::common
                 }
             }
 
-            bool find( TDataType & a_key, uint32_t &  a_found_index) volatile
+            bool find( TDataType & a_key, Id & a_found_index) volatile
             {
                 uint32_t node_index = m_first;
 
@@ -102,7 +114,7 @@ namespace kernel::internal::common
                 {
                     if ( a_key == m_buffer.at( static_cast< MemoryBufferIndex>( node_index)).m_data)
                     {
-                        a_found_index = node_index;
+                        a_found_index = static_cast< Id>( node_index);
                         return true;
                     }
                     else
@@ -114,19 +126,19 @@ namespace kernel::internal::common
                 return false;
             }
 
-            volatile TDataType & at( volatile uint32_t a_node_index) volatile
+            volatile TDataType & at( volatile Id a_node_index) volatile
             {
                 return m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_data;
             }
 
-            uint32_t firstIndex() volatile
+            Id firstIndex() volatile
             {
-                return m_first;
+                return static_cast< Id>( m_first);
             }
 
-            uint32_t nextIndex( uint32_t a_node_index) volatile
+            Id nextIndex( Id a_node_index) volatile
             {
-                return m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_next;
+                return static_cast< Id>( m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_next);
             }
             
             uint32_t count() volatile
