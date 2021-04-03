@@ -8,6 +8,12 @@
 
 namespace kernel::internal::scheduler::ready_list
 {
+    // Type strong index for Circular List holding task::Id types.
+    typedef kernel::internal::common::CircularList<
+            kernel::internal::task::Id,
+            kernel::internal::task::max_number
+        >::Id NodeIndex;
+
     struct TaskList
     {
         kernel::internal::common::CircularList<
@@ -15,7 +21,7 @@ namespace kernel::internal::scheduler::ready_list
             kernel::internal::task::max_number
         > m_list{};
 
-        uint32_t m_current{ 0U};
+        NodeIndex m_current{ static_cast< NodeIndex>( 0U)};
     };
 
     struct Context
@@ -33,7 +39,7 @@ namespace kernel::internal::scheduler::ready_list
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
 
         // Look for dublicate.
-        uint32_t found_index;
+        NodeIndex found_index;
 
         bool item_found = a_context.m_ready_list[ priority].m_list.find( a_id, found_index);
 
@@ -43,7 +49,7 @@ namespace kernel::internal::scheduler::ready_list
         }
 
         // Add task to ready list.
-        uint32_t new_node_idx;
+        NodeIndex new_node_idx;
 
         bool task_added = a_context.m_ready_list[ priority].m_list.add( a_id, new_node_idx);
 
@@ -70,7 +76,7 @@ namespace kernel::internal::scheduler::ready_list
         const uint32_t priority = static_cast< uint32_t>( a_priority);
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
 
-        uint32_t found_index;
+        NodeIndex found_index;
 
         bool item_found = a_context.m_ready_list[ priority].m_list.find( a_id, found_index);
 
@@ -99,11 +105,11 @@ namespace kernel::internal::scheduler::ready_list
     {
         const uint32_t priority = static_cast< uint32_t>( a_priority);
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
-        const uint32_t current_task_index = a_context.m_ready_list[ priority].m_current;
+        const NodeIndex current_node_index = a_context.m_ready_list[ priority].m_current;
 
         if ( count > 1U)
         {
-            const uint32_t next_task_index = a_context.m_ready_list[ priority].m_list.nextIndex( current_task_index);
+            const NodeIndex next_task_index = a_context.m_ready_list[ priority].m_list.nextIndex( current_node_index);
 
             a_context.m_ready_list[ priority].m_current = next_task_index;
             a_id = a_context.m_ready_list[ priority].m_list.at( next_task_index);
@@ -112,7 +118,7 @@ namespace kernel::internal::scheduler::ready_list
         }
         else if ( 1U == count)
         {
-            a_id = a_context.m_ready_list[ priority].m_list.at( current_task_index);
+            a_id = a_context.m_ready_list[ priority].m_list.at( current_node_index);
 
             return true;
         }
@@ -130,7 +136,7 @@ namespace kernel::internal::scheduler::ready_list
     {
         const uint32_t priority = static_cast< uint32_t>( a_priority);
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
-        const uint32_t current_task_index = a_context.m_ready_list[ priority].m_current;
+        const NodeIndex current_task_index = a_context.m_ready_list[ priority].m_current;
 
         if ( count > 0U)
         {

@@ -752,7 +752,7 @@ namespace kernel::static_queue
             return false;
         }
 
-        internal::event::Id queue_id;
+        internal::queue::Id queue_id;
 
         bool queue_opened = internal::queue::open( internal::context::m_queue, queue_id, ap_name);
         

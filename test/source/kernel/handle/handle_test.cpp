@@ -17,19 +17,19 @@ TEST_CASE( "Handle")
 
         kernel::Handle new_handle = handle::create( handle::ObjectType::Task, new_index);
 
-        REQUIRE( reinterpret_cast< kernel::Handle>( 0x0000beefU) == new_handle);
+        REQUIRE( static_cast< kernel::Handle>( 0x0000beefU) == new_handle);
 
         new_handle = handle::create( handle::ObjectType::Event, new_index);
 
-        REQUIRE( reinterpret_cast< kernel::Handle>( 0x0002beefU) == new_handle);
+        REQUIRE( static_cast< kernel::Handle>( 0x0002beefU) == new_handle);
 
         new_handle = handle::create( handle::ObjectType::Timer, new_index);
 
-        REQUIRE( reinterpret_cast<kernel::Handle>( 0x0001beefU) == new_handle);
+        REQUIRE( static_cast<kernel::Handle>( 0x0001beefU) == new_handle);
 
         new_handle = handle::create( static_cast< handle::ObjectType>( 0x1234U), new_index);
 
-        REQUIRE( reinterpret_cast< kernel::Handle>( 0x1234beefU) == new_handle);
+        REQUIRE( static_cast< kernel::Handle>( 0x1234beefU) == new_handle);
         REQUIRE( static_cast< handle::ObjectType>( 0x1234U) == handle::getObjectType( new_handle));
 
         // Create specyfic ID type from abstract index.
@@ -38,9 +38,9 @@ TEST_CASE( "Handle")
             event::Id event = handle::getId< event::Id>( new_handle);
             timer::Id timer = handle::getId< timer::Id>( new_handle);
 
-            REQUIRE( 0xbeefU == task);
-            REQUIRE( 0xbeefU == event);
-            REQUIRE( 0xbeefU == timer);
+            REQUIRE( static_cast< task::Id>( 0xbeefU) == task);
+            REQUIRE( static_cast< event::Id>( 0xbeefU) == event);
+            REQUIRE( static_cast< timer::Id>( 0xbeefU) == timer);
         }
     }
 
@@ -148,7 +148,7 @@ TEST_CASE( "Handle")
             std::unique_ptr< queue::Context> queue_context( new queue::Context);
 
             // Prepare event object and handle.
-            timer::Id        new_index;
+            queue::Id        new_index;
 
             constexpr size_t max_elements = 3U;
             int              buffer[ max_elements]{};

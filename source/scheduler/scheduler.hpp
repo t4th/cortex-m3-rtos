@@ -362,12 +362,14 @@ namespace kernel::internal::scheduler
         {
             auto & current_wait_item = a_context.m_wait_list.m_list;
 
-            if ( true == current_wait_item.isAllocated( i))
+            auto current_wait_item_index = static_cast< wait_list::MemoryBufferIndex> ( i);
+
+            if ( true == current_wait_item.isAllocated( current_wait_item_index))
             {
                 uint32_t signaled_item_index = 0U;
 
                 kernel::sync::WaitResult a_wait_result;
-                auto & conditions = current_wait_item.at( i).m_conditions;
+                auto & conditions = current_wait_item.at( current_wait_item_index).m_conditions;
 
                 bool is_condition_fulfilled =
                     wait::check(
@@ -382,7 +384,7 @@ namespace kernel::internal::scheduler
 
                 if ( true == is_condition_fulfilled)
                 {
-                    task::Id ready_task = current_wait_item.at( i).m_id;
+                    task::Id ready_task = current_wait_item.at( current_wait_item_index).m_id;
 
                     bool task_added = addReadyTask(
                         a_context,
@@ -398,8 +400,7 @@ namespace kernel::internal::scheduler
                             kernel::task::State::Ready
                         );
 
-                        // Store results in internal::task context
-                        // for specific task.
+                        // Store results in internal::task context for specific task.
                         task::wait::result::set(
                             a_task_context,
                             ready_task,
@@ -412,7 +413,7 @@ namespace kernel::internal::scheduler
                             signaled_item_index
                         );
 
-                        current_wait_item.free( i);
+                        current_wait_item.free( current_wait_item_index);
                     }
                     else
                     {
