@@ -14,7 +14,7 @@ namespace kernel
     // Abstract handle to system object.
     // Should only be used with kernel API.
     // Direct modification is UB.
-    typedef volatile void * Handle;
+    enum class Handle : uint32_t{};
 
     // Initialize kernel.
     // This is PRE-CONDITION to all other kernel functions!
@@ -40,7 +40,7 @@ namespace kernel::task
     // always be last in Priority enum. Otherwise UB.
     enum class Priority
     {
-        High = 0U,
+        High,
         Medium,
         Low,
         Idle

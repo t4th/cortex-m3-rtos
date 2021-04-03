@@ -7,8 +7,8 @@
 
 namespace kernel::internal::event
 {
-    // todo: consider it type strong
-    typedef uint32_t Id;
+    // Type strong index of Event.
+    enum class Id : uint32_t{};
 
     enum class State
     {
@@ -22,6 +22,9 @@ namespace kernel::internal::event
         const char *    mp_name;
         bool            m_manual_reset;
     };
+    
+    // Type strong memory index for allocated Event type.
+    typedef common::MemoryBuffer< Event, max_number>::Id MemoryBufferIndex;
 
     struct Context
     {
@@ -43,14 +46,14 @@ namespace kernel::internal::event
         kernel::hardware::CriticalSection critical_section;
 
         // Create new Event object.
-        uint32_t new_item_id;
+        MemoryBufferIndex new_item_id;
 
         if ( false == a_context.m_data.allocate( new_item_id))
         {
             return false;
         }
 
-        a_id = new_item_id;
+        a_id = static_cast< Id>( new_item_id);
 
         // Initialize new object.
         volatile Event & new_event = a_context.m_data.at( new_item_id);
@@ -62,23 +65,20 @@ namespace kernel::internal::event
         return true;
     }
 
-    inline bool open(
-        Context &    a_context,
-        Id &         a_id,
-        const char * ap_name
-    )
+    inline bool open( Context & a_context, Id & a_id, const char * ap_name)
     {
         assert( nullptr != ap_name);
 
         kernel::hardware::CriticalSection critical_section;
 
+        // TODO: make 'id' type strong
         for ( uint32_t id = 0U; id < max_number; ++id)
         {
-            if ( true == a_context.m_data.isAllocated( id))
+            if ( true == a_context.m_data.isAllocated( static_cast< MemoryBufferIndex>( id)))
             {
-                if ( ap_name == a_context.m_data.at( id).mp_name)
+                if ( ap_name == a_context.m_data.at( static_cast< MemoryBufferIndex>( id)).mp_name)
                 {
-                    a_id = id;
+                    a_id = static_cast< Id>( id);
                     return true;
                 }
             }
@@ -91,21 +91,21 @@ namespace kernel::internal::event
     {
         kernel::hardware::CriticalSection critical_section;
 
-        a_context.m_data.free( a_id);
+        a_context.m_data.free( static_cast< MemoryBufferIndex>( a_id));
     }
 
     inline void set( Context & a_context, Id & a_id)
     {
         kernel::hardware::CriticalSection critical_section;
 
-        a_context.m_data.at( a_id).m_state = State::Set;
+        a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state = State::Set;
     }
 
     inline void reset( Context & a_context, Id & a_id)
     {
         kernel::hardware::CriticalSection critical_section;
 
-        a_context.m_data.at( a_id).m_state = State::Reset;
+        a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state = State::Reset;
     }
 
     // Reset event state if manual reset is disabled.
@@ -113,7 +113,7 @@ namespace kernel::internal::event
     {
         kernel::hardware::CriticalSection critical_section;
 
-        auto & event = a_context.m_data.at( a_id);
+        auto & event = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
         if ( false == event.m_manual_reset)
         {
@@ -125,7 +125,7 @@ namespace kernel::internal::event
     {
         kernel::hardware::CriticalSection critical_section;
 
-        auto & event = a_context.m_data.at( a_id);
+        auto & event = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
         if ( internal::event::State::Set == event.m_state)
         {

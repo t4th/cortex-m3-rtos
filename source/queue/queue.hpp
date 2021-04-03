@@ -7,16 +7,14 @@
 #include "../kernel.hpp"
 
 // Static Queue implementation.
-// User is providing pointer to data and data size.
 
-// Queue main usage is data transfer between tasks and between
-// tasks and hardware interrupts. This require usage of hardware
-// level critical sections for context access.
+// Queue main usage is data transfer between tasks and between tasks and hardware interrupts.
+// This require usage of hardware level critical sections for context access.
 
 namespace kernel::internal::queue
 {
-    // todo: consider it type strong
-    typedef uint32_t Id;
+    // Type strong index of Queue.
+    enum class Id : uint32_t{};
 
     struct Queue
     {
@@ -30,6 +28,9 @@ namespace kernel::internal::queue
 
         const char *        mp_name{ nullptr};
     };
+
+    // Type strong memory index for allocated Queue type.
+    typedef common::MemoryBuffer< Queue, max_number>::Id MemoryBufferIndex;
 
     struct Context
     {
@@ -50,14 +51,14 @@ namespace kernel::internal::queue
         kernel::hardware::CriticalSection critical_section;
 
         // Create new Queue object.
-        uint32_t new_queue_id;
+        MemoryBufferIndex new_queue_id;
 
         if ( false == a_context.m_data.allocate( new_queue_id))
         {
             return false;
         }
 
-        a_id = new_queue_id;
+        a_id = static_cast< Id>( new_queue_id);
 
         volatile Queue & new_queue = a_context.m_data.at( new_queue_id);
 
@@ -76,23 +77,20 @@ namespace kernel::internal::queue
         return true;
     }
 
-    inline bool open(
-        Context &    a_context,
-        Id &         a_id,
-        const char * ap_name
-    )
+    inline bool open( Context & a_context, Id & a_id, const char * ap_name)
     {
         assert( nullptr != ap_name);
 
         kernel::hardware::CriticalSection critical_section;
 
+        // TODO: make 'id' type strong
         for ( uint32_t id = 0U; id < max_number; ++id)
         {
-            if ( true == a_context.m_data.isAllocated( id))
+            if ( true == a_context.m_data.isAllocated( static_cast< MemoryBufferIndex>( id)))
             {
-                if ( ap_name == a_context.m_data.at( id).mp_name)
+                if ( ap_name == a_context.m_data.at( static_cast< MemoryBufferIndex>( id)).mp_name)
                 {
-                    a_id = id;
+                    a_id = static_cast< Id>( id);
                     return true;
                 }
             }
@@ -105,14 +103,14 @@ namespace kernel::internal::queue
     {
         kernel::hardware::CriticalSection critical_section;
 
-        a_context.m_data.free( a_id);
+        a_context.m_data.free( static_cast< MemoryBufferIndex>( a_id));
     }
 
     inline bool isFull( Context & a_context, Id & a_id)
     {
         kernel::hardware::CriticalSection critical_section;
 
-        volatile Queue & queue = a_context.m_data.at( a_id);
+        volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
         bool is_queue_full = ( queue.m_current_size >= queue.m_data_max_elements);
 
@@ -123,23 +121,19 @@ namespace kernel::internal::queue
     {
         kernel::hardware::CriticalSection critical_section;
 
-        bool is_queue_empty = ( 0U == a_context.m_data.at( a_id).m_current_size);
+        bool is_queue_empty = ( 0U == a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_current_size);
 
         return is_queue_empty;
     }
 
     // Push item to the head.
-    inline bool send(
-        Context &               a_context,
-        Id &                    a_id,
-        volatile void * const   ap_data
-    )
+    inline bool send( Context & a_context, Id & a_id, volatile void * const ap_data)
     {
         assert( nullptr != ap_data);
 
         kernel::hardware::CriticalSection critical_section;
 
-        volatile Queue & queue = a_context.m_data.at( a_id);
+        volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
         if ( true == isFull( a_context, a_id))
         {
@@ -173,17 +167,13 @@ namespace kernel::internal::queue
     }
     
     // Pop item from the tail.
-    inline bool receive(
-        Context &               a_context,
-        Id &                    a_id,
-        volatile void * const   ap_data
-    )
+    inline bool receive( Context & a_context, Id & a_id, volatile void * const ap_data)
     {
         assert( nullptr != ap_data);
 
         kernel::hardware::CriticalSection critical_section;
 
-        volatile Queue & queue = a_context.m_data.at( a_id);
+        volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
         if ( true == isEmpty( a_context, a_id))
         {
@@ -220,6 +210,6 @@ namespace kernel::internal::queue
     {
         kernel::hardware::CriticalSection critical_section;
 
-        return a_context.m_data.at( a_id).m_current_size;
+        return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_current_size;
     }
 }

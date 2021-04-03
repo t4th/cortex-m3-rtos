@@ -7,11 +7,11 @@
 
 namespace kernel::internal::task
 {
-    constexpr uint32_t priorities_count = 
-        static_cast< uint32_t>( kernel::task::Priority::Idle) + 1U;
-
-    // todo: consider it type strong
-    typedef uint32_t Id;
+    // Calculate number of priorities. Idle is assumed to be the last element in Priority enum.
+    constexpr uint32_t priorities_count = static_cast< uint32_t>( kernel::task::Priority::Idle) + 1U;
+    
+    // Type strong index of Task.
+    enum class Id : uint32_t{};
 
     struct Task
     {
@@ -28,12 +28,15 @@ namespace kernel::internal::task
         uint32_t                        m_last_signal_index;
     };
 
+    // Type strong memory index for allocated Task type.
+    typedef common::MemoryBuffer< Task, max_number>::Id MemoryBufferIndex;
+
     struct Context
     {
         volatile common::MemoryBuffer< Task, max_number> m_data{};
     };
 
-    typedef void( *TaskRoutine)(void);
+    typedef void( *TaskRoutine)( void);
 
     inline bool create(
         Context &               a_context,
@@ -52,7 +55,7 @@ namespace kernel::internal::task
         }
         
         // Create new Task object.
-        uint32_t new_item_id;
+        MemoryBufferIndex new_item_id;
         
         if ( false == a_context.m_data.allocate( new_item_id))
         {
@@ -80,7 +83,7 @@ namespace kernel::internal::task
         if ( nullptr != a_id)
         {
             // Task ID, is task index in memory buffer by design.
-            *a_id = new_item_id;
+            *a_id = static_cast< Id>( new_item_id);
         }
         
         return true;
@@ -88,14 +91,14 @@ namespace kernel::internal::task
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        a_context.m_data.free( a_id);
+        a_context.m_data.free( static_cast< MemoryBufferIndex>( a_id));
     }
 
     namespace priority
     {
         inline kernel::task::Priority get( Context & a_context, volatile Id & a_id)
         {
-            return a_context.m_data.at( a_id).m_priority;
+            return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_priority;
         }
     }
 
@@ -103,12 +106,12 @@ namespace kernel::internal::task
     {
         inline kernel::task::State get( Context & a_context, Id & a_id)
         {
-            return a_context.m_data.at( a_id).m_state;
+            return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state;
         }
 
         inline void set( Context & a_context, volatile Id & a_id, kernel::task::State a_state )
         {
-            a_context.m_data.at( a_id).m_state = a_state;
+            a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state = a_state;
         }
     }
 
@@ -116,7 +119,7 @@ namespace kernel::internal::task
     {
         inline volatile hardware::task::Context * get( Context & a_context, Id & a_id)
         {
-            return &a_context.m_data.at( a_id).m_context;
+            return &a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_context;
         }
     }
     
@@ -124,12 +127,12 @@ namespace kernel::internal::task
     {
         inline uint32_t get( Context & a_context, Id & a_id)
         {
-            return a_context.m_data.at( a_id).m_sp;
+            return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_sp;
         }
 
         inline void set( Context & a_context, Id & a_id, uint32_t a_new_sp )
         {
-            a_context.m_data.at( a_id).m_sp = a_new_sp;
+            a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_sp = a_new_sp;
         }
     }
 
@@ -137,7 +140,7 @@ namespace kernel::internal::task
     {
         inline kernel::task::Routine get( Context & a_context, Id & a_id)
         {
-            return a_context.m_data.at( a_id).m_routine;
+            return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_routine;
         }
     }
 
@@ -145,7 +148,7 @@ namespace kernel::internal::task
     {
         inline void * get( Context & a_context, Id & a_id)
         {
-            return a_context.m_data.at( a_id).m_parameter;
+            return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_parameter;
         }
     }
 
@@ -155,12 +158,12 @@ namespace kernel::internal::task
         {
             inline kernel::sync::WaitResult get( Context & a_context, Id & a_id)
             {
-                return a_context.m_data.at( a_id).m_result;
+                return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_result;
             }
 
             inline void set( Context & a_context, Id & a_id, kernel::sync::WaitResult a_value)
             {
-                a_context.m_data.at( a_id).m_result = a_value;
+                a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_result = a_value;
             }
         }
 
@@ -168,12 +171,12 @@ namespace kernel::internal::task
         {
             inline uint32_t get( Context & a_context, Id & a_id)
             {
-                return a_context.m_data.at( a_id).m_last_signal_index;
+                return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_last_signal_index;
             }
 
             inline void set( Context & a_context, Id & a_id, uint32_t a_value)
             {
-                a_context.m_data.at( a_id).m_last_signal_index = a_value;
+                a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_last_signal_index = a_value;
             }
         }
     }

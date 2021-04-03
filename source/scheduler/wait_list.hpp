@@ -22,6 +22,9 @@ namespace kernel::internal::scheduler::wait_list
         wait::Conditions    m_conditions;
     };
 
+    // Type strong memory index for allocated WaitItem type.
+    typedef common::MemoryBuffer< WaitItem, task::max_number>::Id MemoryBufferIndex;
+
     struct Context
     {
         // TODO: consider this a list to reduce search iterations.
@@ -38,8 +41,9 @@ namespace kernel::internal::scheduler::wait_list
         Time_ms &   a_current
     )
     {
-        uint32_t    item_index;
-        bool        allocated = a_context.m_list.allocate( item_index);
+        MemoryBufferIndex item_index;
+
+        bool allocated = a_context.m_list.allocate( item_index);
 
         if ( true == allocated)
         {
@@ -50,8 +54,7 @@ namespace kernel::internal::scheduler::wait_list
             return false;
         }
 
-        volatile wait::Conditions & conditions =
-            a_context.m_list.at( item_index).m_conditions;
+        auto & conditions = a_context.m_list.at( item_index).m_conditions;
 
         wait::initSleep( conditions, a_interval, a_current);
 
@@ -70,8 +73,9 @@ namespace kernel::internal::scheduler::wait_list
     )
     {
         // Note: function allocate without checking for dublicates in m_list.
-        uint32_t    item_index;
-        bool        allocated = a_context.m_list.allocate( item_index);
+        MemoryBufferIndex item_index;
+
+        bool allocated = a_context.m_list.allocate( item_index);
 
         if ( true == allocated)
         {
@@ -82,8 +86,7 @@ namespace kernel::internal::scheduler::wait_list
             return false;
         }
 
-        volatile wait::Conditions & conditions =
-            a_context.m_list.at( item_index).m_conditions;
+        auto & conditions = a_context.m_list.at( item_index).m_conditions;
 
         bool init_succesful = wait::initWaitForObj(
             conditions,
@@ -104,19 +107,16 @@ namespace kernel::internal::scheduler::wait_list
         return true;
     }
 
-    inline void removeTask(
-        Context & a_context,
-        task::Id & a_task_id
-    )
+    inline void removeTask( Context & a_context, task::Id & a_task_id)
     {
         for ( uint32_t i = 0U; i < kernel::internal::task::max_number; ++i)
         {
             // TODO: it doesn't matter if memory is allocated or not. Consider removing.
-            if ( true == a_context.m_list.isAllocated( i))
+            if ( true == a_context.m_list.isAllocated( static_cast< MemoryBufferIndex>( i)))
             {
-                if ( a_context.m_list.at( i).m_id == a_task_id)
+                if ( a_context.m_list.at( static_cast< MemoryBufferIndex>( i)).m_id == a_task_id)
                 {
-                    a_context.m_list.free( i);
+                    a_context.m_list.free( static_cast< MemoryBufferIndex>( i));
                     break;
                 }
             }

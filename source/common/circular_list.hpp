@@ -16,16 +16,20 @@ namespace kernel::internal::common
                 TDataType m_data{};     // NOTE: only primitive data
             };
        
+            // Type strong memory index for allocated Task type.
+            typedef typename common::MemoryBuffer< Node, MaxSize>::Id MemoryBufferIndex;
+
         public:
             bool add( TDataType a_new_data, uint32_t & a_new_node_index) volatile
             {
-                uint32_t new_node_index;
-                if ( false == m_buffer.allocate(new_node_index))
+                MemoryBufferIndex new_node_index;
+
+                if ( false == m_buffer.allocate( new_node_index))
                 {
                     return false;
                 }
 
-                a_new_node_index = new_node_index;
+                a_new_node_index = static_cast< uint32_t>( new_node_index);
                 
                 volatile Node & new_node = m_buffer.at( new_node_index);
                 
@@ -33,36 +37,36 @@ namespace kernel::internal::common
                 {
                     case 0U: // Create single Node that point to itself.
                         {
-                            m_first = new_node_index;
+                            m_first = static_cast< uint32_t>( new_node_index);
 
-                            new_node.m_next = new_node_index;
-                            new_node.m_prev = new_node_index;
+                            new_node.m_next = static_cast< uint32_t>( new_node_index);
+                            new_node.m_prev = static_cast< uint32_t>( new_node_index);
                         }
                         break;
                     case 1U: // New Node points to first Node.
                         {
-                            volatile Node & first_node = m_buffer.at( m_first);
+                            volatile Node & first_node = m_buffer.at( static_cast< MemoryBufferIndex>( m_first));
                         
-                            first_node.m_next = new_node_index;
-                            first_node.m_prev = new_node_index;
+                            first_node.m_next = static_cast< uint32_t>( new_node_index);
+                            first_node.m_prev = static_cast< uint32_t>( new_node_index);
                             new_node.m_next = m_first;
                             new_node.m_prev = m_first;
                         }
                         break;
                     default: // New Node at last position.
                         {
-                            volatile Node & first_node = m_buffer.at( m_first);
-                            volatile Node & last_node = m_buffer.at( m_last);
+                            volatile Node & first_node = m_buffer.at( static_cast< MemoryBufferIndex>( m_first));
+                            volatile Node & last_node = m_buffer.at( static_cast< MemoryBufferIndex>( m_last));
                         
-                            last_node.m_next = new_node_index;
-                            first_node.m_prev = new_node_index;
+                            last_node.m_next = static_cast< uint32_t>( new_node_index);
+                            first_node.m_prev = static_cast< uint32_t>( new_node_index);
                             new_node.m_next = m_first;
                             new_node.m_prev = m_last;
                         }
                     break;
                 }
                 
-                m_last = new_node_index; // Close the linked list.
+                m_last = static_cast< uint32_t>( new_node_index); // Close the linked list.
                 new_node.m_data = a_new_data;
                 ++m_count;
                 
@@ -75,38 +79,35 @@ namespace kernel::internal::common
                 {
                     if ( m_count > 1U)
                     {
-                        const uint32_t prev = m_buffer.at( a_node_index).m_prev;
-                        const uint32_t next = m_buffer.at( a_node_index).m_next;
+                        const uint32_t prev = m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_prev;
+                        const uint32_t next = m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_next;
 
-                        m_buffer.at( prev).m_next = next;
-                        m_buffer.at( next).m_prev = prev;
+                        m_buffer.at( static_cast< MemoryBufferIndex>( prev)).m_next = next;
+                        m_buffer.at( static_cast< MemoryBufferIndex>( next)).m_prev = prev;
 
                         if ( a_node_index == m_first) { m_first = next; }
                         else if ( a_node_index == m_last) { m_last = prev; }
                     }
 
-                    m_buffer.free( a_node_index);
+                    m_buffer.free( static_cast< MemoryBufferIndex>( a_node_index));
                     --m_count;
                 }
             }
 
-            bool find(
-                TDataType & a_key,
-                uint32_t &  a_found_index
-            ) volatile
+            bool find( TDataType & a_key, uint32_t &  a_found_index) volatile
             {
                 uint32_t node_index = m_first;
 
                 for ( uint32_t i = 0U; i < m_count; ++i)
                 {
-                    if ( a_key == m_buffer.at( node_index).m_data)
+                    if ( a_key == m_buffer.at( static_cast< MemoryBufferIndex>( node_index)).m_data)
                     {
                         a_found_index = node_index;
                         return true;
                     }
                     else
                     {
-                        node_index = m_buffer.at( node_index).m_next;
+                        node_index = m_buffer.at( static_cast< MemoryBufferIndex>( node_index)).m_next;
                     }
                 }
 
@@ -115,7 +116,7 @@ namespace kernel::internal::common
 
             volatile TDataType & at( volatile uint32_t a_node_index) volatile
             {
-                return m_buffer.at( a_node_index).m_data;
+                return m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_data;
             }
 
             uint32_t firstIndex() volatile
@@ -125,7 +126,7 @@ namespace kernel::internal::common
 
             uint32_t nextIndex( uint32_t a_node_index) volatile
             {
-                return m_buffer.at( a_node_index).m_next;
+                return m_buffer.at( static_cast< MemoryBufferIndex>( a_node_index)).m_next;
             }
             
             uint32_t count() volatile
