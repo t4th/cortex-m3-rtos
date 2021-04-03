@@ -21,7 +21,7 @@ namespace kernel::internal::scheduler::ready_list
             kernel::internal::task::max_number
         > m_list{};
 
-        NodeIndex m_current{ 0U};
+        NodeIndex m_current{ static_cast< NodeIndex>( 0U)};
     };
 
     struct Context

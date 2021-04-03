@@ -60,8 +60,8 @@ namespace
         queue::Context          m_Queue;
 
         // members used by specyfic test case instance
-        std::vector<task::Id>   m_TaskHandles;
-        uint32_t                m_current;
+        std::vector< task::Id>   m_TaskHandles;
+        uint32_t                 m_current;
 
         test_case_context() : m_current(0U) {}
 
@@ -69,11 +69,11 @@ namespace
         // to test scheduler for given test case context
         // - create vector of empty handlers
         // - allocate internal::task and return new handles to previous vector
-        void allocate_tasks(kernel::task::Priority a_prio, uint32_t a_task_count)
+        void allocate_tasks( kernel::task::Priority a_prio, uint32_t a_task_count)
         {
             uint32_t i;
 
-            for (i = 0U; i < a_task_count; ++i)
+            for ( i = 0U; i < a_task_count; ++i)
             {
                 m_TaskHandles.push_back({}); // create physical task handle
 
@@ -82,14 +82,14 @@ namespace
                     kernel_task_routine,
                     task_routine,
                     a_prio,
-                    &m_TaskHandles.at(m_current + i), // initialize physical task handle
+                    &m_TaskHandles.at( m_current + i), // initialize physical task handle
                     nullptr,
                     false
                 );
 
-                if(!result)
+                if( !result)
                 {
-                    REQUIRE(false); // shouldnt happen in test
+                    REQUIRE( false); // shouldnt happen in test
                 }
             }
 
@@ -114,26 +114,26 @@ TEST_CASE("Scheduler")
         auto add_and_test_task = []
         (
             test_case_context &         context,
-            uint32_t                current,
-            uint32_t                expected_curr,
-            uint32_t                expected_next
+            uint32_t                    current,
+            task::Id                    expected_curr,
+            task::Id                    expected_next
         )
         {
             // Add new task ID to scheduler.
             bool result = scheduler::addReadyTask(
                 context.m_Scheduler,
                 context.m_Task,
-                context.m_TaskHandles.at(current)
+                context.m_TaskHandles.at( current)
             );
 
-            REQUIRE(true == result);
+            REQUIRE( true == result);
 
             // Get current task ID.
             {
                 task::Id found_id =
                     scheduler::getCurrentTaskId( context.m_Scheduler);
 
-                REQUIRE(expected_curr == found_id);
+                REQUIRE( expected_curr == found_id);
             }
 
             // Get next task ID.
@@ -146,8 +146,8 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(expected_next == found_id);
+                REQUIRE( true == result);
+                REQUIRE( expected_next == found_id);
             }
         };
 
@@ -156,12 +156,17 @@ TEST_CASE("Scheduler")
         {
             constexpr uint32_t count = 5U;
 
-            std::array<uint32_t, count> expected_curr = {0U, 0U, 1U, 2U, 3U};
-            std::array<uint32_t, count> expected_next = {0U, 1U, 2U, 3U, 4U};
+            std::array< uint32_t, count> expected_curr = { 0U, 0U, 1U, 2U, 3U};
+            std::array< uint32_t, count> expected_next = { 0U, 1U, 2U, 3U, 4U};
 
-            for (uint32_t i = 0U; i < count; ++i)
+            for ( uint32_t i = 0U; i < count; ++i)
             {
-                add_and_test_task(*context, i, expected_curr[i], expected_next[i]);
+                add_and_test_task(
+                    *context,
+                    i,
+                    static_cast< task::Id>( expected_curr[ i]),
+                    static_cast< task::Id>( expected_next[i])
+                );
             }
         }
 
@@ -171,8 +176,8 @@ TEST_CASE("Scheduler")
             task::Id found_id;
 
             constexpr uint32_t count = 10U;
-            std::array<uint32_t, count> expected_next = 
-            {0U, 1U, 2U, 3U, 4U, 0U, 1U, 2U, 3U, 4U};
+            std::array< uint32_t, count> expected_next = 
+            { 0U, 1U, 2U, 3U, 4U, 0U, 1U, 2U, 3U, 4U};
 
             for (uint32_t i = 0U; i < count; ++i)
             {
@@ -182,8 +187,8 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(expected_next[i] == found_id);
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( expected_next[ i]) == found_id);
             }
         }
     }
@@ -191,45 +196,50 @@ TEST_CASE("Scheduler")
 
     SECTION( "Add tasks of different priorites and find highest priority.")
     {
-        std::unique_ptr<test_case_context> context(new test_case_context);
+        std::unique_ptr< test_case_context> context( new test_case_context);
 
         // Add some tasks and keep their ID in vector m_TaskHandles.
         {
             // Add 3 LOW priority tasks.
-            context->allocate_tasks(kernel::task::Priority::Low, 3U);
+            context->allocate_tasks( kernel::task::Priority::Low, 3U);
 
-            for (uint32_t i = 0U; i < 3U; ++i)
+            for ( uint32_t i = 0U; i < 3U; ++i)
             {
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    context->m_TaskHandles.at(i)
+                    context->m_TaskHandles.at( i)
                 );
-                REQUIRE(true == result);
+
+                REQUIRE( true == result);
             }
 
             // Add 3 MEDIUMA priority tasks.
-            context->allocate_tasks(kernel::task::Priority::Medium, 3U);
-            for (uint32_t i = 0U; i < 3U; ++i)
+            context->allocate_tasks( kernel::task::Priority::Medium, 3U);
+
+            for ( uint32_t i = 0U; i < 3U; ++i)
             {
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    context->m_TaskHandles.at(3U + i)
+                    context->m_TaskHandles.at( 3U + i)
                 );
-                REQUIRE(true == result);
+
+                REQUIRE( true == result);
             }
             
             // Add 3 HIGH priority tasks.
-            context->allocate_tasks(kernel::task::Priority::High, 3U);
+            context->allocate_tasks( kernel::task::Priority::High, 3U);
+
             for (uint32_t i = 0U; i < 3U; ++i)
             {
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    context->m_TaskHandles.at(6U + i)
+                    context->m_TaskHandles.at( 6U + i)
                 );
-                REQUIRE(true == result);
+
+                REQUIRE( true == result);
             }
         }
 
@@ -237,14 +247,15 @@ TEST_CASE("Scheduler")
         // Expected: task no. 6 is first High priority task.
         {
             task::Id found_id;
+
             bool result = scheduler::getCurrentTask(
                 context->m_Scheduler,
                 context->m_Task,
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(6U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 6U) == found_id);
         }
 
         // Check next task ID.
@@ -258,18 +269,18 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(7U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 7U) == found_id);
         }
 
         // Remove all HIGH priority tasks.
         {
-            for (uint32_t i = 0U; i < 3U; ++i)
+            for ( uint32_t i = 0U; i < 3U; ++i)
             {
                 scheduler::removeTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    context->m_TaskHandles.at(6U + i)
+                    context->m_TaskHandles.at( 6U + i)
                 );
             }
         }
@@ -278,13 +289,14 @@ TEST_CASE("Scheduler")
         // Expected: task no. 3 is first Medium priority task.
         {
             task::Id found_id;
+
             bool result = scheduler::getCurrentTask(
                 context->m_Scheduler,
                 context->m_Task,
                 found_id
             );
-            REQUIRE(true == result);
-            REQUIRE(3U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 3U) == found_id);
         }
 
         // Check next task ID.
@@ -298,17 +310,16 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(4U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 4U) == found_id);
         }
 
         // Get current task Id and remove it.
         {
-            task::Id found_id = 
-                scheduler::getCurrentTaskId( context->m_Scheduler);
+            task::Id found_id = scheduler::getCurrentTaskId( context->m_Scheduler);
 
             // Expected: Should find previous getNextTask result, which is 4.
-            REQUIRE(4U == found_id);
+            REQUIRE( static_cast< task::Id>( 4U) == found_id);
 
             scheduler::removeTask(
                 context->m_Scheduler,
@@ -327,10 +338,10 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
+            REQUIRE( true == result);
             // Expected: task no. 5 is third (now second due to linked list)
             //           Medium priority task
-            REQUIRE(5U == found_id);
+            REQUIRE( static_cast< task::Id>( 5U) == found_id);
         }
 
         // Check next task ID.
@@ -344,15 +355,15 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(3U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 3U) == found_id);
         }
 
         // Suspend last two Medium tasks, so LOW priority tasks are ready.
         {
             task::Id task_to_suspend;
 
-            task_to_suspend = 3U;
+            task_to_suspend = static_cast< task::Id>( 3U);
 
             scheduler::setTaskToSuspended(
                 context->m_Scheduler,
@@ -360,7 +371,7 @@ TEST_CASE("Scheduler")
                 task_to_suspend
                 );
 
-            task_to_suspend = 5U;
+            task_to_suspend = static_cast< task::Id>( 5U);
 
             scheduler::setTaskToSuspended(
                 context->m_Scheduler,
@@ -380,8 +391,8 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(0U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 0U) == found_id);
         }
 
         // Check next task ID.
@@ -394,16 +405,15 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(1U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 1U) == found_id);
         }
 
         // Resume one Medium task, so Low priority is skipped.
         {
             // 3U is first Medium task that was suspended,
             // lets set it to Ready again
-            task::Id task_to_resume;
-            task_to_resume = 3U;
+            task::Id task_to_resume = static_cast< task::Id>( 3U);
 
             scheduler::resumeSuspendedTask(
                 context->m_Scheduler,
@@ -422,8 +432,8 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(3U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 3U) == found_id);
         }
 
         // Check next task ID.
@@ -438,8 +448,8 @@ TEST_CASE("Scheduler")
                 found_id
             );
 
-            REQUIRE(true == result);
-            REQUIRE(3U == found_id);
+            REQUIRE( true == result);
+            REQUIRE( static_cast< task::Id>( 3U) == found_id);
         }
     }
 
@@ -453,26 +463,27 @@ TEST_CASE("Scheduler")
         // Pre-condition
         {
             // Create 3 LOW priority tasks.
-            context->allocate_tasks(kernel::task::Priority::Low, 3);
+            context->allocate_tasks( kernel::task::Priority::Low, 3);
 
             // Add newly created task IDs to scheduler.
-            for (uint32_t i = 0U; i < 3U; ++i)
+            for ( uint32_t i = 0U; i < 3U; ++i)
             {
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
                     context->m_TaskHandles.at(i)
                 );
-                REQUIRE(true == result);
+
+                REQUIRE( true == result);
             }
         }
 
         // Check tasks states.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Do some normal scheduling:
@@ -482,21 +493,23 @@ TEST_CASE("Scheduler")
             // Expected: Current task should be Task 0.
             {
                 task::Id found_id;
+
                 bool result = scheduler::getCurrentTask(
                     context->m_Scheduler,
                     context->m_Task,
                     found_id
                 );
-                REQUIRE(true == result);
-                REQUIRE(0U == found_id);
+
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( 0U) == found_id);
             }
 
             // Check tasks states.
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
 
             // Check next task ID.
@@ -510,16 +523,16 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(1U == found_id);
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( 1U) == found_id);
             }
 
             // Check tasks states.
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
         }
 
@@ -528,7 +541,7 @@ TEST_CASE("Scheduler")
         // wait: 0 (sleep)
         // ready: 1(current) - 2
         {
-            task::Id task_to_sleep = context->m_TaskHandles.at(0U);
+            task::Id task_to_sleep = context->m_TaskHandles.at( 0U);
             kernel::Time_ms current_time = 0U;
 
             bool result = scheduler::setTaskToSleep(
@@ -539,7 +552,7 @@ TEST_CASE("Scheduler")
                 current_time
             );
 
-            REQUIRE(true == result);
+            REQUIRE( true == result);
         }
 
         // After Task 0 is set to sleep, scheduler should go to 
@@ -559,16 +572,16 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(2U == found_id);
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( 2U) == found_id);
             }
 
             // Check tasks states
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
 
             // Check next task ID.
@@ -586,16 +599,16 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(1U == found_id);
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( 1U) == found_id);
             }
 
             // Check tasks states
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
 
             // Check wait condition to wake up Task 0.
@@ -626,16 +639,16 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(2U == found_id);
+                REQUIRE( true == result);
+                REQUIRE( static_cast< task::Id>( 2U) == found_id);
             }
 
             // Check tasks states
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
 
             // Expected: Task 0 should be scheduled.
@@ -650,16 +663,16 @@ TEST_CASE("Scheduler")
                     found_id
                 );
 
-                REQUIRE(true == result);
-                REQUIRE(0U == found_id);
+                REQUIRE( true == result);
+                REQUIRE(static_cast< task::Id>( 0U) == found_id);
             }
 
             // Check tasks states.
             {
                 using namespace kernel::internal;
-                REQUIRE(kernel::task::State::Running == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-                REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+                REQUIRE( kernel::task::State::Running == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+                REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
             }
         }
     }
@@ -677,7 +690,7 @@ TEST_CASE("Scheduler")
         // Pre-condition
         {
             // Create 3 LOW priority tasks.
-            context->allocate_tasks(kernel::task::Priority::Low, 3U);
+            context->allocate_tasks( kernel::task::Priority::Low, 3U);
 
             for (uint32_t i = 0U; i < 3U; ++i)
             {
@@ -685,18 +698,18 @@ TEST_CASE("Scheduler")
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
                     context->m_Task,
-                    context->m_TaskHandles.at(i)
+                    context->m_TaskHandles.at( i)
                 );
-                REQUIRE(true == result);
+                REQUIRE( true == result);
             }
         }
 
         // Check tasks states.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Set Task 1 to wait for event object.
@@ -704,8 +717,9 @@ TEST_CASE("Scheduler")
             // Create event.
             {
                 kernel::internal::event::Id new_event_id;
-                bool result = kernel::internal::event::create(context->m_Event, new_event_id, true, nullptr);
-                REQUIRE(true == result);
+                bool result = kernel::internal::event::create( context->m_Event, new_event_id, true, nullptr);
+                
+                REQUIRE( true == result);
 
                 event = kernel::internal::handle::create(
                     kernel::internal::handle::ObjectType::Event,
@@ -719,7 +733,7 @@ TEST_CASE("Scheduler")
                 const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
-                task::Id task_to_wait = context->m_TaskHandles.at(1U);
+                task::Id task_to_wait = context->m_TaskHandles.at( 1U);
 
                 setTaskToWaitForObj(
                     context->m_Scheduler,
@@ -738,9 +752,9 @@ TEST_CASE("Scheduler")
         // Check tasks states.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Set Task 2 to wait for timer.
@@ -758,7 +772,7 @@ TEST_CASE("Scheduler")
                     interval
                 );
 
-                REQUIRE(true == result);
+                REQUIRE( true == result);
 
                 timer = kernel::internal::handle::create(
                     kernel::internal::handle::ObjectType::Timer,
@@ -772,7 +786,7 @@ TEST_CASE("Scheduler")
                 const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
-                task::Id task_to_wait = context->m_TaskHandles.at(2U);
+                task::Id task_to_wait = context->m_TaskHandles.at( 2U);
 
                 setTaskToWaitForObj(
                     context->m_Scheduler,
@@ -791,9 +805,9 @@ TEST_CASE("Scheduler")
         // Check tasks states.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Check synchronization objects conditions when not conditions are not met.
@@ -814,16 +828,16 @@ TEST_CASE("Scheduler")
         // Expected: Object are still in Waiting state.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Set synchronizatin object to meet condition.
         // Set event.
         {
-            auto id = kernel::internal::handle::getId<kernel::internal::event::Id>(event);
-            kernel::internal::event::set(context->m_Event, id);
+            auto id = kernel::internal::handle::getId<kernel::internal::event::Id>( event);
+            kernel::internal::event::set( context->m_Event, id);
         }
 
         // Check conditions.
@@ -844,9 +858,9 @@ TEST_CASE("Scheduler")
         // Expected: Task 1 should wake up and set state to Ready.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Waiting == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Ready ==   task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Waiting == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
 
         // Set synchronizatin object to meet condition.
@@ -856,7 +870,7 @@ TEST_CASE("Scheduler")
             // set new value higher than expected.
             kernel::Time_ms currentTime = 10001U;
 
-            kernel::internal::timer::tick(context->m_Timer, currentTime);
+            kernel::internal::timer::tick( context->m_Timer, currentTime);
         }
 
         // Check conditions.
@@ -877,9 +891,9 @@ TEST_CASE("Scheduler")
         // Expected: Task 2 should wake up and set state to Ready.
         {
             using namespace kernel::internal;
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(0U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(1U)));
-            REQUIRE(kernel::task::State::Ready == task::state::get(context->m_Task, context->m_TaskHandles.at(2U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 0U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 1U)));
+            REQUIRE( kernel::task::State::Ready == task::state::get( context->m_Task, context->m_TaskHandles.at( 2U)));
         }
     }
 }
