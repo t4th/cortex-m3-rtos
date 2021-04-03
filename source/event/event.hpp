@@ -3,7 +3,7 @@
 #include "config/config.hpp"
 #include "common/memory_buffer.hpp"
 
-#include <kernel.hpp>
+#include "../kernel.hpp"
 
 namespace kernel::internal::event
 {

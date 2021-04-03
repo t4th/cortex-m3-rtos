@@ -4,7 +4,7 @@
 #include "common/memory_buffer.hpp"
 #include "common/memory.hpp"
 
-#include <kernel.hpp>
+#include "../kernel.hpp"
 
 // Static Queue implementation.
 // User is providing pointer to data and data size.

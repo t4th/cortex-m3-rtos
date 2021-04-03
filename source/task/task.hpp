@@ -3,7 +3,7 @@
 #include "hardware/hardware.hpp"
 #include "common/memory_buffer.hpp"
 
-#include <kernel.hpp>
+#include "../kernel.hpp"
 
 namespace kernel::internal::task
 {
@@ -34,7 +34,6 @@ namespace kernel::internal::task
     };
 
     typedef void( *TaskRoutine)(void);
-    
 
     inline bool create(
         Context &               a_context,
@@ -87,7 +86,6 @@ namespace kernel::internal::task
         return true;
     }
 
-    
     inline void destroy( Context & a_context, Id & a_id)
     {
         a_context.m_data.free( a_id);

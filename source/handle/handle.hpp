@@ -4,7 +4,7 @@
 #include "event/event.hpp"
 #include "queue/queue.hpp"
 
-#include <kernel.hpp>
+#include "../kernel.hpp"
 
 // Handle is abstract type holding information of object type
 // and object ID. 16 bit each in 32 bit variable.
