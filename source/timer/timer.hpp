@@ -82,25 +82,14 @@ namespace kernel::internal::timer
 
     inline void tick( Context & a_context, TimeMs & a_current)
     {
-        // TODO: consider memory barrier since this funtion is
-        //       called from interrupt handler.
-
-        // TODO: Iterate through all timers, even not allocated.
-        //       Limiting branches should be more effective that
-        //       late decision trees (and more cache friendly if
-        //       applicable).
         for ( uint32_t i = 0U; i < max_number; ++i)
         {
-            // Note: For now this check stays due to memory buffer
-            //       assert isAllocated when 'at' dereference is used.
             if ( true == a_context.m_data.isAllocated( static_cast< MemoryBufferIndex> ( i)))
             {
                 volatile Timer & timer = a_context.m_data.at( static_cast< MemoryBufferIndex> ( i));
 
                 if ( ( a_current - timer.m_start) > timer.m_interval)
                 {
-                    // TODO: It would be more effective to make 2
-                    //       buffers for each timer state.
                     timer.m_state = State::Finished;
                 }
             }

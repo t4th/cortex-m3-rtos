@@ -60,7 +60,6 @@ namespace kernel::internal::scheduler
         task::Id &                  a_task_id
     )
     {
-        // TODO: implement suspended list
         kernel::internal::task::state::set(
             a_task_context,
             a_task_id,

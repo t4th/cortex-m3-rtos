@@ -71,7 +71,6 @@ namespace kernel::internal::event
 
         kernel::hardware::CriticalSection critical_section;
 
-        // TODO: make 'id' type strong
         for ( uint32_t id = 0U; id < max_number; ++id)
         {
             if ( true == a_context.m_data.isAllocated( static_cast< MemoryBufferIndex>( id)))

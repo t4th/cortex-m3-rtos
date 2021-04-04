@@ -16,12 +16,10 @@ namespace kernel::internal::hardware
     {
         struct Context
         {
-            // TODO: Hide. This is HW specific implementation detail.
             volatile uint32_t   r4, r5, r6, r7,
                                 r8, r9, r10, r11;
         };
         
-        // TODO: Make it a struct.
         class Stack
         {
             public:
