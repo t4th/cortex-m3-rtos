@@ -142,9 +142,7 @@ namespace kernel::sync
     {
         ObjectSet,
         TimeoutOccurred,
-        WaitFailed,
-        InvalidHandle,
-        TooManyHandles
+        WaitFailed
     };
 
     // Can wait for system objects of type: Event, Timer, Queue.

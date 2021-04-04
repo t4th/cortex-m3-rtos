@@ -59,3 +59,9 @@ namespace kernel::internal::scheduler::wait
     // Main use: WaitForObject functions.
     constexpr uint32_t max_input_signals{ 8U};
 }
+
+namespace kernel::error
+{
+    // Enable kernel API error messages.
+    constexpr bool debug_messages_enable{ true};
+}

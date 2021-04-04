@@ -10,20 +10,35 @@
 #include "queue/queue.hpp"
 #include "lock/lock.hpp"
 
+// Print error in case of wrong kernel API usage.
+// Note:  I considered error codes or GetLastError() like function,
+//        but it would bloat the code.
+// Note2: Must only be used to describe error behaviour.
+namespace kernel::error
+{
+    inline void print( const char * a_string)
+    {
+        if constexpr ( debug_messages_enable)
+        {
+            hardware::debug::print( a_string);
+        }
+    }
+}
+
 // Context of the entire kernel.
 namespace kernel::internal::context
 {
-        internal::system_timer::Context m_systemTimer;
-        internal::task::Context         m_tasks;
-        internal::scheduler::Context    m_scheduler;
-        internal::timer::Context        m_timers;
-        internal::event::Context        m_events;
-        internal::queue::Context        m_queue;
-        internal::lock::Context         m_lock;
+    internal::system_timer::Context m_systemTimer;
+    internal::task::Context         m_tasks;
+    internal::scheduler::Context    m_scheduler;
+    internal::timer::Context        m_timers;
+    internal::event::Context        m_events;
+    internal::queue::Context        m_queue;
+    internal::lock::Context         m_lock;
 
-        // Indicate if kernel is started. It is used to detected
-        // if system object was created before or after kernel::start.
-        bool m_started = false;
+    // Indicate if kernel is started. It is used to detected
+    // if system object was created before or after kernel::start.
+    bool m_started = false;
 }
 
 // Implementation of internal kernel functions.
@@ -41,8 +56,7 @@ namespace kernel
     {
         if ( true == internal::context::m_started)
         {
-            // Invalid API usage.
-            hardware::debug::setBreakpoint();
+            error::print( "Kernel already started!\n");
             return;
         }
 
@@ -52,7 +66,7 @@ namespace kernel
 
         if ( false == idle_task_created)
         {
-            // Error while creating IDLE task.
+            error::print( "Critical Error! Failed to create Idle task!\n");
             hardware::debug::setBreakpoint();
             assert( true);
         }
@@ -62,6 +76,7 @@ namespace kernel
     {
         if ( true == internal::context::m_started)
         {
+            error::print( "Kernel already started!\n");
             return;
         }
 
@@ -111,6 +126,7 @@ namespace kernel::task
         
             if ( false == task_created)
             {
+                error::print( "Failed to internally create task!\n");
                 internal::lock::leave( internal::context::m_lock);
                 return false;
             }
@@ -137,7 +153,7 @@ namespace kernel::task
             if ( false == task_added)
             {
                 internal::task::destroy( internal::context::m_tasks, created_task_id);
-
+                error::print( "Failed adding task to scheduler!\n");
                 kernel::internal::lock::leave( internal::context::m_lock);
                 return false;
             }
@@ -189,6 +205,7 @@ namespace kernel::task
 
         if ( internal::handle::ObjectType::Task != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -202,6 +219,7 @@ namespace kernel::task
 
         if ( internal::handle::ObjectType::Task != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -240,6 +258,7 @@ namespace kernel::task
 
         if ( internal::handle::ObjectType::Task != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -341,6 +360,7 @@ namespace kernel::timer
 
             if ( false == timer_created)
             {
+                error::print( "Failed to internally create timer!\n");
                 internal::lock::leave( internal::context::m_lock);
                 return false;
             }
@@ -358,6 +378,7 @@ namespace kernel::timer
 
         if ( internal::handle::ObjectType::Timer != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -375,6 +396,7 @@ namespace kernel::timer
 
         if ( internal::handle::ObjectType::Timer != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -392,6 +414,7 @@ namespace kernel::timer
 
         if ( internal::handle::ObjectType::Timer != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -420,6 +443,7 @@ namespace kernel::event
 
         if ( false == event_created)
         {
+            error::print( "Failed to internally create event!\n");
             return false;
         }
 
@@ -432,6 +456,7 @@ namespace kernel::event
     {
         if ( nullptr == ap_name)
         {
+            error::print( "Invalid argument! Empty pointer to event name!\n");
             return false;
         }
 
@@ -453,6 +478,7 @@ namespace kernel::event
 
         if ( internal::handle::ObjectType::Event != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -466,6 +492,7 @@ namespace kernel::event
 
         if ( internal::handle::ObjectType::Event != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -479,6 +506,7 @@ namespace kernel::event
 
         if ( internal::handle::ObjectType::Event != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -505,6 +533,7 @@ namespace kernel::critical_section
 
             if ( false == event_created)
             {
+                error::print( "Failed to internally create event!\n");
                 internal::lock::leave( internal::context::m_lock);
                 return false;
             }
@@ -572,6 +601,8 @@ namespace kernel::critical_section
                 if ( sync::WaitResult::ObjectSet != result)
                 {
                     // This is critical error since this function doesn't return a value.
+                    // It would most likely happen when critical_section::init was not called.
+                    error::print( "Critical Error!\n");
                     hardware::debug::setBreakpoint();
                     assert( true);
                 }
@@ -635,12 +666,21 @@ namespace kernel::sync
         
         if ( nullptr == a_array_of_handles)
         {
-            return kernel::sync::WaitResult::InvalidHandle;
+            error::print( "Invalid argument! Empty pointer to array of handles!\n");
+            return kernel::sync::WaitResult::WaitFailed;
         }
 
         if ( a_number_of_elements < 1)
         {
-            return kernel::sync::WaitResult::InvalidHandle;
+            error::print( "Invalid argument! Number of elements should be bigger than 0.\n");
+            return kernel::sync::WaitResult::WaitFailed;
+        }
+
+        if ( a_number_of_elements >= internal::scheduler::wait::max_input_signals)
+        {
+            // Can be fixed by increasing number of max_input_signals in config.hpp
+            error::print( "Invalid argument! Number of elements is bigger than allocated memory!\n");
+            return kernel::sync::WaitResult::WaitFailed;
         }
 
         // Note: Before creating system object, this function used to check all wait conditions
@@ -670,9 +710,11 @@ namespace kernel::sync
 
             if ( false == operation_result)
             {
+                // Can be fixed by increasing number of max_input_signals in config.hpp
+                error::print( "Critical Error! Failed to internally create Wait Object.\n");
                 assert( true);
                 internal::lock::leave( internal::context::m_lock);
-                return WaitResult::TooManyHandles;
+                return WaitResult::WaitFailed;
             }
         }
 
@@ -713,16 +755,19 @@ namespace kernel::static_queue
     {
         if ( 0U == a_data_max_size)
         {
+            error::print( "Invalid argument! Buffer size must be bigger than 0.\n");
             return false;
         }
 
         if ( 0U == a_data_type_size)
         {
+            error::print( "Invalid argument! Type size must be bigger than 0.\n");
             return false;
         }
 
         if ( nullptr == ap_static_buffer)
         {
+            error::print( "Invalid argument! Empty pointer to static buffer!\n");
             return false;
         }
         
@@ -739,6 +784,7 @@ namespace kernel::static_queue
 
         if ( false == queue_created)
         {
+            error::print( "Failed to internally create static queue!\n");
             return false;
         }
 
@@ -749,6 +795,7 @@ namespace kernel::static_queue
     {
         if ( nullptr == ap_name)
         {
+            error::print( "Invalid argument! Empty pointer to queue name!\n");
             return false;
         }
 
@@ -770,6 +817,7 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
         }
 
@@ -784,11 +832,13 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
         }
 
         if ( nullptr == ap_data)
         {
+            error::print( "Invalid argument! Empty pointer to data!\n");
             return false;
         }
 
@@ -809,11 +859,13 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
         }
 
         if ( nullptr == ap_data)
         {
+            error::print( "Invalid argument! Empty pointer to data!\n");
             return false;
         }
 
@@ -835,6 +887,7 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
         }
 
@@ -851,6 +904,7 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
         }
 
@@ -867,6 +921,7 @@ namespace kernel::static_queue
 
         if ( internal::handle::ObjectType::Queue != objectType)
         {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
         }
 
@@ -988,7 +1043,12 @@ namespace kernel::internal
             next_task
         );
 
-        assert( true == task_available);
+        if ( false == task_available)
+        {
+            // Should never happen. Most likely Idle task was not created.
+            error::print( "Critical error! No task to switch context to!\n");
+            kernel::hardware::debug::setBreakpoint();
+        }
 
         loadContext( context::m_tasks, next_task);
 
@@ -1015,7 +1075,12 @@ namespace kernel::internal
             next_task
         );
 
-        assert( true == task_available);
+        if ( false == task_available)
+        {
+            // Should never happen. Most likely Idle task was not created.
+            error::print( "Critical error! No task to switch context to!\n");
+            kernel::hardware::debug::setBreakpoint();
+        }
 
         storeContext( context::m_tasks, current_task);
         loadContext( context::m_tasks, next_task);

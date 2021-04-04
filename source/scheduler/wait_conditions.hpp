@@ -114,7 +114,8 @@ namespace kernel::internal::scheduler::wait
 
             if ( false == valid_handle)
             {
-                a_result = kernel::sync::WaitResult::InvalidHandle;
+                // Not supported handle type.
+                a_result = kernel::sync::WaitResult::WaitFailed;
                 return true;
             }
 

@@ -186,7 +186,7 @@ namespace kernel::internal::scheduler
         Time_ms &                   a_current
     )
     {
-        assert(a_wait_signals);
+        assert( a_wait_signals);
 
         bool task_added = wait_list::addTaskWaitObj(
             a_context.m_wait_list,
