@@ -35,14 +35,14 @@ namespace kernel::internal::scheduler::wait
         bool        m_waitForver;
 
         // TODO: consider using internal::timer for wait states.
-        Time_ms     m_interval;
-        Time_ms     m_start;
+        TimeMs      m_interval;
+        TimeMs      m_start;
     };
 
     inline void initSleep(
         volatile Conditions &   a_conditions,
-        Time_ms &               a_interval,
-        Time_ms &               a_current
+        TimeMs &                a_interval,
+        TimeMs &                a_current
     )
     {
         a_conditions.m_type = Type::Sleep;
@@ -56,8 +56,8 @@ namespace kernel::internal::scheduler::wait
         uint32_t                a_number_of_signals,
         bool &                  a_wait_for_all_signals,
         bool &                  a_wait_forver,
-        Time_ms &               a_timeout,
-        Time_ms &               a_current
+        TimeMs &                a_timeout,
+        TimeMs &                a_current
     )
     {
         assert( a_wait_signals);
@@ -177,7 +177,7 @@ namespace kernel::internal::scheduler::wait
         internal::event::Context &  a_event_context,
         internal::queue::Context &  a_queue_context,
         kernel::sync::WaitResult &  a_result,
-        Time_ms &                   a_current,
+        TimeMs &                    a_current,
         uint32_t &                  a_signaled_item_index
         )
     {

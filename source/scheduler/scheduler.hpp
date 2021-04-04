@@ -138,8 +138,8 @@ namespace kernel::internal::scheduler
         Context &                   a_context,
         internal::task::Context &   a_task_context,
         task::Id &                  a_task_id,
-        Time_ms &                   a_interval,
-        Time_ms &                   a_current
+        TimeMs &                    a_interval,
+        TimeMs &                    a_current
     )
     {
         bool task_added = wait_list::addTaskSleep(
@@ -182,8 +182,8 @@ namespace kernel::internal::scheduler
         uint32_t                    a_number_of_signals,
         bool                        a_wait_for_all_signals,
         bool &                      a_wait_forver,
-        Time_ms &                   a_timeout,
-        Time_ms &                   a_current
+        TimeMs &                    a_timeout,
+        TimeMs &                    a_current
     )
     {
         assert( a_wait_signals);
@@ -353,7 +353,7 @@ namespace kernel::internal::scheduler
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
         internal::queue::Context &  a_queue_context,
-        Time_ms &                   a_current
+        TimeMs &                    a_current
     )
     {
         // Iterate over WaitItem which hold conditions used to wake up

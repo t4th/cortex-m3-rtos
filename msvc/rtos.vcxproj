@@ -181,6 +181,7 @@
     <ClInclude Include="..\source\scheduler\scheduler.hpp" />
     <ClInclude Include="..\source\scheduler\wait_conditions.hpp" />
     <ClInclude Include="..\source\scheduler\wait_list.hpp" />
+    <ClInclude Include="..\source\system_timer\system_timer.hpp" />
     <ClInclude Include="..\source\task\task.hpp" />
     <ClInclude Include="..\source\timer\timer.hpp" />
     <ClInclude Include="arm_compat.h" />

@@ -37,8 +37,8 @@ namespace kernel::internal::scheduler::wait_list
     inline bool addTaskSleep(
         Context &   a_context,
         task::Id    a_task_id,
-        Time_ms &   a_interval,
-        Time_ms &   a_current
+        TimeMs &    a_interval,
+        TimeMs &    a_current
     )
     {
         MemoryBufferIndex item_index;
@@ -68,8 +68,8 @@ namespace kernel::internal::scheduler::wait_list
         uint32_t            a_number_of_signals,
         bool &              a_wait_for_all_signals,
         bool &              a_wait_forver,
-        Time_ms &           a_timeout,
-        Time_ms &           a_current
+        TimeMs &            a_timeout,
+        TimeMs &            a_current
     )
     {
         // Note: function allocate without checking for dublicates in m_list.

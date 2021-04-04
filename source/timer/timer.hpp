@@ -19,9 +19,9 @@ namespace kernel::internal::timer
 
     struct Timer
     {
-        Time_ms     m_start;
-        Time_ms     m_interval;
-        State       m_state;
+        TimeMs  m_start;
+        TimeMs  m_interval;
+        State   m_state;
     };
     
     // Type strong memory index for allocated Timer type.
@@ -35,8 +35,8 @@ namespace kernel::internal::timer
     inline bool create(
         Context &   a_context,
         Id &        a_id,
-        Time_ms &   a_start,
-        Time_ms &   a_interval
+        TimeMs &    a_start,
+        TimeMs &    a_interval
     )
     {
         // Create new Timer object.
@@ -80,7 +80,7 @@ namespace kernel::internal::timer
         return a_context.m_data.at( static_cast< MemoryBufferIndex> ( a_id)).m_state;
     }
 
-    inline void tick( Context & a_context, Time_ms & a_current)
+    inline void tick( Context & a_context, TimeMs & a_current)
     {
         // TODO: consider memory barrier since this funtion is
         //       called from interrupt handler.

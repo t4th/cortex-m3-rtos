@@ -9,7 +9,7 @@
 // User API.
 namespace kernel
 {
-    typedef uint32_t Time_ms;
+    typedef uint32_t TimeMs;
 
     // Abstract handle to system object.
     // Should only be used with kernel API.
@@ -25,7 +25,7 @@ namespace kernel
     void start();
 
     // Return time in miliseconds since kernel started.
-    Time_ms getTime();
+    TimeMs getTime();
 
     // Return core frequency in Hz.
     uint32_t getCoreFrequencyHz();
@@ -77,13 +77,13 @@ namespace kernel::task
     // Works only with Suspended tasks. Has no effect on Ready or Waiting tasks.
     void resume( kernel::Handle & a_handle);
 
-    void sleep( Time_ms a_time);
+    void sleep( TimeMs a_time);
 }
 
 // User API for controling software timers.
 namespace kernel::timer
 {
-    bool create( kernel::Handle & a_handle, Time_ms a_interval);
+    bool create( kernel::Handle & a_handle, TimeMs a_interval);
     void destroy( kernel::Handle & a_handle);
     void start( kernel::Handle & a_handle);
     void stop( kernel::Handle & a_handle);
@@ -150,7 +150,7 @@ namespace kernel::sync
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver = true,
-        Time_ms             a_timeout = 0U
+        TimeMs              a_timeout = 0U
     );
 
     // Wait for multiple system objects provided as an array of handles.
@@ -162,7 +162,7 @@ namespace kernel::sync
         uint32_t            a_number_of_elements,
         bool                a_wait_for_all = true,
         bool                a_wait_forver = true,
-        Time_ms             a_timeout = 0U,
+        TimeMs              a_timeout = 0U,
         uint32_t *          a_signaled_item_index = nullptr
     );
 }

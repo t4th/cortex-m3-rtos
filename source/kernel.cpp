@@ -90,7 +90,7 @@ namespace kernel
         internal::hardware::syscall( internal::hardware::SyscallId::LoadNextTask);
     }
 
-    Time_ms getTime()
+    TimeMs getTime()
     {
         return internal::system_timer::get( internal::context::m_systemTimer);
     }
@@ -314,12 +314,12 @@ namespace kernel::task
         }
     }
 
-    void sleep( Time_ms a_time)
+    void sleep( TimeMs a_time)
     {
         // Note: Sping lock in case if provided time is smaller or equal to single context switch interval.
         if ( a_time <= internal::system_timer::context_switch_interval_ms)
         {
-            for ( volatile Time_ms delay = 0U; delay < a_time; ++delay);
+            for ( volatile TimeMs delay = 0U; delay < a_time; ++delay);
             return;
         }
 
@@ -327,7 +327,7 @@ namespace kernel::task
         {
             auto currentTask = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
-            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
 
             internal::scheduler::setTaskToSleep(
                 internal::context::m_scheduler,
@@ -343,11 +343,11 @@ namespace kernel::task
 
 namespace kernel::timer
 {
-    bool create( kernel::Handle & a_handle, Time_ms a_interval)
+    bool create( kernel::Handle & a_handle, TimeMs a_interval)
     {
         internal::lock::enter( internal::context::m_lock);
         {
-            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
 
             internal::timer::Id new_timer_id;
 
@@ -634,7 +634,7 @@ namespace kernel::sync
     WaitResult waitForSingleObject(
         kernel::Handle &    a_handle,
         bool                a_wait_forver,
-        Time_ms             a_timeout
+        TimeMs              a_timeout
     )
     {
         constexpr uint32_t number_of_elements{ 1U};
@@ -657,7 +657,7 @@ namespace kernel::sync
         uint32_t            a_number_of_elements,
         bool                a_wait_for_all,
         bool                a_wait_forver,
-        Time_ms             a_timeout,
+        TimeMs              a_timeout,
         uint32_t *          a_signaled_item_index
     )
     {
@@ -692,7 +692,7 @@ namespace kernel::sync
         internal::lock::enter( internal::context::m_lock);
         {
             // Set task to Wait state for object pointed by a_handle
-            Time_ms currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
 
             auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
@@ -1102,7 +1102,7 @@ namespace kernel::internal
         // If lock is enabled, increment time, but delay scheduler.
         if ( lock::isLocked( context::m_lock))
         {
-            Time_ms current_time = system_timer::get( context::m_systemTimer);
+            TimeMs current_time = system_timer::get( context::m_systemTimer);
 
             timer::tick( context::m_timers, current_time);
 

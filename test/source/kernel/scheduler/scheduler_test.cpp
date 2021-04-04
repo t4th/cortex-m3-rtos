@@ -63,7 +63,7 @@ namespace
         std::vector< task::Id>   m_TaskHandles;
         uint32_t                 m_current;
 
-        test_case_context() : m_current(0U) {}
+        test_case_context() : m_current( 0U) {}
 
         // allocate enough task structures that will be used
         // to test scheduler for given test case context
@@ -75,7 +75,7 @@ namespace
 
             for ( i = 0U; i < a_task_count; ++i)
             {
-                m_TaskHandles.push_back({}); // create physical task handle
+                m_TaskHandles.push_back( {}); // create physical task handle
 
                 bool result = kernel::internal::task::create(
                     m_Task,
@@ -103,11 +103,11 @@ TEST_CASE("Scheduler")
 {
     SECTION( "Add tasks of same priority and test round-robin scheduling.")
     {
-        std::unique_ptr<test_case_context> context(new test_case_context);
+        std::unique_ptr<test_case_context> context( new test_case_context);
 
         // Create 10 internal::task structures.
         {
-            context->allocate_tasks(kernel::task::Priority::Low, 10U);
+            context->allocate_tasks( kernel::task::Priority::Low, 10U);
         }
 
         // Add task and test Current and Next.
@@ -165,7 +165,7 @@ TEST_CASE("Scheduler")
                     *context,
                     i,
                     static_cast< task::Id>( expected_curr[ i]),
-                    static_cast< task::Id>( expected_next[i])
+                    static_cast< task::Id>( expected_next[ i])
                 );
             }
         }
@@ -231,7 +231,7 @@ TEST_CASE("Scheduler")
             // Add 3 HIGH priority tasks.
             context->allocate_tasks( kernel::task::Priority::High, 3U);
 
-            for (uint32_t i = 0U; i < 3U; ++i)
+            for ( uint32_t i = 0U; i < 3U; ++i)
             {
                 bool result = scheduler::addReadyTask(
                     context->m_Scheduler,
@@ -457,8 +457,8 @@ TEST_CASE("Scheduler")
     {
         std::unique_ptr<test_case_context> context(new test_case_context);
 
-        kernel::Time_ms timeout = 100U;
-        kernel::Time_ms current = 100U;
+        kernel::TimeMs timeout = 100U;
+        kernel::TimeMs current = 100U;
 
         // Pre-condition
         {
@@ -542,7 +542,7 @@ TEST_CASE("Scheduler")
         // ready: 1(current) - 2
         {
             task::Id task_to_sleep = context->m_TaskHandles.at( 0U);
-            kernel::Time_ms current_time = 0U;
+            kernel::TimeMs current_time = 0U;
 
             bool result = scheduler::setTaskToSleep(
                 context->m_Scheduler,
@@ -613,7 +613,7 @@ TEST_CASE("Scheduler")
 
             // Check wait condition to wake up Task 0.
             {
-                kernel::Time_ms new_time = current + timeout;
+                kernel::TimeMs new_time = current + timeout;
 
                 checkWaitConditions(
                     context->m_Scheduler,
@@ -684,8 +684,8 @@ TEST_CASE("Scheduler")
         kernel::Handle event;
         kernel::Handle timer;
 
-        const kernel::Time_ms timeout = 100U;
-        const kernel::Time_ms current = 100U;
+        const kernel::TimeMs timeout = 100U;
+        const kernel::TimeMs current = 100U;
 
         // Pre-condition
         {
@@ -729,7 +729,7 @@ TEST_CASE("Scheduler")
 
             // Set task to wait for new event.
             {
-                kernel::Time_ms unused_ref = 0U;
+                kernel::TimeMs unused_ref = 0U;
                 const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
@@ -762,8 +762,8 @@ TEST_CASE("Scheduler")
             // Create timer object.
             {
                 kernel::internal::timer::Id new_timer_id;
-                kernel::Time_ms start = 0U;
-                kernel::Time_ms interval = 10000U;
+                kernel::TimeMs start = 0U;
+                kernel::TimeMs interval = 10000U;
 
                 bool result = kernel::internal::timer::create(
                     context->m_Timer,
@@ -782,7 +782,7 @@ TEST_CASE("Scheduler")
 
             // Set task to wait for new timer.
             {
-                kernel::Time_ms unused_ref = 0U;
+                kernel::TimeMs unused_ref = 0U;
                 const bool wait_for_all_signals = true;
                 bool wait_forever = true;
 
@@ -812,7 +812,7 @@ TEST_CASE("Scheduler")
 
         // Check synchronization objects conditions when not conditions are not met.
         {
-            kernel::Time_ms currentTime = 10U;
+            kernel::TimeMs currentTime = 10U;
 
             checkWaitConditions(
                 context->m_Scheduler,
@@ -842,7 +842,7 @@ TEST_CASE("Scheduler")
 
         // Check conditions.
         {
-            kernel::Time_ms currentTime = 11U;
+            kernel::TimeMs currentTime = 11U;
 
             checkWaitConditions(
                 context->m_Scheduler,
@@ -868,14 +868,14 @@ TEST_CASE("Scheduler")
         {
             // Timer start value was 0, interval 10000U,
             // set new value higher than expected.
-            kernel::Time_ms currentTime = 10001U;
+            kernel::TimeMs currentTime = 10001U;
 
             kernel::internal::timer::tick( context->m_Timer, currentTime);
         }
 
         // Check conditions.
         {
-            kernel::Time_ms currentTime = 11U;
+            kernel::TimeMs currentTime = 11U;
 
             checkWaitConditions(
                 context->m_Scheduler,

@@ -6,9 +6,9 @@
 
 struct Delay
 {
-    kernel::Time_ms delay_for_task0;
-    kernel::Time_ms delay_for_task1;
-    kernel::Time_ms delay_for_task2;
+    kernel::TimeMs delay_for_task0;
+    kernel::TimeMs delay_for_task1;
+    kernel::TimeMs delay_for_task2;
 };
 
 void task_routine( void * a_parameter);
@@ -35,7 +35,7 @@ int main()
 // Delayed ping.
 void task_routine( void * a_parameter)
 {
-    kernel::Time_ms & timer = *reinterpret_cast< kernel::Time_ms*>( a_parameter);
+    kernel::TimeMs & timer = *reinterpret_cast< kernel::TimeMs*>( a_parameter);
 
     kernel::hardware::debug::print( "task - start\r\n");
 

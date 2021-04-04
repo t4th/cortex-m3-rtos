@@ -29,7 +29,7 @@ namespace kernel::internal::task
 namespace kernel::internal::system_timer
 {
     // Round-robin context switch intervals in miliseconds.
-    constexpr Time_ms context_switch_interval_ms{ 10U};
+    constexpr TimeMs context_switch_interval_ms{ 10U};
 }
 
 namespace kernel::internal::event

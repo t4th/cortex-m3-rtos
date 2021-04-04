@@ -121,6 +121,9 @@
     <ClInclude Include="..\source\common\memory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\system_timer\system_timer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\external\st\STM32F10x\startup_stm32f10x_hd.s">

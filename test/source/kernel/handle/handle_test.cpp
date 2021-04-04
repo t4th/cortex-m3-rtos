@@ -101,8 +101,8 @@ TEST_CASE( "Handle")
 
             // Prepare event object and handle.
             timer::Id new_index;
-            kernel::Time_ms start = 0U;
-            kernel::Time_ms interval = 100U;
+            kernel::TimeMs start = 0U;
+            kernel::TimeMs interval = 100U;
             bool timer_created = timer::create( *timer_context, new_index, start, interval);
 
             REQUIRE( true == timer_created);
@@ -125,7 +125,7 @@ TEST_CASE( "Handle")
             REQUIRE( false == condition_check_result);
 
             // Finish timer.
-            kernel::Time_ms current_time = start + interval + 1U;
+            kernel::TimeMs current_time = start + interval + 1U;
             timer::tick( *timer_context, current_time);
 
             // Test the handle.
