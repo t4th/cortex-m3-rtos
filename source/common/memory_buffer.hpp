@@ -64,8 +64,9 @@ namespace kernel::internal::common
 
     private:
         TDataType   m_data[ MaxSize];
-
-        // TODO: Is bool 1 byte or 4? Hack it to 1-bit - 1-status.
+        
+        // Note: This is not effective way to hold information, but simple enough
+        //       for this project.
         bool        m_status[ MaxSize];
 
     };
