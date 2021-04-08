@@ -6,12 +6,10 @@
 #include "handle/handle.hpp"
 
 // Scheduler is used to order which task is to be served next.
-// It is state machine using m_current and m_next to evaluate
-// arbitration queues.
+// It is using m_current and m_next to evaluate arbitration queues.
 
-// Scheduler is not responsible for allocating Task memory, but
-// only uses internal::task:Id type, which is internal::task
-// unique identifier.
+// Scheduler is not responsible for allocating Task memory, but only
+// uses internal::task:Id type, which is internal::task unique identifier.
 
 // For scheduler it does not matter if provided task ID is valid or not.
 
@@ -19,8 +17,8 @@ namespace kernel::internal::scheduler
 {
     struct Context
     {
-        // Note: by design, Idle task must always be available
-        //       ,has Id = 0 and Idle priority. Otherwise UB.
+        // Note: by design, Idle task must always be available,
+        //       has Id = 0 and Idle priority. Otherwise UB.
         volatile kernel::internal::task::Id m_current{ 0U};
         volatile kernel::internal::task::Id m_next{ 0U};
 
@@ -32,13 +30,12 @@ namespace kernel::internal::scheduler
     };
 
     inline bool addReadyTask(
-        Context &                   a_context,
-        internal::task::Context &   a_task_context,
-        task::Id &                  a_task_id
+        Context &       a_context,
+        task::Context & a_task_context,
+        task::Id &      a_task_id
     )
     {
-        kernel::task::Priority priority = 
-            task::priority::get( a_task_context, a_task_id);
+        auto priority = task::priority::get( a_task_context, a_task_id);
 
         bool task_added = ready_list::addTask(
             a_context.m_ready_list,
@@ -80,17 +77,13 @@ namespace kernel::internal::scheduler
             a_task_id
         );
 
+        // Only resume Suspended tasks. Waiting tasks cannot be resumed.
         if ( kernel::task::State::Suspended != resumed_task_state)
         {
             return false;
         }
 
-        wait_list::removeTask(
-            a_context.m_wait_list,
-            a_task_id
-        );
-
-        bool task_added = addReadyTask(a_context, a_task_context, a_task_id);
+        bool task_added = addReadyTask( a_context, a_task_context, a_task_id);
 
         if ( true == task_added)
         {
@@ -116,21 +109,10 @@ namespace kernel::internal::scheduler
             kernel::task::State::Suspended
         );
 
-        kernel::task::Priority prio = internal::task::priority::get(
-            a_task_context,
-            a_task_id
-        );
+        auto priority = internal::task::priority::get( a_task_context, a_task_id);
 
-        ready_list::removeTask(
-            a_context.m_ready_list,
-            prio,
-            a_task_id
-        );
-
-        wait_list::removeTask(
-            a_context.m_wait_list,
-            a_task_id
-        );
+        ready_list::removeTask( a_context.m_ready_list, priority, a_task_id);
+        wait_list::removeTask( a_context.m_wait_list, a_task_id);
     }
 
     inline bool setTaskToSleep(
@@ -153,16 +135,9 @@ namespace kernel::internal::scheduler
             return false;
         }
 
-        kernel::task::Priority prio = internal::task::priority::get(
-            a_task_context,
-            a_task_id
-        );
+        auto priority = internal::task::priority::get( a_task_context, a_task_id);
 
-        ready_list::removeTask(
-            a_context.m_ready_list,
-            prio,
-            a_task_id
-        );
+        ready_list::removeTask( a_context.m_ready_list, priority, a_task_id);
 
         kernel::internal::task::state::set(
             a_task_context,
@@ -203,14 +178,11 @@ namespace kernel::internal::scheduler
             return false;
         }
 
-        kernel::task::Priority prio = internal::task::priority::get(
-            a_task_context,
-            a_task_id
-        );
+        auto priority = internal::task::priority::get( a_task_context, a_task_id);
 
         ready_list::removeTask(
             a_context.m_ready_list,
-            prio,
+            priority,
             a_task_id
         );
 
@@ -229,21 +201,10 @@ namespace kernel::internal::scheduler
         task::Id &                  a_task_id
     )
     {
-        kernel::task::Priority prio = internal::task::priority::get(
-            a_task_context,
-            a_task_id
-        );
+        auto priority = internal::task::priority::get( a_task_context, a_task_id);
 
-        ready_list::removeTask(
-            a_context.m_ready_list,
-            prio,
-            a_task_id
-        );
-
-        wait_list::removeTask(
-            a_context.m_wait_list,
-            a_task_id
-        );
+        ready_list::removeTask( a_context.m_ready_list, priority, a_task_id);
+        wait_list::removeTask( a_context.m_wait_list, a_task_id);
     }
 
     inline bool getNextTask(
@@ -253,16 +214,15 @@ namespace kernel::internal::scheduler
     )
     {
         bool next_task_found = false;
+        
+        // Iterate over each priority list, starting from highest priority first.
+        uint32_t priority = static_cast< uint32_t>( kernel::task::Priority::High);
 
-        for ( uint32_t prio = static_cast< uint32_t>( kernel::task::Priority::High);
-            prio < kernel::internal::task::priorities_count;
-            ++prio)
+        for ( ;priority < kernel::internal::task::priorities_count; ++priority)
         {
-            kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
-
             next_task_found = ready_list::findNextTask(
                 a_context.m_ready_list,
-                priority,
+                static_cast< kernel::task::Priority>( priority),
                 a_next_task_id
             );
 
@@ -301,15 +261,14 @@ namespace kernel::internal::scheduler
     {
         bool next_task_found = false;
 
-        for ( uint32_t prio = static_cast< uint32_t>( kernel::task::Priority::High);
-            prio < kernel::internal::task::priorities_count;
-            ++prio)
-        {
-            kernel::task::Priority priority = static_cast< kernel::task::Priority>( prio);
+        // Iterate over each priority list, starting from highest priority first.
+        uint32_t priority = static_cast< uint32_t>( kernel::task::Priority::High);
 
+        for ( ; priority < kernel::internal::task::priorities_count; ++priority)
+        {
             next_task_found = ready_list::findCurrentTask(
                 a_context.m_ready_list,
-                priority,
+                static_cast< kernel::task::Priority>( priority),
                 a_next_task_id
             );
 
@@ -355,8 +314,7 @@ namespace kernel::internal::scheduler
         TimeMs &                    a_current
     )
     {
-        // Iterate over WaitItem which hold conditions used to wake up
-        // waiting task.
+        // Iterate over WaitItem which hold conditions used to wake up waiting task.
         for ( uint32_t i = 0U; i < kernel::internal::task::max_number; ++i)
         {
             auto & current_wait_item = a_context.m_wait_list.m_list;

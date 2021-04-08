@@ -99,11 +99,11 @@ namespace kernel::internal::scheduler::ready_list
     // Find next task in selected priority group and UPDATE current task.
     inline bool findNextTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority &        a_priority,
+        const kernel::task::Priority &  a_priority,
         kernel::internal::task::Id &    a_id
     )
     {
-        const uint32_t priority = static_cast< uint32_t>( a_priority);
+        const uint32_t priority = static_cast< const uint32_t>( a_priority);
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
         const NodeIndex current_node_index = a_context.m_ready_list[ priority].m_current;
 
@@ -130,11 +130,11 @@ namespace kernel::internal::scheduler::ready_list
 
     inline bool findCurrentTask(
         ready_list::Context &           a_context,
-        kernel::task::Priority &        a_priority,
+        const kernel::task::Priority &  a_priority,
         kernel::internal::task::Id &    a_id
     )
     {
-        const uint32_t priority = static_cast< uint32_t>( a_priority);
+        const uint32_t priority = static_cast< const uint32_t>( a_priority);
         const uint32_t count = a_context.m_ready_list[ priority].m_list.count();
         const NodeIndex current_task_index = a_context.m_ready_list[ priority].m_current;
 

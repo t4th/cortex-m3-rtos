@@ -245,7 +245,7 @@ namespace kernel::internal::hardware
             return __get_PSP();
         }
 
-        void set(uint32_t a_new_sp)
+        void set( uint32_t a_new_sp)
         {
             // TODO: Thread mode should be used in final version
             __set_PSP( a_new_sp);
