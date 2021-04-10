@@ -9,7 +9,7 @@
 // User API.
 namespace kernel
 {
-    typedef uint32_t TimeMs;
+    using TimeMs = uint32_t;
 
     // Abstract handle to system object.
     // Should only be used with kernel API.
@@ -223,17 +223,17 @@ namespace kernel::hardware
             // Priority groups.
             enum class Preemption
             {
-                Critical = 1U,
-                Kernel = 2U,
-                User = 3U
+                Critical,
+                Kernel,
+                User
             };
 
             // Sub-priorities of Priority groups.
             enum class Sub
             {
-                High = 0U,
-                Medium = 1U,
-                Low = 2U
+                High,
+                Medium,
+                Low
             };
 
             // Vendor interrupt ID must be set according to MCU vendor data sheet.

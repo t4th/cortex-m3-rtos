@@ -45,7 +45,8 @@ namespace kernel::hardware
                 Sub         a_sub_priority
             )
             {
-                uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
+                // Pre-emption priority value 0 is reserved. Set enum underlying value to always skip it.
+                uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority) + 1U;
                 uint32_t sub_priority = static_cast< uint32_t> ( a_sub_priority);
 
                 // Note: For a processor configured with less than eight bits of priority,
@@ -61,7 +62,7 @@ namespace kernel::hardware
                 // Note: signed integer is used, because core interrupts use negative priorities.
                 int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
 
-                if ( priority_number >= static_cast< int32_t>( 0))
+                if ( priority_number >= static_cast< int32_t>( 0U))
                 {
                     // Configure vendor interrupts.
                     NVIC->IP[ priority_number] = new_value;
@@ -118,9 +119,9 @@ namespace kernel::hardware
         // TODO: test if compiler is not re-ordering this functions.
         void enter( Context & a_context, interrupt::priority::Preemption a_preemption_priority)
         {
-            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority);
-            uint32_t new_value = 
-                preemption_priority << ( 8U - number_of_preemption_priority_bits);
+            // Pre-emption priority value 0 is reserved. Set enum underlying value to always skip it.
+            uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority) + 1U;
+            uint32_t new_value = preemption_priority << ( 8U - number_of_preemption_priority_bits);
 
             // Setting BASEPRI to 0 has no effect, so it is most likely bug.
             assert( 0U != new_value);
