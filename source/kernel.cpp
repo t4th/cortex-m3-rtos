@@ -201,9 +201,9 @@ namespace kernel::task
 
     void terminate( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Task != objectType)
+        if ( internal::handle::ObjectType::Task != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -215,9 +215,9 @@ namespace kernel::task
 
     void suspend( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Task != objectType)
+        if ( internal::handle::ObjectType::Task != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -254,9 +254,9 @@ namespace kernel::task
 
     void resume( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Task != objectType)
+        if ( internal::handle::ObjectType::Task != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -269,11 +269,11 @@ namespace kernel::task
 
         kernel::internal::lock::enter( internal::context::m_lock);
         {
-            auto resumedTaskId = internal::handle::getId< internal::task::Id>( a_handle);
-            auto currentTaskId = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+            auto resumed_task_id = internal::handle::getId< internal::task::Id>( a_handle);
+            auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
             // If task is trying to resume itself - do nothing.
-            if ( resumedTaskId == currentTaskId)
+            if ( resumed_task_id == current_task_id)
             {
                 internal::lock::leave( internal::context::m_lock);
                 return;
@@ -282,7 +282,7 @@ namespace kernel::task
             bool task_resumed = internal::scheduler::resumeSuspendedTask(
                 internal::context::m_scheduler,
                 internal::context::m_tasks,
-                resumedTaskId
+                resumed_task_id
             );
 
             // If task is not suspended - do nothing.
@@ -293,17 +293,17 @@ namespace kernel::task
             }
 
             // If resumed task is higher priority than current, issue context switch.
-            const auto currentTaskPrio = internal::task::priority::get(
+            const auto current_task_priority = internal::task::priority::get(
                 internal::context::m_tasks,
-                currentTaskId
+                current_task_id
             );
 
-            const auto resumedTaskPrio = internal::task::priority::get(
+            const auto resumed_task_priority = internal::task::priority::get(
                 internal::context::m_tasks,
-                resumedTaskId
+                resumed_task_id
             );
 
-            if ( resumedTaskPrio < currentTaskPrio)
+            if ( resumed_task_priority < current_task_priority)
             {
                 internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
@@ -325,16 +325,16 @@ namespace kernel::task
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto currentTask = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+            auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
-            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs current_time = internal::system_timer::get( internal::context::m_systemTimer);
 
             internal::scheduler::setTaskToSleep(
                 internal::context::m_scheduler,
                 internal::context::m_tasks,
-                currentTask,
+                current_task_id,
                 a_time,
-                currentTime
+                current_time
             );
         }
         internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
@@ -347,14 +347,14 @@ namespace kernel::timer
     {
         internal::lock::enter( internal::context::m_lock);
         {
-            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs current_time = internal::system_timer::get( internal::context::m_systemTimer);
 
             internal::timer::Id new_timer_id;
 
             bool timer_created = internal::timer::create(
                 internal::context::m_timers,
                 new_timer_id,
-                currentTime,
+                current_time,
                 a_interval
             );
 
@@ -374,9 +374,9 @@ namespace kernel::timer
 
     void destroy( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Timer != objectType)
+        if ( internal::handle::ObjectType::Timer != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -392,9 +392,9 @@ namespace kernel::timer
 
     void start( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Timer != objectType)
+        if ( internal::handle::ObjectType::Timer != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -410,9 +410,9 @@ namespace kernel::timer
 
     void stop( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Timer != objectType)
+        if ( internal::handle::ObjectType::Timer != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -474,9 +474,9 @@ namespace kernel::event
 
     void destroy( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Event != objectType)
+        if ( internal::handle::ObjectType::Event != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -488,9 +488,9 @@ namespace kernel::event
 
     void set( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Event != objectType)
+        if ( internal::handle::ObjectType::Event != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -502,9 +502,9 @@ namespace kernel::event
 
     void reset( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Event != objectType)
+        if ( internal::handle::ObjectType::Event != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -545,12 +545,12 @@ namespace kernel::critical_section
 
             internal::event::set( internal::context::m_events, new_event_id);
 
-            internal::task::Id currentTask =
+            internal::task::Id current_task_id =
                 internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
             a_context.m_ownerTask = internal::handle::create(
                 internal::handle::ObjectType::Task,
-                currentTask
+                current_task_id
             );
 
             a_context.m_lockCount = 0U;
@@ -692,7 +692,7 @@ namespace kernel::sync
         internal::lock::enter( internal::context::m_lock);
         {
             // Set task to Wait state for object pointed by a_handle
-            TimeMs currentTime = internal::system_timer::get( internal::context::m_systemTimer);
+            TimeMs current_time = internal::system_timer::get( internal::context::m_systemTimer);
 
             auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
@@ -705,7 +705,7 @@ namespace kernel::sync
                 a_wait_for_all,
                 a_wait_forver,
                 a_timeout,
-                currentTime
+                current_time
             );
 
             if ( false == operation_result)
@@ -813,9 +813,9 @@ namespace kernel::static_queue
 
     void destroy( kernel::Handle & a_handle)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return;
@@ -828,9 +828,9 @@ namespace kernel::static_queue
 
     bool send( kernel::Handle & a_handle, volatile void * const ap_data)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
@@ -855,9 +855,9 @@ namespace kernel::static_queue
 
     bool receive( kernel::Handle & a_handle, volatile void * const ap_data)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
@@ -883,9 +883,9 @@ namespace kernel::static_queue
 
     bool size( kernel::Handle & a_handle, size_t & a_size)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
@@ -900,9 +900,9 @@ namespace kernel::static_queue
 
     bool isFull( kernel::Handle & a_handle, bool & a_is_full)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
@@ -917,9 +917,9 @@ namespace kernel::static_queue
 
     bool isEmpty( kernel::Handle & a_handle, bool & a_is_empty)
     {
-        const auto objectType = internal::handle::getObjectType( a_handle);
+        const auto object_type = internal::handle::getObjectType( a_handle);
 
-        if ( internal::handle::ObjectType::Queue != objectType)
+        if ( internal::handle::ObjectType::Queue != object_type)
         {
             error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
             return false;
