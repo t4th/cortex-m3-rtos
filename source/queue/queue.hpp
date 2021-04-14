@@ -48,7 +48,7 @@ namespace kernel::internal::queue
     {
         assert( nullptr != ap_static_buffer);
 
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         // Create new Queue object.
         MemoryBufferIndex new_queue_id;
@@ -81,7 +81,7 @@ namespace kernel::internal::queue
     {
         assert( nullptr != ap_name);
 
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         for ( uint32_t id = 0U; id < max_number; ++id)
         {
@@ -100,14 +100,14 @@ namespace kernel::internal::queue
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         a_context.m_data.free( static_cast< MemoryBufferIndex>( a_id));
     }
 
     inline bool isFull( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
@@ -118,7 +118,7 @@ namespace kernel::internal::queue
 
     inline bool isEmpty( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         bool is_queue_empty = ( 0U == a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_current_size);
 
@@ -130,7 +130,7 @@ namespace kernel::internal::queue
     {
         assert( nullptr != ap_data);
 
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
@@ -170,7 +170,7 @@ namespace kernel::internal::queue
     {
         assert( nullptr != ap_data);
 
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         volatile Queue & queue = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
@@ -207,7 +207,7 @@ namespace kernel::internal::queue
 
     inline size_t getSize( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         return a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_current_size;
     }

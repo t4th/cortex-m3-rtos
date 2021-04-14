@@ -59,8 +59,8 @@ namespace kernel::task
     bool create(
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority = kernel::task::Priority::Low,
-        kernel::Handle *        a_handle = nullptr,
-        void *                  a_parameter = nullptr,
+        kernel::Handle * const  a_handle = nullptr,
+        void * const            a_parameter = nullptr,
         bool                    a_create_suspended = false
     );
 
@@ -99,11 +99,11 @@ namespace kernel::event
     bool create(
         kernel::Handle &    a_handle,
         bool                a_manual_reset = false,
-        const char *        ap_name = nullptr
+        const char * const  ap_name = nullptr
     );
 
     // ap_name parameter must point to compile time available literal or UB.
-    bool open( kernel::Handle & a_handle, const char * ap_name);
+    bool open( kernel::Handle & a_handle, const char * const ap_name);
     void destroy( kernel::Handle & a_handle);
     void set( kernel::Handle & a_handle);
     void reset( kernel::Handle & a_handle);
@@ -158,12 +158,12 @@ namespace kernel::sync
     // If a_wait_for_all is not set, optional argument a_signaled_item_index,
     // will return first signaled handle index.
     WaitResult waitForMultipleObjects(
-        kernel::Handle *    a_array_of_handles,
-        uint32_t            a_number_of_elements,
-        bool                a_wait_for_all = true,
-        bool                a_wait_forver = true,
-        TimeMs              a_timeout = 0U,
-        uint32_t *          a_signaled_item_index = nullptr
+        kernel::Handle * const  a_array_of_handles,
+        uint32_t                a_number_of_elements,
+        bool                    a_wait_for_all = true,
+        bool                    a_wait_forver = true,
+        TimeMs                  a_timeout = 0U,
+        uint32_t * const        a_signaled_item_index = nullptr
     );
 }
 
@@ -183,11 +183,11 @@ namespace kernel::static_queue
         size_t                a_data_max_size,
         size_t                a_data_type_size,
         volatile void * const ap_static_buffer,
-        const char *          ap_name = nullptr
+        const char * const    ap_name = nullptr
     );
     
     // ap_name parameter must be pointer to compile time available literal or UB.
-    bool open( kernel::Handle & a_handle, const char * ap_name);
+    bool open( kernel::Handle & a_handle, const char * const ap_name);
     void destroy( kernel::Handle & a_handle);
     bool send( kernel::Handle & a_handle, volatile void * const ap_data);
     bool receive( kernel::Handle & a_handle, volatile void * const ap_data);
@@ -273,11 +273,12 @@ namespace kernel::hardware
     class CriticalSection
     {
     public:
-        CriticalSection()
+        CriticalSection() = delete;
+        inline CriticalSection( const interrupt::priority::Preemption & a_preemption_priority)
         {
-           critical_section::enter( m_context, interrupt::priority::Preemption::Critical);
+           critical_section::enter( m_context, a_preemption_priority);
         }
-        ~CriticalSection()
+        inline ~CriticalSection()
         {
             critical_section::leave( m_context);
         }

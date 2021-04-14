@@ -106,8 +106,8 @@ namespace kernel::task
     bool create(
         kernel::task::Routine   a_routine,
         kernel::task::Priority  a_priority,
-        kernel::Handle *        a_handle,
-        void *                  a_parameter,
+        kernel::Handle * const  a_handle,
+        void * const            a_parameter,
         bool                    a_create_suspended
     )
     {
@@ -430,7 +430,7 @@ namespace kernel::timer
 namespace kernel::event
 {
     // Note: No lock is required since internal::event API is already protected.
-    bool create( kernel::Handle & a_handle, bool a_manual_reset, const char * a_name)
+    bool create( kernel::Handle & a_handle, bool a_manual_reset, const char * const a_name)
     {
         internal::event::Id new_event_id;
 
@@ -452,7 +452,7 @@ namespace kernel::event
         return true;
     }
 
-    bool open( kernel::Handle & a_handle, const char * ap_name)
+    bool open( kernel::Handle & a_handle, const char * const ap_name)
     {
         if ( nullptr == ap_name)
         {
@@ -653,12 +653,12 @@ namespace kernel::sync
     }
 
     WaitResult waitForMultipleObjects(
-        kernel::Handle *    a_array_of_handles,
-        uint32_t            a_number_of_elements,
-        bool                a_wait_for_all,
-        bool                a_wait_forver,
-        TimeMs              a_timeout,
-        uint32_t *          a_signaled_item_index
+        kernel::Handle * const  a_array_of_handles,
+        uint32_t                a_number_of_elements,
+        bool                    a_wait_for_all,
+        bool                    a_wait_forver,
+        TimeMs                  a_timeout,
+        uint32_t * const        a_signaled_item_index
     )
     {
         assert( nullptr != a_array_of_handles);
@@ -750,7 +750,7 @@ namespace kernel::static_queue
         size_t                  a_data_max_size,
         size_t                  a_data_type_size,
         volatile void * const   ap_static_buffer,
-        const char *            ap_name
+        const char * const      ap_name
     )
     {
         if ( 0U == a_data_max_size)
@@ -791,7 +791,7 @@ namespace kernel::static_queue
         return true;
     }
 
-    bool open( kernel::Handle & a_handle, const char * ap_name)
+    bool open( kernel::Handle & a_handle, const char * const ap_name)
     {
         if ( nullptr == ap_name)
         {

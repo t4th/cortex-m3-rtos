@@ -43,7 +43,7 @@ namespace kernel::internal::event
         const char * ap_name
     )
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         // Create new Event object.
         MemoryBufferIndex new_item_id;
@@ -69,7 +69,7 @@ namespace kernel::internal::event
     {
         assert( nullptr != ap_name);
 
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         for ( uint32_t id = 0U; id < max_number; ++id)
         {
@@ -88,21 +88,21 @@ namespace kernel::internal::event
 
     inline void destroy( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         a_context.m_data.free( static_cast< MemoryBufferIndex>( a_id));
     }
 
     inline void set( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state = State::Set;
     }
 
     inline void reset( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id)).m_state = State::Reset;
     }
@@ -110,7 +110,7 @@ namespace kernel::internal::event
     // Reset event state if manual reset is disabled.
     inline void manualReset( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         auto & event = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
@@ -122,7 +122,7 @@ namespace kernel::internal::event
 
     inline bool isSignaled( Context & a_context, Id & a_id)
     {
-        kernel::hardware::CriticalSection critical_section;
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
 
         auto & event = a_context.m_data.at( static_cast< MemoryBufferIndex>( a_id));
 
