@@ -1,19 +1,20 @@
 // This is on target example, but you can still use Keil simulator and set
 // USART interrupts manually to pending state from within NVIC peripheral.
 
-// Example: Echo input string from usart 1 to ITM trace builit-in in debugger.
+// Example: Echo USART 1 input and echo it also to ITM trace builit-in in debugger.
+//          Under/overflow errors are not handled.
 
 #include <kernel.hpp>
 
 #include "gpio.hpp"
 
-// Send provided string to selected queue. End-of-string sign is also sent.
 template< size_t StringSize>
 void print( kernel::Handle & a_queue, const char ( &a_string)[ StringSize])
 {
     size_t i = 0U;
 
-    while ( i < StringSize)
+    // Skip end-of-string sign.
+    while ( '\0' != a_string[ i] && i < StringSize)
     {
         uint8_t byte_to_send = static_cast< uint8_t>( a_string[ i]);
 
@@ -37,21 +38,6 @@ void print( kernel::Handle & a_queue, const char ( &a_string)[ StringSize])
     USART1->CR1 |= USART_CR1_TXEIE;
 }
 
-void getQueuesHandles( kernel::Handle & a_rx_queue, kernel::Handle & a_tx_queue)
-{
-    if ( false == kernel::static_queue::open( a_rx_queue, "RX queue"))
-    {
-        kernel::hardware::debug::print( "\nFailed to open RX queue.\n");
-        kernel::hardware::debug::setBreakpoint();
-    }
-
-    if ( false == kernel::static_queue::open( a_tx_queue, "TX queue"))
-    {
-        kernel::hardware::debug::print( "\nFailed to open TX queue.\n");
-        kernel::hardware::debug::setBreakpoint();
-    }
-}
-
 extern "C"
 {
     // Note: Overrun and other errors are not handled.
@@ -59,8 +45,10 @@ extern "C"
     {
         kernel::Handle usart_rx_queue;
         kernel::Handle usart_tx_queue;
-    
-        getQueuesHandles( usart_rx_queue, usart_tx_queue);
+
+        // Ignore error checking.
+        ( void) kernel::static_queue::open( usart_rx_queue, "RX queue");
+        ( void) kernel::static_queue::open( usart_tx_queue, "TX queue");
 
         volatile uint16_t status_register = USART1->SR;
 
@@ -68,7 +56,7 @@ extern "C"
         if ( status_register & USART_SR_RXNE)
         {
             uint8_t received_byte = USART1->DR & 0xFF;
-            
+
             bool byte_sent = kernel::static_queue::send( usart_rx_queue, received_byte);
 
             if ( false == byte_sent)
@@ -95,6 +83,9 @@ extern "C"
                 if ( true == byte_received)
                 {
                     USART1->DR = char_to_send;
+                    
+                    // Wait for Transmit Complete.
+                    while ( !(USART1->SR & USART_SR_TC));
                 }
                 else
                 {
@@ -131,9 +122,9 @@ void startup_task( void * a_parameter)
 
     // Configure USART1: baudrate and interrupts.
     const uint32_t  core_frequency = kernel::getCoreFrequencyHz();
-    const uint32_t  usart_baudrate_9600{ core_frequency / 9600U};
+    const uint32_t  usart_baudrate_115200{ core_frequency / 115200U};
 
-    USART1->BRR = static_cast< uint16_t>( usart_baudrate_9600);
+    USART1->BRR = static_cast< uint16_t>( usart_baudrate_115200);
     USART1->CR1 |=  USART_CR1_RXNEIE   // Enable rx ready interrupt.
                 |   USART_CR1_RE       // Enable rx.
                 |   USART_CR1_TE;      // Enable tx.
@@ -157,20 +148,26 @@ void startup_task( void * a_parameter)
 
 void worker_task( void * a_parameter)
 {
+    constexpr size_t response_buffer_size = 64U;
+    char response_buffer[ response_buffer_size];
+    
     kernel::Handle usart_rx_queue;
     kernel::Handle usart_tx_queue;
     
-    getQueuesHandles( usart_rx_queue, usart_tx_queue);
+    // Ignore error checking.
+    ( void) kernel::static_queue::open( usart_rx_queue, "RX queue");
+    ( void) kernel::static_queue::open( usart_tx_queue, "TX queue");
 
-    print( usart_tx_queue, "Worker task started.");
+    print( usart_tx_queue, "Worker task started.\n");
 
     while( true)
     {
-        // Wait until at least one elements is available in queue.
+        // Wait until at least one element is available in queue.
         auto result = kernel::sync::waitForSingleObject( usart_rx_queue);
 
         if ( kernel::sync::WaitResult::ObjectSet == result)
         {
+            int response_buffer_index = 0;
             uint8_t received_byte;
 
             // Flush all queue content until its empty.
@@ -184,12 +181,16 @@ void worker_task( void * a_parameter)
                 if ( true == queue_not_empty)
                 {
                     kernel::hardware::debug::putChar( static_cast< char>( received_byte));
+                    response_buffer[ response_buffer_index] = received_byte;
                 }
                 else
                 {
                     // Queue is empty.
+                    response_buffer[ response_buffer_index] = '\0';
+                    print( usart_tx_queue, response_buffer);
                     break;
                 }
+                ++response_buffer_index;
             };
         }
         else
@@ -201,7 +202,7 @@ void worker_task( void * a_parameter)
 
 int main()
 {
-    static constexpr size_t max_queue_elements{ 32U};
+    static constexpr size_t max_queue_elements{ 64U};
 
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_rx_buffer;
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_tx_buffer;
