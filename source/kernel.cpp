@@ -36,16 +36,16 @@ namespace kernel::internal::context
     internal::queue::Context        m_queue;
     internal::lock::Context         m_lock;
 
-    // Indicate if kernel is started. It is used to detected
-    // if system object was created before or after kernel::start.
+    // Indicate if kernel is started. It is used to detect if
+    // system object was created before or after kernel::start.
     bool m_started = false;
 }
 
-// Implementation of internal kernel functions.
+// Declarations of internal kernel functions.
 namespace kernel::internal
 {
-    void task_routine();
-    void idle_routine( void * a_parameter);
+    void taskRoutine();
+    void idleTaskRoutine( void * a_parameter);
     void terminateTask( task::Id a_id);
 }
 
@@ -62,7 +62,7 @@ namespace kernel
 
         internal::hardware::init();
         
-        bool idle_task_created = task::create( internal::idle_routine, task::Priority::Idle);
+        bool idle_task_created = task::create( internal::idleTaskRoutine, task::Priority::Idle);
 
         if ( false == idle_task_created)
         {
@@ -117,7 +117,7 @@ namespace kernel::task
 
             bool task_created = internal::task::create(
                 internal::context::m_tasks,
-                internal::task_routine,
+                internal::taskRoutine,
                 a_routine, a_priority,
                 &created_task_id,
                 a_parameter,
@@ -966,7 +966,7 @@ namespace kernel::internal
     }
 
     // Task routine wrapper used by kernel.
-    void task_routine()
+    void taskRoutine()
     {
         internal::task::Id current_task;
         kernel::task::Routine routine;
@@ -989,7 +989,7 @@ namespace kernel::internal
     // TODO: calculate CPU load
     // TODO: consider creating callback instead of 'weak' attribute, where kernel API
     //       functions won't work (Terminate on Idle task is a bad idea - UB).
-    __attribute__(( weak)) void idle_routine( void * a_parameter)
+    __attribute__(( weak)) void idleTaskRoutine( void * a_parameter)
     {
         while( true)
         {
