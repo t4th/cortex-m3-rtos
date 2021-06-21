@@ -14,7 +14,7 @@ volatile kernel::internal::hardware::task::Context * next_task_context;
 
 namespace
 {
-    // Variables used to calculate SysTick prescaler used to reach 1 ms timestamp.
+    // Variables used to calculate SysTick prescaler to reach 1 ms timestamp.
     // This is derived from formula:
     // TARGET_SYSTICK_TIMESTAMP_HZ = CORE_CLOCK_FREQ_HZ / SYSTICK_PRESCALER,
     // where SYSTICK_PRESCALER is searched value.
@@ -62,7 +62,7 @@ namespace kernel::hardware
                 // Note: signed integer is used, because core interrupts use negative priorities.
                 int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
 
-                if ( priority_number >= static_cast< int32_t>( 0U))
+                if ( priority_number >= 0)
                 {
                     // Configure vendor interrupts.
                     NVIC->IP[ priority_number] = new_value;
