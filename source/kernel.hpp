@@ -34,7 +34,7 @@ namespace kernel
 // User API for controling tasks.
 namespace kernel::task
 {
-    typedef void( *Routine)( void * a_parameter);
+    using Routine = void( *)( void * a_parameter);
 
     // Task priority. Idle task MUST always be available and MUST
     // always be last in Priority enum. Otherwise UB.
@@ -239,7 +239,7 @@ namespace kernel::hardware
             // Vendor interrupt ID must be set according to MCU vendor data sheet.
             // Using invalid interrupt ID value will result in Undefined Behaviour.
             void set(
-                uint32_t    a_vendor_interrupt_id,
+                int32_t     a_vendor_interrupt_id,
                 Preemption  a_preemption_priority,
                 Sub         a_sub_priority
             );

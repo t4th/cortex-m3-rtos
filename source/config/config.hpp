@@ -23,7 +23,7 @@ namespace kernel::internal::hardware
 namespace kernel::internal::task
 {
     // Define maximum number of tasks.
-    constexpr uint32_t max_number{ 10U};
+    constexpr uint32_t max_number{ 6U};
 }
 
 namespace kernel::internal::system_timer

@@ -28,6 +28,44 @@ namespace
     constexpr uint32_t number_of_preemption_priority_bits{ 2U};
     constexpr uint32_t number_of_sub_priority_bits{ 2U};
     constexpr uint32_t number_of_total_priority_bits{ __NVIC_PRIO_BITS};
+
+
+    // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
+    static constexpr void setInterruptPriority(
+        IRQn_Type                                          a_interrupt_number,
+        kernel::hardware::interrupt::priority::Preemption  a_preemption_priority,
+        kernel::hardware::interrupt::priority::Sub         a_sub_priority
+    )
+    {
+        // Pre-emption priority value 0 is reserved. Set enum underlying value to always skip it.
+        uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority) + 1U;
+        uint32_t sub_priority = static_cast< uint32_t> ( a_sub_priority);
+
+        // Note: For a processor configured with less than eight bits of priority,
+        //       the lower bits of the register are always 0.
+
+        //       In this case, STM32 uses 4 bits, so result in 8 bit register would be
+        //       xx.yy0000, where xx is pre-emption priority, and yy is sub-priority.
+        uint8_t new_value = static_cast< uint8_t>(
+            ( preemption_priority << ( 8U - number_of_preemption_priority_bits)) |
+            ( sub_priority << ( 8U - number_of_total_priority_bits))
+            ) & 0xFFUL;
+
+        // Note: signed integer is used, because core interrupts use negative priorities.
+        int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
+
+        if ( priority_number >= 0)
+        {
+            // Configure vendor interrupts.
+            NVIC->IP[ priority_number] = new_value;
+        }
+        else
+        {
+            // Configure core interrupts.
+            auto system_priority_number = ( priority_number & 0xFUL) - 4UL;
+            SCB->SHP[ system_priority_number] = new_value;
+        }
+    }
 }
 
 // User-level hardware interface.
@@ -38,54 +76,17 @@ namespace kernel::hardware
         // Hardware priority config.
         namespace priority
         {
-            // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
-            constexpr void set(
-                IRQn_Type   a_interrupt_number,
-                Preemption  a_preemption_priority,
-                Sub         a_sub_priority
-            )
-            {
-                // Pre-emption priority value 0 is reserved. Set enum underlying value to always skip it.
-                uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority) + 1U;
-                uint32_t sub_priority = static_cast< uint32_t> ( a_sub_priority);
-
-                // Note: For a processor configured with less than eight bits of priority,
-                //       the lower bits of the register are always 0.
-
-                //       In this case, STM32 uses 4 bits, so result in 8 bit register would be
-                //       xx.yy0000, where xx is pre-emption priority, and yy is sub-priority.
-                uint8_t new_value = static_cast< uint8_t>(
-                    ( preemption_priority << ( 8U - number_of_preemption_priority_bits)) |
-                    ( sub_priority << ( 8U - number_of_total_priority_bits))
-                    ) & 0xFFUL;
-
-                // Note: signed integer is used, because core interrupts use negative priorities.
-                int32_t priority_number = static_cast< int32_t>( a_interrupt_number);
-
-                if ( priority_number >= 0)
-                {
-                    // Configure vendor interrupts.
-                    NVIC->IP[ priority_number] = new_value;
-                }
-                else
-                {
-                    // Configure core interrupts.
-                    uint32_t system_priority_number = ( priority_number & 0xFUL) - 4UL;
-                    SCB->SHP[ system_priority_number] = new_value;
-                }
-            }
-
             void set(
-                uint32_t    a_vendor_interrupt_id,
-                Preemption  a_preemption_priority,
-                Sub         a_sub_priority
+                int32_t    a_vendor_interrupt_id,
+                Preemption a_preemption_priority,
+                Sub        a_sub_priority
             )
             {
                 if ( a_vendor_interrupt_id < maximum_priority_number)
                 {
                     IRQn_Type interrupt_number = static_cast< IRQn_Type> ( a_vendor_interrupt_id);
 
-                    set( interrupt_number, a_preemption_priority, a_sub_priority);
+                    setInterruptPriority( interrupt_number, a_preemption_priority, a_sub_priority);
                 }
                 else
                 {
@@ -94,7 +95,7 @@ namespace kernel::hardware
             }
         }
 
-        void enable( uint32_t a_vendor_interrupt_id)
+        void enable( int32_t a_vendor_interrupt_id)
         {
             if ( a_vendor_interrupt_id < maximum_priority_number)
             {
@@ -228,9 +229,9 @@ namespace kernel::internal::hardware
         //       kernel data. It is actually recommended in ARM reference manual.
         using namespace kernel::hardware::interrupt;
 
-        priority::set( SVCall_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
-        priority::set( PendSV_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
-        priority::set( SysTick_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
+        setInterruptPriority( SVCall_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
+        setInterruptPriority( PendSV_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
+        setInterruptPriority( SysTick_IRQn, priority::Preemption::Kernel, priority::Sub::Low);
     }
     
     void start()
