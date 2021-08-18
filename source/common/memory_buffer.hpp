@@ -34,9 +34,11 @@ namespace kernel::internal::common
 
         inline void free( Id a_item_id) volatile
         {
-            assert( static_cast< uint32_t>( a_item_id) < MaxSize);
+            auto index = static_cast< uint32_t>( a_item_id);
 
-            m_status[ static_cast< uint32_t>( a_item_id)] = false;
+            assert( index < MaxSize);
+
+            m_status[ index] = false;
         }
 
         inline void freeAll() volatile
@@ -49,17 +51,21 @@ namespace kernel::internal::common
 
         inline volatile TDataType & at( Id a_item_id) volatile
         {
-            assert( static_cast< uint32_t>( a_item_id) < MaxSize);
-            assert( m_status[ static_cast< uint32_t>( a_item_id)]);
+            auto index = static_cast< uint32_t>( a_item_id);
 
-            return m_data[ static_cast< uint32_t>( a_item_id)];
+            assert( index < MaxSize);
+            assert( true == m_status[ index]);
+
+            return m_data[ index];
         }
 
         inline bool isAllocated( Id a_item_id) volatile
         {
-            assert( static_cast< uint32_t>( a_item_id) < MaxSize);
+            auto index = static_cast< uint32_t>( a_item_id);
 
-            return m_status[ static_cast< uint32_t>( a_item_id)];
+            assert( index < MaxSize);
+
+            return m_status[ index];
         }
 
     private:
