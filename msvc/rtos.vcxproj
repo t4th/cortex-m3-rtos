@@ -161,6 +161,7 @@
     <ClCompile Include="..\examples\create_task\main.cpp" />
     <ClCompile Include="..\examples\critical_section\main.cpp" />
     <ClCompile Include="..\examples\serial_interrupt\main.cpp" />
+    <ClCompile Include="..\examples\software_timers\main.cpp" />
     <ClCompile Include="..\examples\task_sleep\main.cpp" />
     <ClCompile Include="..\examples\using_interrupt\main.cpp" />
     <ClCompile Include="..\examples\waitForMultipleObjects\main.cpp" />
