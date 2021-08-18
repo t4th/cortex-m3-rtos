@@ -53,6 +53,14 @@ namespace kernel::internal::timer
 {
     // Define maximum number of software timers.
     constexpr uint32_t max_number{ 8U};
+
+    // Define priority of internal critical section.
+    // It should be equal or higher than interrupt using queue API.
+    // If no hardware interrupt is using event API it can be safety
+    // set to Preemption::Kernel.
+    constexpr auto critical_section_priority{
+        kernel::hardware::interrupt::priority::Preemption::Kernel
+    };
 }
 
 namespace kernel::internal::queue

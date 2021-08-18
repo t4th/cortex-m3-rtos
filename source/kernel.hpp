@@ -86,6 +86,7 @@ namespace kernel::timer
     bool create( kernel::Handle & a_handle, TimeMs a_interval);
     void destroy( kernel::Handle & a_handle);
     void start( kernel::Handle & a_handle);
+    void restart( kernel::Handle & a_handle);
     void stop( kernel::Handle & a_handle);
 }
 
@@ -247,7 +248,7 @@ namespace kernel::hardware
 
         // Vendor interrupt ID must be set according to MCU vendor data sheet.
         // Using invalid interrupt ID value will result in Undefined Behaviour.
-        void enable( uint32_t a_vendor_interrupt_id);
+        void enable( int32_t a_vendor_interrupt_id);
 
         // Stop core until interrupt occur.
         void wait();

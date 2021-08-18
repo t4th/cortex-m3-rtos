@@ -101,6 +101,7 @@ namespace kernel::internal::handle
 
     // Reset state of system object pointed by provided handle.
     inline void resetState(
+        internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
         volatile kernel::Handle &   a_handle
     )
@@ -113,6 +114,13 @@ namespace kernel::internal::handle
         {
             auto event_id = internal::handle::getId< internal::event::Id>( a_handle);
             internal::event::manualReset( a_event_context, event_id);
+
+            break;
+        }
+        case internal::handle::ObjectType::Timer:
+        {
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
+            internal::timer::stop( a_timer_context, timer_id);
 
             break;
         }

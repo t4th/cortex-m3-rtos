@@ -21,6 +21,7 @@ namespace kernel::internal::timer
     {
         TimeMs  m_start;
         TimeMs  m_interval;
+        TimeMs  m_current;
         State   m_state;
     };
     
@@ -39,6 +40,8 @@ namespace kernel::internal::timer
         TimeMs &    a_interval
     )
     {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
         // Create new Timer object.
         MemoryBufferIndex new_item_id;
 
@@ -54,6 +57,7 @@ namespace kernel::internal::timer
 
         new_timer.m_start = a_start;
         new_timer.m_interval = a_interval;
+        new_timer.m_current = a_start;
 
         new_timer.m_state = State::Stopped;
 
@@ -62,35 +66,58 @@ namespace kernel::internal::timer
 
     inline void destroy( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
         a_context.m_data.free( static_cast< MemoryBufferIndex> ( a_id));
     }
 
     inline void start( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
         a_context.m_data.at( static_cast< MemoryBufferIndex> ( a_id)).m_state = State::Started;
+    }
+
+    inline void restart( Context & a_context, Id & a_id)
+    {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
+        volatile Timer & timer = a_context.m_data.at( static_cast< MemoryBufferIndex> ( a_id));
+
+        timer.m_start = timer.m_current;
+        timer.m_state = State::Started;
     }
 
     inline void stop( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
         a_context.m_data.at( static_cast< MemoryBufferIndex> ( a_id)).m_state = State::Stopped;
     }
 
     inline State getState( Context & a_context, Id & a_id)
     {
+        kernel::hardware::CriticalSection critical_section{ critical_section_priority};
+
         return a_context.m_data.at( static_cast< MemoryBufferIndex> ( a_id)).m_state;
     }
 
+    // Note: No critical section here, since this function is called from within kernel::internal::tick.
     inline void tick( Context & a_context, TimeMs & a_current)
     {
         for ( uint32_t i = 0U; i < max_number; ++i)
         {
             if ( true == a_context.m_data.isAllocated( static_cast< MemoryBufferIndex> ( i)))
             {
-                volatile Timer & timer = a_context.m_data.at( static_cast< MemoryBufferIndex> ( i));
+                volatile Timer & current_timer = a_context.m_data.at( static_cast< MemoryBufferIndex> ( i));
+                current_timer.m_current = a_current;
 
-                if ( ( a_current - timer.m_start) > timer.m_interval)
+                if ( State::Started == current_timer.m_state)
                 {
-                    timer.m_state = State::Finished;
+                    if ( ( current_timer.m_current - current_timer.m_start) > current_timer.m_interval)
+                    {
+                        current_timer.m_state = State::Finished;
+                    }
                 }
             }
         }

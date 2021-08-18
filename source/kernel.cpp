@@ -408,6 +408,24 @@ namespace kernel::timer
         internal::lock::leave( internal::context::m_lock);
     }
 
+    void restart( kernel::Handle & a_handle)
+    {
+        const auto object_type = internal::handle::getObjectType( a_handle);
+
+        if ( internal::handle::ObjectType::Timer != object_type)
+        {
+            error::print( "Invalid handle! Underlying object type is not supported by this function.\n");
+            return;
+        }
+
+        internal::lock::enter( internal::context::m_lock);
+        {
+            auto timer_id = internal::handle::getId< internal::timer::Id>( a_handle);
+            internal::timer::restart( internal::context::m_timers, timer_id);
+        }
+        internal::lock::leave( internal::context::m_lock);
+    }
+
     void stop( kernel::Handle & a_handle)
     {
         const auto object_type = internal::handle::getObjectType( a_handle);
@@ -661,9 +679,6 @@ namespace kernel::sync
         uint32_t * const        a_signaled_item_index
     )
     {
-        assert( nullptr != a_array_of_handles);
-        assert( a_number_of_elements >= 1U);
-        
         if ( nullptr == a_array_of_handles)
         {
             error::print( "Invalid argument! Empty pointer to array of handles!\n");
@@ -879,7 +894,6 @@ namespace kernel::static_queue
 
         return receive_result;
     }
-
 
     bool size( kernel::Handle & a_handle, size_t & a_size)
     {

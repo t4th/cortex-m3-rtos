@@ -127,7 +127,7 @@ namespace kernel::internal::scheduler::wait
             {
                 if ( true == condition_fulfilled)
                 {
-                    handle::resetState( a_event_context, a_wait_signals[ i]);
+                    handle::resetState( a_timer_context, a_event_context, a_wait_signals[ i]);
                     
                     a_signaled_item_index = i;
                     a_result = kernel::sync::WaitResult::ObjectSet;
@@ -161,7 +161,7 @@ namespace kernel::internal::scheduler::wait
                 // Reset all system objects pointed by a_wait_signals.
                 for ( uint32_t i = 0U; i < a_number_of_signals; ++i)
                 {
-                    handle::resetState( a_event_context, a_wait_signals[ i]);
+                    handle::resetState( a_timer_context, a_event_context, a_wait_signals[ i]);
                 }
                 a_result = kernel::sync::WaitResult::ObjectSet;
                 return true;

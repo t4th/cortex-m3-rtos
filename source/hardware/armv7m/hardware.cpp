@@ -29,7 +29,6 @@ namespace
     constexpr uint32_t number_of_sub_priority_bits{ 2U};
     constexpr uint32_t number_of_total_priority_bits{ __NVIC_PRIO_BITS};
 
-
     // This is replacement of CMSIS __NVIC_SetPriority, which is using fixed amount of priority bits.
     static constexpr void setInterruptPriority(
         IRQn_Type                                          a_interrupt_number,
