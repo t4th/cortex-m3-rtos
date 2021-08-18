@@ -73,6 +73,13 @@ namespace
         {
             uint32_t i;
 
+            if ( a_task_count > kernel::internal::task::max_number)
+            {
+                // Tests are allocating more memory than set in config.hpp.
+                // Increase kernel::internal::task::max_number to fit tests.
+                REQUIRE( false);
+            }
+
             for ( i = 0U; i < a_task_count; ++i)
             {
                 m_TaskHandles.push_back( {}); // create physical task handle
@@ -89,7 +96,8 @@ namespace
 
                 if( !result)
                 {
-                    REQUIRE( false); // shouldnt happen in test
+                    // shouldnt happen in test :P
+                    REQUIRE( false); 
                 }
             }
 
@@ -170,7 +178,7 @@ TEST_CASE("Scheduler")
             }
         }
 
-        // Check cirurality.
+        // Check circularity.
         {
             bool result = false;
             task::Id found_id;
@@ -759,7 +767,7 @@ TEST_CASE("Scheduler")
 
         // Set Task 2 to wait for timer.
         {
-            // Create timer object.
+            // Create and start timer object.
             {
                 kernel::internal::timer::Id new_timer_id;
                 kernel::TimeMs start = 0U;
@@ -773,6 +781,10 @@ TEST_CASE("Scheduler")
                 );
 
                 REQUIRE( true == result);
+
+                kernel::internal::timer::start(
+                    context->m_Timer,
+                    new_timer_id);
 
                 timer = kernel::internal::handle::create(
                     kernel::internal::handle::ObjectType::Timer,

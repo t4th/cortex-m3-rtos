@@ -107,6 +107,9 @@ TEST_CASE( "Handle")
 
             REQUIRE( true == timer_created);
 
+            // Start timer.
+            kernel::internal::timer::start( *timer_context, new_index);
+
             // Create handle.
             kernel::Handle new_handle = handle::create( handle::ObjectType::Timer, new_index);
 
