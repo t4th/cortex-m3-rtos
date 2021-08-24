@@ -1,14 +1,13 @@
 # ARM Cortex-m3 RTOS
 
-This is hobby project to create small RTOS with just enough features to make it interesting.
-Unlike other cortex-m RTOS projects (and there are many of them) my goal is not to create fastest/safest/hackest version,
-but elegant and easy to navigate version for education purpose. That's why I used this oppurtinity to test some C++17 features and different
-programming paradigms/architect decisons.
+This is a hobby project to create small RTOS with just enough features to make it interesting.
 
-No fancy build system set - simple Keil Uvision Lite project due to free simulator. (it should be easy enough to setup this project with any other compiler/system)
-90% of development time was spent using simulator. Examples are avilable in the repository.
+It is also great opportunity to test some new C++17 features and different architectural design decisions for an embedded application.
 
-Check out prove of concept branches for technical stuff (link below).
+Typical big RTOS projects tend to grow exponentially with increasing number of new features, board/compiler supports and code optimizations.
+All these practices are effectively hiding the simple underlying principles of how RTOS is actually implemented.
+
+My goal is to create elegant and easy to navigate project for educational purpose.
 
 Main source of information is official ARMv7-M Architecture Reference Manual
 https://developer.arm.com/documentation/ddi0403/latest/
@@ -22,13 +21,6 @@ https://github.com/t4th/cortex-m3-rtos-project-template
 On target example projects:
 https://github.com/t4th/cortex-m3-rtos-blinky-example
 
-## Notes
-12/12/2020 - initial version of waitForMultipleObjects.
-
-12/03/2020 - initial version of timers, events, sleep, critical section and waitForSingleObject are now pushed and working
-
-11/13/2020 - after doing this project in spare time it finally reached version 0.1! It is possible to create and remove tasks statically and in runtime. Stability is good, but I am still experimenting with optimal stack size and until stack overflow detection is done one must be careful with number of function entries in task routine!
-
 ## Goals
 
 ### 1.0 Features
@@ -41,38 +33,42 @@ https://github.com/t4th/cortex-m3-rtos-blinky-example
 - [x] hardware critical section: enter, leave
 - [x] queue
 - [ ] examples
+- [ ] design documents in readme
+- [ ] write 1.0 summary (bad/good)
 
 ### 1.0+ Features
-- [ ] static way to map HW interrupts to events (compile time named events?)
-- [ ] stack over/underflow detection in Idle task
+- [ ] port examples to popular boards (discovery, nucleo)
+- [ ] static way to map HW interrupts to events
+- [ ] stack over/underflow detection
 - [ ] implement privilege levels
 - [ ] implement priority inheritance
+- [ ] PC application tracker
 - [ ] setup gcc project with cmake for linux
 - [ ] adapt HW layer for Cortex-M4
 - [ ] adapt HW layer for Cortex-M7
-- [ ] core tests
+- [ ] kernel API tests
 
 ### Other
-* build and simulated via keil uvision
+* simple build system with core simulator - Keil uVision
 * use ARM Compiler 6 for C++17 compatibility
 * runs on stm32f103ze (no cache, no fpu, simple pipeline)
 
 ## Implementation decisions
-* no automatic cleanup when task is terminated/closed
-* tasks should not keep information about system objects created during its quanta time
+* tasks should not keep information about life time of system objects created during its quanta time
+* KISS principle, due to educational purpose of the project. Simple data structures, linear searches, no bit hacking, no implicit code tricks.
 
 ### Scheduler
 * fully pre-emptive priority based multitasking
 * highest priority task are to be served first
 * tasks of the same priority should be running using Round Robin
-* idle task as lowest priority
+* idle task is always available at lowest priority
 
 ### Memory
-* static buffers for all kernel components
+* pre-allocated static buffers for all kernel components
 * no dynamic allocations
 
 ## Architecture
-Preview using UML. There are no objects, but it's okay to show code dependency.
+Dependency preview using UML.
 ![Alt arch](/doc/arch.png?raw=true)
 
 ## Tools
@@ -90,7 +86,7 @@ Open project **keil\rtos.uvprojx** or call:
 
 ...or just open project in Uvision and build/run using IDE.
 
-If you want to build this project without Uvision just throw it to any ARM compiler and set:
+If you want to build this project without Uvision just use any gcc ARM compiler and set:
 * C++ to 17
 * cpu=cortex-m3
 * disable c++ exceptions with no-exceptions flag
@@ -99,22 +95,22 @@ If you want to build this project without Uvision just throw it to any ARM compi
 * and of course add kernel files to compiler: source/kernel.cpp and source/hardware/armv7m/hardware.cpp
 
 ## Edit
-Visual Studio Community 2019 (set x86 in Configuration Manager), Uvision or just open in VSCode.
+I am using Visual Studio Community 2019 (set x86 in Configuration Manager) as editor and Uvision as debugger.
 
 ## Experimental POC branches
-Scheduler prove-of-concept
+Scheduler prove-of-concept in C
 https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
 
-kernel prove-of-concept
+Kernel prove-of-concept in C
 https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 
 ## After POC branch decisions
-* HANDLE system similiar to windows win32 (generlized handle to system objects for easier user API) - better than raw pointers
-* task scheduling made with circular linked list - simplest solution for 1.0 (normally its heap or b-tree)
+* HANDLE system similiar to windows win32 (generlized handle to system objects for easier user API)
+* task scheduling made with circular linked list
 
 ## API usage examples
 User API functions and parameters details are descripted in **kernel.hpp**.
-All working examples are in examples directory.
+All working examples are in **examples** directory.
 
 ### Initial setup
 **kernel.hpp** is the only header needed to access all kernel features.
@@ -335,5 +331,5 @@ int main()
 See **examples/serial_interrupt** for practical example with USART peripheral.
 
 ## Keil Uvision simulator preview
-Overview of simulator view.
+Overview of simulator view used for development.
 ![Alt arch](/doc/sim.png?raw=true)
