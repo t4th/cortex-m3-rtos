@@ -330,6 +330,20 @@ int main()
 
 See **examples/serial_interrupt** for practical example with USART peripheral.
 
+## API software examples
+Kernel is printing log message through **kernel::hardware::debug** (ITM) which can be received and read by View->Serial windows->Debug (printf) Viewer both in simulator and on target examples in Keil Uvision.
+
+| Directory name | Description | Kernel API used |
+| --- | --- | --- |
+| create_task | Create tasks statically and dynamically with different priorities and blocking delay to illustrate scheduling. | kernel, kernel::task | 
+| critical_section | Illustrate how to use software critical section. Enable or disable **use_critical_section** variable to see the difference in access of shared data via the program output. | kernel, kernel::task, kernel::critical_section |
+| serial_interrupt | This is on-target example using **kernel::static_queue** to receive and transmit data over USART peripheral. | kernel, kernel::task, kernel::static_queue, kernel::sync, kernel::hardware::debug, kernel::hardware::interrupt::priority, kernel::hardware::interrupt |
+| software_timers | Use software timers to wake-up tasks in selected time intervals. | kernel, kernel::task, kernel::timer, kernel::sync |
+| task_sleep | Use **task::sleep** to wake-up tasks in selected time intervals. | kernel, kernel::task |
+| using_interrupt | This is on-target example using hardware interrupt to wake-up a sleeping task. It can also run on simulator and selected interrupt can be set to Pending via NVIC peripheral.  | kernel, kernel::task, kernel::event, kernel::sync |
+| waitForMultipleObjects | Worker task is waiting for five automatic-reset events and one manual-reset event. Order tasks is setting those events step-by-step to wake-up worker tasks when all events are in SET state. | kernel, kernel::task, kernel::sync |
+| waitForSingleObject | Task is being toggled by other task using single event synchronization object. | kernel, kernel::task, kernel::sync |
+
 ## Keil Uvision simulator preview
 Overview of simulator view used for development.
 ![Alt arch](/doc/sim.png?raw=true)
