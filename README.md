@@ -36,7 +36,7 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 - [x] software critical section: enter, leave
 - [x] hardware critical section: enter, leave
 - [x] queue
-- [ ] examples
+- [x] examples
 - [ ] design documents in readme
 - [ ] write 1.0 summary (bad/good)
 
