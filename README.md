@@ -12,16 +12,20 @@ My goal is to create elegant and easy to navigate project for educational purpos
 Main source of information is official ARMv7-M Architecture Reference Manual
 https://developer.arm.com/documentation/ddi0403/latest/
 
-Task tracking via github:
-https://github.com/t4th/cortex-m3-rtos/projects/1
+Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
-On target template project:
-https://github.com/t4th/cortex-m3-rtos-project-template
+On target template project: https://github.com/t4th/cortex-m3-rtos-project-template
 
-On target example projects:
-https://github.com/t4th/cortex-m3-rtos-blinky-example
+On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-example
 
-## Goals
+## Table of content
+- [Goals](#goals)
+- [Architecture](#architecture)
+- [Build](#build)
+- [API usage examples](#api-usage)
+- [API software examples](#api-software-usage)
+
+## Goals <a name="goals"/>
 
 ### 1.0 Features
 - [x] task: create, delete
@@ -49,13 +53,15 @@ https://github.com/t4th/cortex-m3-rtos-blinky-example
 - [ ] kernel API tests
 
 ### Other
-* simple build system with core simulator - Keil uVision
+* simple build system with core simulator - Keil uVision for Windows
 * use ARM Compiler 6 for C++17 compatibility
 * runs on stm32f103ze (no cache, no fpu, simple pipeline)
 
 ## Implementation decisions
 * tasks should not keep information about life time of system objects created during its quanta time
 * KISS principle, due to educational purpose of the project. Simple data structures, linear searches, no bit hacking, no implicit code tricks.
+* HANDLE system similiar to windows win32 (generlized handle to system objects for easier user API)
+* task scheduling made with circular linked list
 
 ### Scheduler
 * fully pre-emptive priority based multitasking
@@ -67,16 +73,16 @@ https://github.com/t4th/cortex-m3-rtos-blinky-example
 * pre-allocated static buffers for all kernel components
 * no dynamic allocations
 
-## Architecture
+### Experimental POC branches
+Scheduler in C: https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
+Basic kernel in C: https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
+
+## Architecture <a name="architecture"/>
 Dependency preview using UML.
 ![Alt arch](/doc/arch.png?raw=true)
 
-## Tools
-* windows
-* keil Uvision 5 lite 529 (Monday, November 18, 2019) or up (needed for c++17)
-
-## Build
-Install keil Uvision 5 lite 529 and set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
+## Build <a name="build"/>
+Install keil Uvision 5 lite 529 (or up) and set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
 
 Open project **keil\rtos.uvprojx** or call:  
 **build.BAT** to build  
@@ -97,18 +103,7 @@ If you want to build this project without Uvision just use any gcc ARM compiler 
 ## Edit
 I am using Visual Studio Community 2019 (set x86 in Configuration Manager) as editor and Uvision as debugger.
 
-## Experimental POC branches
-Scheduler prove-of-concept in C
-https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
-
-Kernel prove-of-concept in C
-https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
-
-## After POC branch decisions
-* HANDLE system similiar to windows win32 (generlized handle to system objects for easier user API)
-* task scheduling made with circular linked list
-
-## API usage examples
+## API usage examples <a name="api-usage"/>
 User API functions and parameters details are descripted in **kernel.hpp**.
 All working examples are in **examples** directory.
 
@@ -330,7 +325,7 @@ int main()
 
 See **examples/serial_interrupt** for practical example with USART peripheral.
 
-## API software examples
+## API software examples <a name="api-software-usage"/>
 Kernel is printing log message through **kernel::hardware::debug** (ITM) which can be received and read by View->Serial windows->Debug (printf) Viewer both in simulator and on target examples in Keil Uvision.
 
 | Directory name | Description | Kernel API used |
