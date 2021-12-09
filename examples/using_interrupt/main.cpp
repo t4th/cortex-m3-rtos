@@ -18,7 +18,7 @@ extern "C"
     {
         kernel::Handle sync_event;
 
-        (void)kernel::event::open( sync_event, "sync event");
+        ( void)kernel::event::open( sync_event, "sync event");
         kernel::event::set( sync_event);
 
         // clear pending bit
@@ -34,7 +34,7 @@ void startup_task( void * a_parameter)
     // Create kernel object to sync actions
     kernel::Handle sync_event;
 
-    (void)kernel::event::create( sync_event, false, "sync event");
+    ( void)kernel::event::create( sync_event, false, "sync event");
 
     // Clocks
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
@@ -67,7 +67,7 @@ void worker_task( void * a_parameter)
 {
     kernel::Handle sync_event;
 
-    (void)kernel::event::open( sync_event, "sync event");
+    ( void)kernel::event::open( sync_event, "sync event");
 
     while( true)
     {

@@ -4,28 +4,19 @@
 
 #include <kernel.hpp>
 
-struct Delay
-{
-    kernel::TimeMs delay_for_task0;
-    kernel::TimeMs delay_for_task1;
-    kernel::TimeMs delay_for_task2;
-};
-
 void task_routine( void * a_parameter);
 
 int main()
 {
-    Delay delay;
-
-    delay.delay_for_task0 = 100U;
-    delay.delay_for_task1 = 500U;
-    delay.delay_for_task2 = 1000U;
+    kernel::TimeMs delay_for_task0 = 100U;
+    kernel::TimeMs delay_for_task1 = 500U;
+    kernel::TimeMs delay_for_task2 = 1000U;
 
     kernel::init();
 
-    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task0);
-    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task1);
-    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay.delay_for_task2);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay_for_task0);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay_for_task1);
+    kernel::task::create( task_routine, kernel::task::Priority::Low, nullptr, &delay_for_task2);
 
     kernel::start();
 

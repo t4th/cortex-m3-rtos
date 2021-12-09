@@ -53,9 +53,9 @@ void task_routine( void * a_parameter)
 
 int main()
 {
-    kernel::Handle timer0;
-    kernel::Handle timer1;
-    kernel::Handle timer2;
+    kernel::Handle timer0{};
+    kernel::Handle timer1{};
+    kernel::Handle timer2{};
 
     ( void)kernel::timer::create( timer0, 100U);
     ( void)kernel::timer::create( timer1, 500U);
