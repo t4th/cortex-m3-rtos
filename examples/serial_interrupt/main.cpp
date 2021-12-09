@@ -43,8 +43,8 @@ extern "C"
     // Note: Overrun and other errors are not handled.
     void USART1_IRQHandler()
     {
-        kernel::Handle usart_rx_queue;
-        kernel::Handle usart_tx_queue;
+        kernel::Handle usart_rx_queue{};
+        kernel::Handle usart_tx_queue{};
 
         // Ignore error checking.
         ( void) kernel::static_queue::open( usart_rx_queue, "RX queue");
@@ -55,7 +55,7 @@ extern "C"
         // Receive handler.
         if ( status_register & USART_SR_RXNE)
         {
-            uint8_t received_byte = USART1->DR & 0xFF;
+            uint8_t received_byte = USART1->DR & 0xFFU;
 
             bool byte_sent = kernel::static_queue::send( usart_rx_queue, received_byte);
 
@@ -151,8 +151,8 @@ void worker_task( void * a_parameter)
     constexpr size_t response_buffer_size = 64U;
     char response_buffer[ response_buffer_size];
     
-    kernel::Handle usart_rx_queue;
-    kernel::Handle usart_tx_queue;
+    kernel::Handle usart_rx_queue{};
+    kernel::Handle usart_tx_queue{};
     
     // Ignore error checking.
     ( void) kernel::static_queue::open( usart_rx_queue, "RX queue");
@@ -202,13 +202,13 @@ void worker_task( void * a_parameter)
 
 int main()
 {
-    static constexpr size_t max_queue_elements{ 64U};
+    constexpr size_t max_queue_elements{ 64U};
 
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_rx_buffer;
     kernel::static_queue::Buffer< uint8_t, max_queue_elements> usart_tx_buffer;
     
-    kernel::Handle rx_queue;
-    kernel::Handle tx_queue;
+    kernel::Handle rx_queue{};
+    kernel::Handle tx_queue{};
 
     kernel::init();
 
