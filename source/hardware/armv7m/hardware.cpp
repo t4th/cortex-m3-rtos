@@ -123,7 +123,7 @@ namespace kernel::hardware
             uint32_t preemption_priority = static_cast< uint32_t> ( a_preemption_priority) + 1U;
             uint32_t new_value = preemption_priority << ( 8U - number_of_preemption_priority_bits);
 
-            // Setting BASEPRI to 0 has no effect, so it is most likely bug.
+            // Setting BASEPRI to 0 has no effect, so it is most likely a bug.
             assert( 0U != new_value);
 
             // Store previous priority;
@@ -275,10 +275,10 @@ namespace kernel::internal::hardware::task
     // This function initialize default stack frame for each task.
     void Stack::init( uint32_t a_routine_address) volatile
     {
-        // This is magic number and does not hold any meaning. It help tracking stack overflows.
+        // This is a magic number and does not hold any meaning. It help tracking stack overflows.
         constexpr uint32_t default_general_purpose_register_value = 0xCDCD'CDCDU;
 
-        // This is default value set by CPU after reset.
+        // This is default value set by CPU after hardware reset.
         // If interrupt return with this value set, it will cause fault error.
         constexpr uint32_t default_link_register_value = 0xFFFF'FFFFU;
 

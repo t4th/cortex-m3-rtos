@@ -8,7 +8,7 @@
 
 // Handle is abstract type holding information of object type and object ID.
 // It is used to get/create underlying object in kernel::Handle type.
-// Format: xxxx.yyyy, where Xs are 4 bytes for ObjectType and Ys 4 bytes are object index.
+// Format: xxxx.yyyy, where X's are 2 bytes for ObjectType and Y's 2 bytes are object index.
 
 namespace kernel::internal::handle
 {

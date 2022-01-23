@@ -36,8 +36,9 @@ namespace kernel::internal::context
     internal::queue::Context        m_queue;
     internal::lock::Context         m_lock;
 
-    // Indicate if kernel is started. It is used to detect if
-    // system object was created before or after kernel::start.
+    // Indicate if kernel has been started. It is used to detect if
+    // system object was created before or after kernel::start and also
+    // for some sanity checks.
     bool m_started = false;
 }
 
@@ -170,8 +171,8 @@ namespace kernel::task
                 *a_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id);
             }
 
-            // If priority of task just created is higher than current task, issue context switch.
-            if ( internal::context::m_started && ( a_priority < current_task_priority))
+            // If priority of task just created is higher than current task, issue a context switch.
+            if ( (internal::context::m_started) && ( a_priority < current_task_priority))
             {
                 internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
@@ -190,9 +191,9 @@ namespace kernel::task
 
         internal::lock::enter( internal::context::m_lock);
         {
-            auto created_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
+            auto current_task_id = internal::scheduler::getCurrentTaskId( internal::context::m_scheduler);
 
-            new_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id);
+            new_handle = internal::handle::create( internal::handle::ObjectType::Task, current_task_id);
         }
         internal::lock::leave( internal::context::m_lock);
 
@@ -292,7 +293,7 @@ namespace kernel::task
                 return;
             }
 
-            // If resumed task is higher priority than current, issue context switch.
+            // If resumed task is higher priority than current, issue a context switch.
             const auto current_task_priority = internal::task::priority::get(
                 internal::context::m_tasks,
                 current_task_id
@@ -316,7 +317,7 @@ namespace kernel::task
 
     void sleep( TimeMs a_time)
     {
-        // Note: Sping lock in case if provided time is smaller or equal to single context switch interval.
+        // Note: Sping lock in case if provided time is smaller or equal to a single context switch interval.
         if ( a_time <= internal::system_timer::context_switch_interval_ms)
         {
             for ( volatile TimeMs delay = 0U; delay < a_time; ++delay);
@@ -541,7 +542,7 @@ namespace kernel::critical_section
         {
             internal::event::Id new_event_id;
 
-            // Create event used to wake up tasks waiting for critical section.
+            // Create event used to wake up tasks waiting for a critical section.
             bool event_created = internal::event::create(
                 internal::context::m_events,
                 new_event_id,
@@ -592,7 +593,7 @@ namespace kernel::critical_section
     {
         volatile uint32_t i = 0U;
 
-        // Note: function is constructed this way, because time between kernel lock/unlock and
+        // Note: Function is constructed this way, because time between kernel lock/unlock and
         //       waking from waitForSingleObject is big enough for context switches to occur
         //       and modify m_lockCount even if m_event was set. So after waking up task,
         //       m_lockCount test should be done again.

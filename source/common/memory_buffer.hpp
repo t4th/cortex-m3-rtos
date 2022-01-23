@@ -6,6 +6,8 @@ namespace kernel::internal::common
 {
     // Abstract memory buffer. Idea behind it is to keep data and status separetly as
     // an arrays of structs.
+
+    // It is simple by design. 
     template < typename TDataType, std::size_t MaxSize>
     class MemoryBuffer
     {

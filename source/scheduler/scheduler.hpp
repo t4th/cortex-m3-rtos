@@ -305,6 +305,8 @@ namespace kernel::internal::scheduler
 
     //       Now Wait list data is accessed directly skipping Wait list interface
     //       in between.
+
+    // TODO: Still, this the the main kernel choke point to measure and optimize.
     inline void checkWaitConditions(
         Context &                   a_context,
         internal::task::Context &   a_task_context,
