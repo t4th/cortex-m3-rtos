@@ -2,7 +2,7 @@
 
 This is a hobby project to create small RTOS with just enough features to make it interesting.
 
-It is also great opportunity to test some new C++17 features and different architectural design decisions for an embedded application.
+It is also a great opportunity to test some new C++17 features and different architectural design decisions for an embedded application.
 
 Typical big RTOS projects tend to grow exponentially with increasing number of new features, board/compiler supports and code optimizations.
 All these practices are effectively hiding the simple underlying principles of how RTOS is actually implemented.
@@ -60,18 +60,18 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 ## Implementation decisions
 * tasks should not keep information about life time of system objects created during its quanta time
 * KISS principle, due to educational purpose of the project. Simple data structures, linear searches, no bit hacking, no implicit code tricks.
-* HANDLE system similiar to windows win32 (generlized handle to system objects for easier user API)
+* HANDLE system similiar to windows win32 (generalized handle to system objects for easier user API)
 * task scheduling made with circular linked list
 
 ### Scheduler
 * fully pre-emptive priority based multitasking
-* highest priority task are to be served first
+* highest priority tasks are to be served first
 * tasks of the same priority should be running using Round Robin
 * idle task is always available at lowest priority
 
 ### Memory
-* pre-allocated static buffers for all kernel components
-* no dynamic allocations
+* simple memory model; no dynamic allocations, ie. no classic heap
+* fixed size static buffers for all kernel components creating during runtime
 
 ### Experimental POC branches
 Scheduler in C: https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
