@@ -40,18 +40,18 @@ namespace kernel::internal::scheduler::wait
     };
 
     inline void initSleep(
-        volatile Conditions &   a_conditions,
+        volatile Conditions &   a_conditions_context,
         TimeMs &                a_interval,
         TimeMs &                a_current
     )
     {
-        a_conditions.m_type = Type::Sleep;
-        a_conditions.m_interval = a_interval;
-        a_conditions.m_start = a_current;
+        a_conditions_context.m_type = Type::Sleep;
+        a_conditions_context.m_interval = a_interval;
+        a_conditions_context.m_start = a_current;
     }
 
     inline bool initWaitForObj(
-        volatile Conditions &   a_conditions,
+        volatile Conditions &   a_conditions_context,
         kernel::Handle *        a_wait_signals,
         uint32_t                a_number_of_signals,
         bool &                  a_wait_for_all_signals,
@@ -65,23 +65,23 @@ namespace kernel::internal::scheduler::wait
 
         if ( a_number_of_signals < max_input_signals)
         {
-            a_conditions.m_numberOfSignals = a_number_of_signals;
+            a_conditions_context.m_numberOfSignals = a_number_of_signals;
         }
         else
         {
             return false;
         }
 
-        for ( uint32_t i = 0U; i < a_conditions.m_numberOfSignals; ++i)
+        for ( uint32_t i = 0U; i < a_conditions_context.m_numberOfSignals; ++i)
         {
-            a_conditions.m_waitSignals[ i] = a_wait_signals[ i];
+            a_conditions_context.m_waitSignals[ i] = a_wait_signals[ i];
         }
 
-        a_conditions.m_waitForAllSignals = a_wait_for_all_signals;
-        a_conditions.m_type = Type::WaitForObj;
-        a_conditions.m_waitForver = a_wait_forver;
-        a_conditions.m_interval = a_timeout;
-        a_conditions.m_start = a_current;
+        a_conditions_context.m_waitForAllSignals = a_wait_for_all_signals;
+        a_conditions_context.m_type = Type::WaitForObj;
+        a_conditions_context.m_waitForver = a_wait_forver;
+        a_conditions_context.m_interval = a_timeout;
+        a_conditions_context.m_start = a_current;
 
         return true;
     }
@@ -116,7 +116,7 @@ namespace kernel::internal::scheduler::wait
             {
                 // Not supported handle type.
                 a_result = kernel::sync::WaitResult::WaitFailed;
-                return true;
+                return false;
             }
 
             condition_fulfilled &= condition_fulfilled;
@@ -172,7 +172,7 @@ namespace kernel::internal::scheduler::wait
     }
 
     inline bool check(
-        volatile Conditions &       a_conditions,
+        volatile Conditions &       a_conditions_context,
         internal::timer::Context &  a_timer_context,
         internal::event::Context &  a_event_context,
         internal::queue::Context &  a_queue_context,
@@ -181,11 +181,11 @@ namespace kernel::internal::scheduler::wait
         uint32_t &                  a_signaled_item_index
         )
     {
-        switch( a_conditions.m_type)
+        switch( a_conditions_context.m_type)
         {
         case Type::Sleep:
         {
-            if ( a_current - a_conditions.m_start > a_conditions.m_interval)
+            if ( a_current - a_conditions_context.m_start > a_conditions_context.m_interval)
             {
                 a_result = kernel::sync::WaitResult::ObjectSet;
                 return true;
@@ -196,10 +196,10 @@ namespace kernel::internal::scheduler::wait
         {
             a_signaled_item_index = 0U;
 
-            if ( false == a_conditions.m_waitForver)
+            if ( false == a_conditions_context.m_waitForver)
             {
                 // Check timeout before wait signals.
-                if ( a_current - a_conditions.m_start > a_conditions.m_interval)
+                if ( a_current - a_conditions_context.m_start > a_conditions_context.m_interval)
                 {
                     a_result = kernel::sync::WaitResult::TimeoutOccurred;
                     return true;
@@ -211,9 +211,9 @@ namespace kernel::internal::scheduler::wait
                 a_event_context,
                 a_queue_context,
                 a_result,
-                a_conditions.m_waitSignals,
-                a_conditions.m_numberOfSignals,
-                a_conditions.m_waitForAllSignals,
+                a_conditions_context.m_waitSignals,
+                a_conditions_context.m_numberOfSignals,
+                a_conditions_context.m_waitForAllSignals,
                 a_signaled_item_index
             );
 
