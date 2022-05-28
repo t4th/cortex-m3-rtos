@@ -41,9 +41,8 @@ namespace kernel::internal::event
     constexpr uint32_t max_number{ 8U};
 
     // Define priority of internal critical section.
-    // It should be equal or higher than interrupt using queue API.
-    // If no hardware interrupt is using event API it can be safety
-    // set to Preemption::Kernel.
+    // It should be equal or higher than interrupts using event API.
+    // This include system timer!
     constexpr auto critical_section_priority{
         kernel::hardware::interrupt::priority::Preemption::Kernel
     };
@@ -55,9 +54,9 @@ namespace kernel::internal::timer
     constexpr uint32_t max_number{ 8U};
 
     // Define priority of internal critical section.
-    // It should be equal or higher than interrupt using queue API.
+    // It should be equal or higher than interrupts using software timers API.
     // If no hardware interrupt is using event API it can be safety
-    // set to Preemption::Kernel.
+    // set to Preemption::User.
     constexpr auto critical_section_priority{
         kernel::hardware::interrupt::priority::Preemption::Kernel
     };

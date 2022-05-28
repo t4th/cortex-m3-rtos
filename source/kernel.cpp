@@ -317,7 +317,7 @@ namespace kernel::task
 
     void sleep( TimeMs a_time)
     {
-        // Note: Sping lock in case if provided time is smaller or equal to a single context switch interval.
+        // Note: Spin lock in case if provided time is smaller or equal to a single context switch interval.
         if ( a_time <= internal::system_timer::context_switch_interval_ms)
         {
             for ( volatile TimeMs delay = 0U; delay < a_time; ++delay);
