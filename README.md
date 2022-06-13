@@ -1,4 +1,4 @@
-# ARM Cortex-m3 RTOS
+﻿# ARM Cortex-m3 RTOS
 
 This is a hobby project to create small RTOS with just enough features to make it interesting.
 
@@ -7,7 +7,7 @@ It is also a great opportunity to test some new C++17 features and different arc
 Typical big RTOS projects tend to grow exponentially with increasing number of new features, board/compiler supports and code optimizations.
 All these practices are effectively hiding the simple underlying principles of how RTOS is actually implemented.
 
-My goal is to create elegant and easy to navigate project for educational purpose.
+My goal is to create elegant and easy to navigate project for an educational purpose.
 
 Main source of information is official ARMv7-M Architecture Reference Manual
 https://developer.arm.com/documentation/ddi0403/latest/
@@ -22,6 +22,7 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 - [Goals](#goals)
 - [Architecture](#architecture)
 - [Build](#build)
+- [API graphical overview](#api-overview)
 - [API usage examples](#api-usage)
 - [API software examples](#api-software-usage)
 
@@ -71,7 +72,7 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 
 ### Memory
 * simple memory model; no dynamic allocations, ie. no classic heap
-* fixed size static buffers for all kernel components creating during runtime
+* fixed size static buffers for all kernel components created during runtime
 
 ### Experimental POC branches
 Scheduler in C: https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
@@ -103,8 +104,39 @@ If you want to build this project without Uvision just use any gcc ARM compiler 
 ## Edit
 I am using Visual Studio Community 2019 (set x86 in Configuration Manager) as editor and Uvision as debugger.
 
-## API usage examples <a name="api-usage"/>
+## API graphical overview <a name="api-overview"/>
 User API functions and parameters details are descripted in **kernel.hpp**.
+```C
+ ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+ │ <<kernel>>                                     ┌─────────────────────────┐ ┌────────────────┐ │
+ │                                                │<<critical_section>>     │ │<<static_queue>>│ │
+ │ +init()   +getTime()                           │                         │ │                │ │
+ │ +start()  +getCoreFrequency()                  │ +init()                 │ │ +create()      │ │
+ │ ┌───────────────┐ ┌────────────┐ ┌───────────┐ │ +deinit()               │ │ +open()        │ │
+ │ │ <<tasks>>     │ │  <<timer>> │ │ <<event>> │ │ +enter()                │ │ +destroy()     │ │
+ │ │               │ │            │ │           │ │ +leave()                │ │ +send()        │ │
+ │ │ +create()     │ │ +create()  │ │ +create() │ └─────────────────────────┘ │ +receive()     │ │
+ │ │ +getCurrent() │ │ +destroy() │ │ +destroy()│ ┌─────────────────────────┐ │ +size()        │ │
+ │ │ +terminate()  │ │ +start()   │ │ +open()   │ │<<sync>>                 │ │ +isFull()      │ │
+ │ │ +suspend()    │ │ +restart() │ │ +set()    │ │                         │ │ +isEmpty()     │ │
+ │ │ +resume()     │ │ +stop()    │ │ +reset()  │ │+waitForSingleObject()   │ │                │ │
+ │ │ +sleep()      │ │            │ │           │ │+waitForMultipleObjects()│ │                │ │
+ │ └───────────────┘ └────────────┘ └───────────┘ └─────────────────────────┘ └────────────────┘ │
+ │ ┌───────────────────────────────────────────────────────────────────────────────────────────┐ │
+ │ │ <<hardwaree>>                                                                             │ │
+ │ │ ┌────────────────────────────────────┐ ┌────────────────────┐ ┌────────────────────┐      │ │
+ │ │ │<<interrupt>>                       │ │<<critical_section>>│ │<<debug>>           │      │ │
+ │ │ │               ┌────────────────┐   │ │                    │ │                    │      │ │
+ │ │ │               │<<priority>>    │   │ │ +enter()           │ │ +putChar()         │      │ │
+ │ │ │ +enable()     │                │   │ │ +leave()           │ │ +print()           │      │ │
+ │ │ │ +disable()    │ +set()         │   │ └────────────────────┘ │ +setBreakpoint()   │      │ │
+ │ │ │               └────────────────┘   │                        └────────────────────┘      │ │
+ │ │ └────────────────────────────────────┘                                                    │ │
+ │ └───────────────────────────────────────────────────────────────────────────────────────────┘ │
+ └───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## API usage examples <a name="api-usage"/>
 All working examples are in **examples** directory.
 
 ### Initial setup
