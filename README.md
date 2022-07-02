@@ -38,8 +38,7 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 - [x] hardware critical section: enter, leave
 - [x] queue
 - [x] examples
-- [ ] design documents in readme
-- [ ] write 1.0 summary (bad/good)
+- [x] design documents in readme
 
 ### 1.0+ Features
 - [ ] port examples to popular boards (discovery, nucleo)
@@ -79,8 +78,61 @@ Scheduler in C: https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
 Basic kernel in C: https://github.com/t4th/cortex-m3-rtos/tree/kernel_poc
 
 ## Architecture <a name="architecture"/>
-Dependency preview using UML.
-![Alt arch](/doc/arch.png?raw=true)
+As an operating system is only an abstraction, it should create as little overhead as possible. That is why I decided to implement it with as little translation units as it seemed reasonable:
+* **kernel.cpp** - implement hardware independent functionality
+* **hardware.cpp** - provide abstracted hardware dependent code
+
+All other internal system components are implemented as headers only, so the compiler can inline and remove all abstractions away.
+
+### Component overview.
+Implementation details of the kernel and the hardware are locked behind **internal** namespace. The only user accessable namespaces are exposed by **kernel.hpp** (see [API graphical overview](#api-overview)).
+```C
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│  <<kernel>>    ┌──────────┐ ┌───────────┐ ┌───────────┐ ┌──────────────────────┐ ┌──────────┐ ┌──────────────────┐       ┌──────────────────────────┐ │
+│                │ <<task>> │ │ <<timer>> │ │ <<event>> │ │ <<critical_section>> │ │ <<sync>> │ │ <<static_queue>> │       │       <<hardware>>       │ │
+│                │          │ │           │ │           │ │                      │ │          │ │                  │       │ ┌──────────────────────┐ │ │
+│                │          │ │           │ │           │ │                      │ │          │ │                  │       │ │ <<interrupt>>        │ │ │
+│                └────┬─────┘ └─────┬─────┘ └─────┬─────┘ └──────────────────────┘ └────┬─────┘ └───────┬──────────┘       │ └──────────────────────┘ │ │
+│ ┌───────────────────┼─────────────┼─────────────┼─────────────────────────────────────┼───────────────┼────────────────┐ │ ┌──────────────────────┐ │ │
+│ │  <<internal>>     │             │             │                                     │               │                │ │ │ <<critical_section>> │ │ │
+│ │ ┌──────────┐ ┌────▼─────┐ ┌─────▼─────┐ ┌─────▼─────┐  ┌───────────────┐       ┌────▼─────┐ ┌───────▼──────────┐     │ │ └──────────────────────┘ │ │
+│ │ │ <<lock>> │ │ <<task>> │ │ <<timer>> │ │ <<event>> │  │ <<scheduler>> │       │ <<sync>> │ │ <<static_queue>> │     │ │ ┌──────────────────────┐ │ │
+│ │ │          │ │          │ │           │ │           │  │               │       │          │ │                  │     │ │ │ <<debug>>            │ │ │
+│ │ └──────────┘ └────────┬─┘ └───────────┘ └───────────┘  └───────────────┘       └──────────┘ └──────────────────┘     │ │ └──────────────────────┘ │ │
+│ └───────────────────────┼─────────────────────────────────────┬─────▲──────────────────────────────────────────────────┘ └──────────────────────────┘ │
+│                         │                                     │     │                                                                                 │
+│ ┌───────────────────────┼─────────────────────────────────────┼─────┼─────────────────────────────┐                                                   │
+│ │ <<hardware::internal>>│                                     │     │                             │                                                   │
+│ │                ┌──────┴──────┐                ┌─────────────┼─────┴───────────────────────────┐ │                                                   │
+│ │             ┌──▼─────┐ ┌─────▼────┐           │ <<context>> │                                 │ │                                                   │
+│ │             │ <<sp>> │ │ <<task>> │           │   ┌─────────▼───┐ ┌───────────┐               │ │                                                   │
+│ │             │        │ │          │           │   │ <<current>> │ │ <<next>>  │               │ │                                                   │
+│ │             └────────┘ └──────────┘           │   └─────────────┘ └───────────┘               │ │                                                   │
+│ │                                               └───────────────────────────────────────────────┘ │                                                   │
+│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘                                                   │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Modules namespaces relations
+
+
+```C
+ ┌─────────────────────────────────┐           ┌─────────────────────────────┐
+ │ kernel.cpp                      │           │  hardware.cpp               │
+ │ ┌───────────────────────────────┼───────────┼───────────────────────────┐ │
+ │ │ <<kernel>>                    │           │  ┌──────────────────────┐ │ │
+ │ │                               │           │  │ <<hardware>>         │ │ │
+ │ │ ┌──────────────────────────┐  │  <<use>   │  │  ┌─────────────────┐ │ │ │
+ │ │ │ <<internal>>             ├──┼───────────┼─►│  │ <<internal>>    │ │ │ │
+ │ │ │                          │  │  <<use>>  │  │  │                 │ │ │ │
+ │ │ │                          ├──┼───────────┼──┼─►│                 │ │ │ │
+ │ │ │                          │  │  <<use>>  │  │  │                 │ │ │ │
+ │ │ │                          │◄─┼───────────┼──┼──┤                 │ │ │ │
+ │ │ │                          │  │           │  │  └─────────────────┘ │ │ │
+ │ │ └──────────────────────────┘  │           │  └──────────────────────┘ │ │
+ │ └───────────────────────────────┼───────────┼───────────────────────────┘ │
+ └─────────────────────────────────┘           └─────────────────────────────┘
+```
 
 ## Build <a name="build"/>
 Install keil Uvision 5 lite 529 (or up) and set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
@@ -374,3 +426,8 @@ Kernel is printing log message through **kernel::hardware::debug** (ITM) which c
 ## Keil Uvision simulator preview
 Overview of simulator view used for development.
 ![Alt arch](/doc/sim.png?raw=true)
+
+## Other
+Used software/toos:
+* ASCIIFlow
+* PlantUml

@@ -210,7 +210,7 @@ namespace kernel::task
             return;
         }
 
-        auto terminated_task_id = internal::handle::getId<internal::task::Id>(a_handle);
+        auto terminated_task_id = internal::handle::getId< internal::task::Id>( a_handle);
         internal::terminateTask( terminated_task_id);
     }
 
