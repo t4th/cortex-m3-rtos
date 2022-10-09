@@ -1,0 +1,50 @@
+@startuml
+robust "Interrupts" as INT
+robust "Code" as CODE
+
+@0
+INT is Idle
+CODE is User
+
+'single system timer tick
+@1
+INT is SysTick
+INT@1 <-> @6 : System tick period
+CODE is Kernel
+CODE@1 <-> @2 : Handler Mode
+
+@2
+INT is Idle
+CODE is User
+CODE@2 <-> @6 : Thread Mode
+
+@6
+INT is SysTick
+CODE is Kernel
+
+@7
+INT is Idle
+CODE is User
+
+@8
+INT is SVCALL
+CODE is Kernel
+CODE -> INT : Kernel API call
+
+@9
+INT is PendSV
+INT@9 <-> @10 : Context Switch
+
+@10
+INT is Idle
+CODE is User
+
+@11
+INT is SysTick
+CODE is Kernel
+
+@12
+INT is Idle
+CODE is User
+
+@enduml

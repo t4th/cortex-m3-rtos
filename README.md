@@ -143,6 +143,15 @@ Graphical overview of namespaces relation between modules.
  └─────────────────────────────────┘           └─────────────────────────────┘
 ```
 
+### Timings
+Periodic System Timer is used to tick the kernel. It is used to increment the system time and elevate the CPU priviledge from Thread Mode to Handler Mode. During this small period, kernel is checking all waitable objects conditions and reschedulle tasks if needed.
+
+If context switch is requested by scheduller, kernel is manually setting PendSV interrupt so the CPU can tail-chain from SysTick. PendSV handler is responsible for switching and returning to the next user task context.
+![Alt arch](/doc/timing1.png?raw=true)
+
+If user i calling any kernel API function that can result in context switch (Sleep, CreateTask, etc.), kernel is using SVCALL interrupt to elevate the priviledge to a Handler Mode and then it can tail-chain to PendSV.
+![Alt arch](/doc/timing2.png?raw=true)
+
 ## Build <a name="build"/>
 Install keil Uvision 5 lite 529 (or up) and set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
 
