@@ -171,8 +171,9 @@ namespace kernel::task
                 *a_handle = internal::handle::create( internal::handle::ObjectType::Task, created_task_id);
             }
 
-            // If priority of task just created is higher than current task, issue a context switch.
-            if ( (internal::context::m_started) && ( a_priority < current_task_priority))
+            // If kernel is started, priority of a task just created is higher than the current task and
+            // created task is not suspended - issue a context switch.
+            if ( (internal::context::m_started) && ( a_priority < current_task_priority) && ( false == a_create_suspended))
             {
                 internal::hardware::syscall( internal::hardware::SyscallId::ExecuteContextSwitch);
             }
