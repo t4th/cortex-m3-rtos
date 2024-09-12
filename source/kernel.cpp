@@ -1007,9 +1007,10 @@ namespace kernel::internal
     //       functions won't work (Terminate on Idle task is a bad idea - UB).
     __attribute__(( weak)) void idleTaskRoutine( void * a_parameter)
     {
-        while( true)
+        while (true)
         {
-            // TODO: consider using hardware::waitForInterrupt();
+            // If there is nothing to do, wait for external event (or RTOS tick).
+            kernel::hardware::interrupt::wait();
         }
     }
 }
