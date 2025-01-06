@@ -14,10 +14,6 @@ https://developer.arm.com/documentation/ddi0403/latest/
 
 Task tracking via github: https://github.com/t4th/cortex-m3-rtos/projects/1
 
-On target template project: https://github.com/t4th/cortex-m3-rtos-project-template
-
-On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-example
-
 ## Table of content
 - [Goals](#goals)
 - [Architecture](#architecture)
@@ -47,15 +43,10 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 - [ ] implement privilege levels
 - [ ] implement priority inheritance
 - [ ] PC application tracker
-- [ ] setup gcc project with cmake for linux
+- [x] setup gcc project with cmake for linux
 - [ ] adapt HW layer for Cortex-M4
 - [ ] adapt HW layer for Cortex-M7
 - [ ] kernel API tests
-
-### Other
-* simple build system with core simulator - Keil uVision for Windows
-* use ARM Compiler 6 for C++17 compatibility
-* runs on stm32f103ze (no cache, no fpu, simple pipeline)
 
 ## Implementation decisions
 * tasks should not keep information about life time of system objects created during its quanta time
@@ -72,6 +63,11 @@ On target example projects: https://github.com/t4th/cortex-m3-rtos-blinky-exampl
 ### Memory
 * simple memory model; no dynamic allocations, ie. no classic heap
 * fixed size static buffers for all kernel components created during runtime
+
+### Other
+* simple build system with core simulator - Keil uVision for Windows
+* use ARM Compiler 6 for C++17 compatibility
+* runs on stm32f103ze (no cache, no fpu, simple pipeline)
 
 ### Experimental POC branches
 Scheduler in C: https://github.com/t4th/cortex-m3-rtos/tree/schedule_poc
@@ -153,7 +149,10 @@ If user i calling any kernel API function that can result in context switch (Sle
 ![Alt arch](/doc/timing2.png?raw=true)
 
 ## Build <a name="build"/>
-Install keil Uvision 5 lite 529 (or up) and set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
+### Keil Uvision
+Install keil Uvision 5 lite 529 (or up) open project in **keil** directory.
+
+You can also use BAT: set up path to install dir in **build.BAT** file, ie. **set keil_dir=d:\Keil_v5\UV4**.  
 
 Open project **keil\rtos.uvprojx** or call:  
 **build.BAT** to build  
@@ -161,7 +160,32 @@ Open project **keil\rtos.uvprojx** or call:
 **build.BAT re** to retranslate  
 **build.BAT debug** or **build.BAT d** to start debuging  
 
-...or just open project in Uvision and build/run using IDE.
+### CMake
+Only tested with arm-none-eabi toolchain.
+
+To build lib:
+
+```console
+cd cortex-m3-rtos
+mkdir build
+cd build
+
+cmake -DTOOLCHAIN_PATH="<tools dir>" -DCMAKE_TOOLCHAIN_FILE="../cubeide-gcc.cmake" -G"MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug  ..
+
+cmake --build .
+```
+
+I have used "d:/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/" as TOOLCHAIN_PATH, since I already had CubeIde installed, but you can download it manually.
+
+To build examples, do the same as above, but starting from example directory, for example: "examples\create_task". Of course cmake path to toolchain will be different:
+
+```console
+cmake -DTOOLCHAIN_PATH="d:/STM32CubeIDE_1.16.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/" -DCMAKE_TOOLCHAIN_FILE="../../../cubeide-gcc.cmake" -G"MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug  ..
+
+cmake --build .
+```
+
+### Other
 
 If you want to build this project without Uvision just use any gcc ARM compiler and set:
 * C++ to 17
@@ -172,7 +196,7 @@ If you want to build this project without Uvision just use any gcc ARM compiler 
 * and of course add kernel files to compiler: source/kernel.cpp and source/hardware/armv7m/hardware.cpp
 
 ## Edit
-I am using Visual Studio Community 2019 (set x86 in Configuration Manager) as editor and Uvision as debugger.
+I am using Visual Studio Community 2019 (set x86 in Configuration Manager) as editor and Uvision as debugger, but VSCode is also working with cmake version.
 
 ## API graphical overview <a name="api-overview"/>
 User API functions and parameters details are descripted in **kernel.hpp**.

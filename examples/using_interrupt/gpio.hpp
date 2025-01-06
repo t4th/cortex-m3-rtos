@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <stm32f10x.h>
+#include <stm32f1xx.h>
 
 namespace gpio
 {
@@ -94,11 +94,11 @@ namespace gpio
     namespace internal
     {
         constexpr GPIO_TypeDef * getBase( gpio::Port a_port);
-        constexpr u32 getPinNumber( gpio::Pin a_pin);
-        constexpr u32 getInputMode( gpio::InputMode a_mode);
-        constexpr u32 getOutputMode( gpio::OutputMode a_mode);
-        constexpr u32 getSpeed( gpio::OutputSpeed a_speed);
-        constexpr void setPinMode( GPIO_TypeDef * ap_gpio, u32 a_pin, u32 a_mode, u32 a_config);
+        constexpr uint32_t getPinNumber( gpio::Pin a_pin);
+        constexpr uint32_t getInputMode( gpio::InputMode a_mode);
+        constexpr uint32_t getOutputMode( gpio::OutputMode a_mode);
+        constexpr uint32_t getSpeed( gpio::OutputSpeed a_speed);
+        void setPinMode( GPIO_TypeDef * ap_gpio, uint32_t a_pin, uint32_t a_mode, uint32_t a_config);
     }
 
     // Input Mode
@@ -106,10 +106,10 @@ namespace gpio
     void setPinAsInput()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
-        u32 mode = internal::getInputMode( a_mode);
+        uint32_t pin = internal::getPinNumber( a_pin);
+        uint32_t mode = internal::getInputMode( a_mode);
 
-        constexpr u32 InputMode = 0U;
+        constexpr uint32_t InputMode = 0U;
         internal::setPinMode( gpio, pin, InputMode, mode);
     }
 
@@ -117,9 +117,9 @@ namespace gpio
     bool getInputPinValue()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
+        uint32_t pin = internal::getPinNumber( a_pin);
 
-        u32 result = ( gpio->IDR  >> pin) & 0x1U;
+        uint32_t result = ( gpio->IDR  >> pin) & 0x1U;
 
         if ( result)
         {
@@ -136,9 +136,9 @@ namespace gpio
     void setPinAsOutput()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
-        u32 speed = internal::getSpeed( a_speed);
-        u32 mode = internal::getOutputMode( a_mode);
+        uint32_t pin = internal::getPinNumber( a_pin);
+        uint32_t speed = internal::getSpeed( a_speed);
+        uint32_t mode = internal::getOutputMode( a_mode);
 
         internal::setPinMode( gpio, pin, speed, mode);
     }
@@ -147,7 +147,7 @@ namespace gpio
     void setOutputPin()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
+        uint32_t pin = internal::getPinNumber( a_pin);
 
         gpio->BSRR = ( 1U << pin);
     }
@@ -156,7 +156,7 @@ namespace gpio
     void clearOutputPin()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
+        uint32_t pin = internal::getPinNumber( a_pin);
 
         gpio->BRR = ( 1U << pin);
     }
@@ -165,9 +165,9 @@ namespace gpio
     bool getOutputPinValue()
     {
         GPIO_TypeDef * gpio = internal::getBase( a_port);
-        u32 pin = internal::getPinNumber( a_pin);
+        uint32_t pin = internal::getPinNumber( a_pin);
 
-        u32 result = ( gpio->ODR  >> pin) & 0x1U;
+        uint32_t result = ( gpio->ODR  >> pin) & 0x1U;
 
         if ( result)
         {
@@ -183,7 +183,7 @@ namespace gpio
     template < Port a_port, Pin a_pin>
     void configureExternalInterrupt()
     {
-        constexpr u32 pin = internal::getPinNumber( a_pin);
+        constexpr uint32_t pin = internal::getPinNumber( a_pin);
         // There are 4 EXTI_CR defined as array. Each register
         // is defined for different pins:
         // EXTICR[0] - pin 0 - 3
@@ -197,10 +197,10 @@ namespace gpio
         // 11'10 for pin 14, and so on.
         // By shifting pin value >> 2 you get Exti_cr index.
         // Note: since its compile time anyway, pin if-else would make no difference :P
-        constexpr u32 exti_control_register = pin >> 2U;
-        constexpr u32 port = static_cast< u32>( a_port);
-        constexpr u32 bitfield_shift_value = 4U * ( pin & 0x3U);
-        constexpr u32 bitfield_mask = 0x0FU;
+        constexpr uint32_t exti_control_register = pin >> 2U;
+        constexpr uint32_t port = static_cast< uint32_t>( a_port);
+        constexpr uint32_t bitfield_shift_value = 4U * ( pin & 0x3U);
+        constexpr uint32_t bitfield_mask = 0x0FU;
 
         AFIO->EXTICR[ exti_control_register] &= ~( bitfield_mask << bitfield_shift_value);
         AFIO->EXTICR[ exti_control_register] |= ( port << bitfield_shift_value);
@@ -226,47 +226,52 @@ namespace gpio
                 return GPIOF;
             case gpio::Port::G:
                 return GPIOG;
+            default:
+                return nullptr;
             }
         }
 
-        constexpr u32 getPinNumber( gpio::Pin a_pin)
+        constexpr uint32_t getPinNumber( gpio::Pin a_pin)
         {
             return static_cast< int>( a_pin);
         }
 
-        constexpr u32 getInputMode( gpio::InputMode a_mode)
+        constexpr uint32_t getInputMode( gpio::InputMode a_mode)
         {
-            constexpr u32 lookup[] = { 0x00U, 0x01U, 0x02U, 0x02U};
+            constexpr uint32_t lookup[] = { 0x00U, 0x01U, 0x02U, 0x02U};
 
             return lookup[ static_cast< int>( a_mode)];
         }
 
-        constexpr u32 getOutputMode( gpio::OutputMode a_mode)
+        constexpr uint32_t getOutputMode( gpio::OutputMode a_mode)
         {
-            constexpr u32 lookup[] = { 0x00U, 0x01U, 0x02U, 0x03U};
+            constexpr uint32_t lookup[] = { 0x00U, 0x01U, 0x02U, 0x03U};
 
             return lookup[ static_cast< int>( a_mode)];
         }
 
-        constexpr u32 getSpeed( gpio::OutputSpeed a_speed)
+        constexpr uint32_t getSpeed( gpio::OutputSpeed a_speed)
         {
-            constexpr u32 lookup[] = { 0x01U, 0x02U, 0x03U};
+            constexpr uint32_t lookup[] = { 0x01U, 0x02U, 0x03U};
 
             return lookup[ static_cast< int>( a_speed)];
         }
 
-        constexpr void setPinMode(
+#if defined ( __CC_ARM )
+    constexpr
+#endif
+        void setPinMode(
             GPIO_TypeDef *  ap_gpio,
-            u32             a_pin,
-            u32             a_mode,
-            u32             a_config
+            uint32_t             a_pin,
+            uint32_t             a_mode,
+            uint32_t             a_config
         )
         {
-            constexpr u32 mask = 0x0FU; // Nibble mask.
+            constexpr uint32_t mask = 0x0FU; // Nibble mask.
 
             if ( a_pin < 8U) /* CRL register */
             {
-                u32 temp = ap_gpio->CRL;
+                uint32_t temp = ap_gpio->CRL;
                 temp &= ~( mask << ( a_pin * 4U));               /* clear fields */
                 temp |=  a_mode << ( a_pin * 4U);                /* set MODE field */
                 temp |=  a_config  << ( ( a_pin * 4U) + 2U);      /* set CNF field */
@@ -275,7 +280,7 @@ namespace gpio
             else /* CRH register */
             {
                 a_pin -= 8U;
-                u32 temp = ap_gpio->CRH;
+                uint32_t temp = ap_gpio->CRH;
                 temp &= ~( mask << ( a_pin * 4U));              /* clear fields */
                 temp |=  a_mode << ( a_pin * 4U);               /* set MODE field */
                 temp |=  a_config  << ( ( a_pin * 4U) + 2U);    /* set CNF field */
