@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <atomic>
 
 // Calling any of below functions from within hardware interrupt routine
 // will cause undefined behaviour, unless specified otherwise.
@@ -120,10 +119,10 @@ namespace kernel::critical_section
     // Modyfing this outside critical_section API is UB.
     struct Context
     {
-        volatile std::atomic< uint32_t> m_lockCount;
-        volatile uint32_t               m_spinLock;
-        kernel::Handle                  m_event;
-        kernel::Handle                  m_ownerTask; // Debug information.
+        uint32_t        m_lockCount;
+        uint32_t        m_spinLock;
+        kernel::Handle  m_event;
+        kernel::Handle  m_ownerTask; // Debug information.
     };
 
     // Spinlock argument define number of ticks used to check critical section
