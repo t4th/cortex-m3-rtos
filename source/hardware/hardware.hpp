@@ -58,4 +58,9 @@ namespace kernel::internal::hardware
     {
         void set( volatile task::Context * a_context);
     }
+
+    namespace utility
+    {
+        void memoryBarrier();
+    }
 }

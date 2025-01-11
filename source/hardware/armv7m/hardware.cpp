@@ -268,6 +268,14 @@ namespace kernel::internal::hardware
             next_task_context = a_context;
         }
     }
+
+    namespace utility
+    {
+        void memoryBarrier()
+        {
+            __DMB();
+        }
+    }
 }
 
 namespace kernel::internal::hardware::task
