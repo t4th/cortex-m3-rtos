@@ -99,9 +99,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STM32F10X_HD;__ARMCC_VERSION=6010050;__attribute__(a)=;__builtin_arm_dmb(a)=;__builtin_arm_isb(a)=;__builtin_arm_nop(a)=;__enable_irq()=;__disable_irq()=;__BKPT(a)=;__builtin_arm_wfi(a)=;__ARM_ARCH_7M__=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STM32F103xE;__ARMCC_VERSION=6010050;__attribute__(a)=;__builtin_arm_dmb(a)=;__builtin_arm_isb(a)=;__builtin_arm_nop(a)=;__enable_irq()=;__disable_irq()=;__BKPT(a)=;__builtin_arm_wfi(a)=;__ARM_ARCH_7M__=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\external\arm;..\external\st\STM32F10x;..\source\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\external\arm;..\external\st\STM32F10x;..\external\st\STM32F10x\armcc;..\source\</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/D "__attribute__(a)=" /D "__builtin_arm_dmb(a)=" /D "__builtin_arm_dsb(a)=" /D "__builtin_arm_isb(a)=" /D "__builtin_arm_nop(a)=" /D "__enable_irq()=" /D "__disable_irq()="  /D " __BKPT(a)="  /D " __builtin_arm_wfi(a)=" /D " __ARM_ARCH_7M__=1" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -177,6 +177,7 @@
     <ClInclude Include="..\source\handle\handle.hpp" />
     <ClInclude Include="..\source\hardware\hardware.hpp" />
     <ClInclude Include="..\source\kernel.hpp" />
+    <ClInclude Include="..\source\lock\lock.hpp" />
     <ClInclude Include="..\source\queue\queue.hpp" />
     <ClInclude Include="..\source\scheduler\ready_list.hpp" />
     <ClInclude Include="..\source\scheduler\scheduler.hpp" />
@@ -188,7 +189,7 @@
     <ClInclude Include="arm_compat.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\external\st\STM32F10x\startup_stm32f10x_hd.s" />
+    <None Include="..\external\st\STM32F10x\armcc\startup_stm32f10x_hd.s" />
     <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
